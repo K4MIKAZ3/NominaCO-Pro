@@ -38,6 +38,7 @@ import com.nominacopro.domain.model.ContractType
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.ui.Formatters
+import com.nominacopro.ui.components.NominaTopBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,10 +95,10 @@ fun ProfileScreen(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text("Mi perfil laboral", style = MaterialTheme.typography.titleLarge)
+            NominaTopBar(title = "Perfil")
+            Column(Modifier.padding(horizontal = 16.dp)) {
             Text(
                 "SMMLV 2026: ${Formatters.money(ColombiaLaborLaw2026.SMMLV)}",
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -254,6 +255,7 @@ fun ProfileScreen(
                         modifier = Modifier.padding(top = 8.dp),
                     ) { Text("Cancelar") }
                 }
+            }
             }
         }
     }

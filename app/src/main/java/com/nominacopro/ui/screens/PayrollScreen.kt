@@ -13,6 +13,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
@@ -41,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthlyPayroll
@@ -53,6 +61,14 @@ import com.nominacopro.domain.model.YearSettlementReport
 import com.nominacopro.domain.payperiod.PayPeriod
 import com.nominacopro.domain.payperiod.PayPeriodCalculator
 import com.nominacopro.domain.payperiod.PayPeriodType
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
+import com.nominacopro.ui.components.NominaAccentSection
+import com.nominacopro.ui.components.NominaHeroCard
+import com.nominacopro.ui.components.NominaStatCard
+import com.nominacopro.ui.components.NominaStatusBadge
+import com.nominacopro.ui.components.NominaTopBar
+import com.nominacopro.ui.theme.NominaDesign
 import com.nominacopro.ui.Formatters
 
 @Composable
@@ -69,6 +85,9 @@ fun PayrollScreen(
     manualDeductions: List<ManualDeduction>,
     yearSettlement: YearSettlementReport?,
     pendingVacationDays: Int,
+    employeeName: String? = null,
+    employeeJobTitle: String? = null,
+    employeeDocumentId: String? = null,
     onPendingVacationDaysChange: (Int) -> Unit,
     use24Hour: Boolean,
     profileMissing: Boolean,
@@ -98,43 +117,70 @@ fun PayrollScreen(
         manualDeductions.filter { it.entryType == PayrollEntryType.BONUS }
     }
 
+    var earningsExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(true) }
+    var deductionsExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(true) }
     var periodExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(false) }
-    var monthExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(!showSubPeriods) }
     var daysExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(false) }
     var settlementExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(false) }
 
     LaunchedEffect(showSubPeriods) {
         if (!showSubPeriods) {
             periodExpanded = false
-            monthExpanded = true
+            earningsExpanded = true
         }
     }
 
     val vacationDaysInput = if (pendingVacationDays > 0) pendingVacationDays.toString() else ""
+    val totalLegalDeductions = payroll.legalDeductions.sumOf { it.amount }
+    val totalManualDeductions = manualDeductions
+        .filter { it.entryType == PayrollEntryType.DEDUCTION }
+        .sumOf { it.amount }
+    val totalDeductions = totalLegalDeductions + totalManualDeductions
+    val monthTitle = Formatters.monthNameFull(payroll.month).replaceFirstChar { it.titlecase() }
 
-    LazyColumn(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    LazyColumn(modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item { NominaTopBar(title = "Nómina") }
+
         item {
-            Text(
-                "Liquidación ${Formatters.monthNameFull(payroll.month)} ${payroll.year}",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-            )
-            if (!showSubPeriods) {
-                Text(
-                    "Período mensual · mes completo",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = NominaDesign.CardShape,
+                color = NominaDesign.SurfaceElevated,
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column {
+                        Text("Periodo de pago", color = NominaDesign.TextMuted, fontSize = 13.sp)
+                        Text(
+                            "Liquidación $monthTitle ${payroll.year}",
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                        if (!showSubPeriods) {
+                            Text(
+                                "Período mensual · mes completo",
+                                color = NominaDesign.TextMuted,
+                                fontSize = 12.sp,
+                            )
+                        }
+                    }
+                    NominaStatusBadge("Liquidada")
+                }
             }
         }
 
         if (showSubPeriods && payPeriods.isNotEmpty()) {
             item {
-                Text("Subperíodo", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     payPeriods.forEach { period ->
@@ -152,9 +198,10 @@ fun PayrollScreen(
             item {
                 CollapsibleSection(
                     title = "Resumen del subperíodo",
-                    subtitle = "${Formatters.money(periodSummary.pendingBalance)} pendiente · toca para detalle",
+                    subtitle = "${Formatters.money(periodSummary.pendingBalance)} pendiente",
                     expanded = periodExpanded,
                     onToggle = { periodExpanded = !periodExpanded },
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 ) {
                     PeriodSummaryContent(periodSummary)
                 }
@@ -162,7 +209,174 @@ fun PayrollScreen(
         }
 
         item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NominaHeroCard(
+                label = "Total a pagar",
+                amount = Formatters.money(payroll.netTotal),
+                badge = "Liquidación calculada",
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+
+        item {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                NominaStatCard(
+                    label = "Total devengado",
+                    amount = Formatters.money(payroll.grossTotal),
+                    icon = Icons.Default.AccountBalanceWallet,
+                    accent = NominaDesign.Green,
+                    modifier = Modifier.weight(1f),
+                )
+                NominaStatCard(
+                    label = "Total deducciones",
+                    amount = Formatters.money(totalDeductions),
+                    icon = Icons.Default.ArrowDownward,
+                    accent = NominaDesign.Cyan,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        item {
+            NominaAccentSection(
+                title = "Devengados",
+                amount = Formatters.money(payroll.grossTotal),
+                accent = NominaDesign.Green,
+                expanded = earningsExpanded,
+                onToggle = { earningsExpanded = !earningsExpanded },
+                modifier = Modifier.padding(horizontal = 16.dp),
+            ) {
+                Text(
+                    buildString {
+                        append("${payroll.workedDays} días laborados")
+                        if (payroll.remuneratedRestDays > 0) {
+                            append(" + ${payroll.remuneratedRestDays} descanso remunerado")
+                        }
+                    },
+                    color = NominaDesign.TextMuted,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                payroll.earnings.filter { it.code != "BON" }.forEach { line ->
+                    PayrollRow(line, false)
+                }
+                if (monthBonuses.isNotEmpty()) {
+                    monthBonuses.forEach { bonus ->
+                        PayrollRow(PayrollLine(bonus.label, bonus.amount, code = "BON"), false)
+                    }
+                }
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Bonos", fontWeight = FontWeight.SemiBold)
+                    IconButton(onClick = onAddBonus) {
+                        Icon(Icons.Default.Add, contentDescription = "Agregar bono")
+                    }
+                }
+                if (monthBonuses.isEmpty()) {
+                    Text("Sin bonos registrados.", style = MaterialTheme.typography.bodySmall, color = NominaDesign.TextMuted)
+                }
+            }
+        }
+
+        item {
+            NominaAccentSection(
+                title = "Descuentos",
+                amount = Formatters.money(totalDeductions),
+                accent = NominaDesign.Cyan,
+                expanded = deductionsExpanded,
+                onToggle = { deductionsExpanded = !deductionsExpanded },
+                modifier = Modifier.padding(horizontal = 16.dp),
+            ) {
+                payroll.legalDeductions.forEach { line -> PayrollRow(line, true) }
+                val deductions = manualDeductions.filter { it.entryType == PayrollEntryType.DEDUCTION }
+                deductions.forEach { ManualEntryRow(it, onRemoveManualEntry, isCredit = false) }
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Egresos del mes", fontWeight = FontWeight.SemiBold)
+                    IconButton(onClick = onAddDeduction) {
+                        Icon(Icons.Default.Add, contentDescription = "Agregar egreso")
+                    }
+                }
+                if (deductions.isEmpty()) {
+                    Text("Sin egresos manuales.", style = MaterialTheme.typography.bodySmall, color = NominaDesign.TextMuted)
+                }
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                RowAmount("Total descuentos", totalDeductions, true, bold = true)
+            }
+        }
+
+        item {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = NominaDesign.CardShape,
+                color = NominaDesign.SurfaceElevated,
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Neto a pagar", color = NominaDesign.TextMuted)
+                    Text(
+                        Formatters.money(payroll.netTotal),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp,
+                        modifier = Modifier.padding(vertical = 6.dp),
+                    )
+                    Text("✓ Cálculo personal · no constituye nómina oficial", color = NominaDesign.Green, fontSize = 13.sp)
+                }
+            }
+        }
+
+        if (!employeeName.isNullOrBlank()) {
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = NominaDesign.CardShape,
+                    color = NominaDesign.SurfaceElevated,
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 12.dp)
+                                .background(NominaDesign.Green.copy(alpha = 0.15f), NominaDesign.CardShape)
+                                .padding(12.dp),
+                        ) {
+                            Icon(Icons.Default.Person, null, tint = NominaDesign.Green)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text("Información del empleado", color = NominaDesign.TextMuted, fontSize = 12.sp)
+                            Text(employeeName, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 2.dp))
+                            employeeJobTitle?.takeIf { it.isNotBlank() }?.let {
+                                Text(it, color = NominaDesign.TextMuted, fontSize = 13.sp)
+                            }
+                            employeeDocumentId?.takeIf { it.isNotBlank() }?.let {
+                                Text("CC $it", color = NominaDesign.TextMuted, fontSize = 12.sp)
+                            }
+                        }
+                        Icon(Icons.Default.ChevronRight, null, tint = NominaDesign.TextMuted)
+                    }
+                }
+            }
+        }
+
+        item {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 FilledTonalButton(onClick = onExportPayrollPdf, modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.PictureAsPdf, null, modifier = Modifier.padding(end = 4.dp))
                     Text("PDF nómina")
@@ -174,25 +388,33 @@ fun PayrollScreen(
         }
 
         item {
-            CollapsibleSection(
-                title = if (showSubPeriods) "Detalle del mes" else "Liquidación del mes",
-                subtitle = buildString {
-                    append("${payroll.workedDays} días")
-                    if (payroll.remuneratedRestDays > 0) append(" + ${payroll.remuneratedRestDays} descanso")
-                    append(" · neto ${Formatters.money(payroll.netTotal)}")
-                },
-                expanded = monthExpanded,
-                onToggle = { monthExpanded = !monthExpanded },
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                MonthDetailContent(
-                    payroll = payroll,
-                    advances = monthAdvances,
-                    bonuses = monthBonuses,
-                    manualDeductions = manualDeductions,
-                    onAddAdvance = onAddAdvance,
-                    onAddBonus = onAddBonus,
-                    onAddDeduction = onAddDeduction,
-                    onRemoveManualEntry = onRemoveManualEntry,
+                Text("Avances", fontWeight = FontWeight.SemiBold)
+                IconButton(onClick = onAddAdvance) {
+                    Icon(Icons.Default.Add, contentDescription = "Agregar avance")
+                }
+            }
+        }
+        if (monthAdvances.isEmpty()) {
+            item {
+                Text(
+                    "Sin avances registrados.",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = NominaDesign.TextMuted,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        } else {
+            items(monthAdvances.size) { index ->
+                ManualEntryRow(
+                    monthAdvances[index],
+                    onRemoveManualEntry,
+                    isCredit = false,
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
         }
@@ -204,25 +426,22 @@ fun PayrollScreen(
                 subtitle = "${daysToShow.size} jornada(s) registrada(s)",
                 expanded = daysExpanded,
                 onToggle = { daysExpanded = !daysExpanded },
+                modifier = Modifier.padding(horizontal = 16.dp),
             ) {
                 if (daysToShow.isEmpty()) {
-                    Text(
-                        "No hay jornadas en este período.",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    )
+                    Text("No hay jornadas en este período.", color = NominaDesign.TextMuted)
                 } else {
                     daysToShow.sortedBy { it.date }.forEach { entry ->
-                        Card(
+                        Surface(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            shape = NominaDesign.CardShape,
+                            color = NominaDesign.Surface,
                         ) {
                             Column(Modifier.padding(12.dp)) {
-                                Text(
-                                    "${entry.date.dayOfMonth}/${entry.date.monthValue}/${entry.date.year}",
-                                    fontWeight = FontWeight.SemiBold,
-                                )
+                                Text("${entry.date.dayOfMonth}/${entry.date.monthValue}/${entry.date.year}", fontWeight = FontWeight.SemiBold)
                                 Text(
                                     "${Formatters.formatTime(entry.start, use24Hour)} – ${Formatters.formatTime(entry.end, use24Hour)}",
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = NominaDesign.Green,
                                 )
                             }
                         }
@@ -235,9 +454,10 @@ fun PayrollScreen(
             item {
                 CollapsibleSection(
                     title = "Prima, cesantías y liquidación ${report.year}",
-                    subtitle = "Prima año ${Formatters.money(report.firstSemester.primaAmount + report.secondSemester.primaAmount)} · toca para detalle",
+                    subtitle = "Prima año ${Formatters.money(report.firstSemester.primaAmount + report.secondSemester.primaAmount)}",
                     expanded = settlementExpanded,
                     onToggle = { settlementExpanded = !settlementExpanded },
+                    modifier = Modifier.padding(horizontal = 16.dp),
                 ) {
                     SettlementContent(
                         report = report,
@@ -252,7 +472,8 @@ fun PayrollScreen(
             Text(
                 "Base legal: CST · Ley 2466/2025 · prima/cesantías sobre 360 días · uso personal",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                color = NominaDesign.TextMuted,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
     }
@@ -264,9 +485,14 @@ private fun CollapsibleSection(
     subtitle: String,
     expanded: Boolean,
     onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = NominaDesign.SurfaceElevated),
+        shape = NominaDesign.CardShape,
+    ) {
         Column(Modifier.padding(16.dp)) {
             Row(
                 Modifier
@@ -468,9 +694,14 @@ private fun SemesterRow(semester: SemesterSettlement) {
 }
 
 @Composable
-private fun ManualEntryRow(entry: ManualDeduction, onRemove: (Long) -> Unit, isCredit: Boolean) {
+private fun ManualEntryRow(
+    entry: ManualDeduction,
+    onRemove: (Long) -> Unit,
+    isCredit: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        modifier.fillMaxWidth().padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

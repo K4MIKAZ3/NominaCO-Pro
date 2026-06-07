@@ -17,17 +17,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.WorkHistory
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,11 +34,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.nominacopro.data.CalendarMark
 import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
 import com.nominacopro.ui.Formatters
-import com.nominacopro.ui.components.DashboardCard
+import com.nominacopro.ui.components.NominaTopBar
+import com.nominacopro.ui.theme.NominaDesign
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.math.ceil
@@ -59,128 +60,285 @@ fun CalendarScreen(
 ) {
     val days = buildCalendarDays(yearMonth)
     val rows = ceil((days.size) / 7.0).toInt()
-    val gridHeight = (rows * 52 + (rows - 1) * 6).dp
+    val gridHeight = (rows * 48 + (rows - 1) * 8).dp
+    val workedCount = marks.values.count { it.worked }
+    val pendingCount = countPendingWeekdays(yearMonth, marks)
+    val monthLabel = Formatters.monthNameFull(yearMonth.monthValue).replaceFirstChar { it.titlecase() }
 
     LazyColumn(
-        modifier.fillMaxSize().padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { DashboardCard(dashboard, Modifier.padding(top = 8.dp)) }
+        item {
+            NominaTopBar(
+                title = "Calendario",
+                subtitle = monthLabel,
+            )
+        }
 
         item {
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onPrev) { Icon(Icons.Default.ChevronLeft, null) }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onPrev) {
+                        Icon(Icons.Default.ChevronLeft, null, tint = NominaDesign.TextMuted)
+                    }
                     Text(
-                        Formatters.monthNameFull(yearMonth.monthValue),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
+                        "${monthLabel} ${yearMonth.year}",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp,
                     )
-                    Text("${yearMonth.year}", color = MaterialTheme.colorScheme.primary)
+                    IconButton(onClick = onNext) {
+                        Icon(Icons.Default.ChevronRight, null, tint = NominaDesign.TextMuted)
+                    }
                 }
-                IconButton(onClick = onNext) { Icon(Icons.Default.ChevronRight, null) }
+                Surface(
+                    shape = CircleShape,
+                    color = NominaDesign.GreenGlow,
+                    modifier = Modifier.clickable(onClick = onToday),
+                ) {
+                    Row(
+                        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, null, tint = NominaDesign.Green, modifier = Modifier.size(16.dp))
+                        Text("Hoy", color = NominaDesign.Green, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
             }
         }
 
         item {
-            Text(
-                "Hoy",
-                modifier = Modifier.clickable { onToday() },
-                color = MaterialTheme.colorScheme.secondary,
-            )
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = NominaDesign.CardShape,
+                color = NominaDesign.SurfaceElevated,
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(7),
+                        modifier = Modifier.height(gridHeight),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        userScrollEnabled = false,
+                    ) {
+                        items(listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")) { label ->
+                            Text(
+                                label,
+                                modifier = Modifier.padding(4.dp),
+                                color = NominaDesign.TextMuted,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                        items(days) { cell ->
+                            if (cell == null) {
+                                Box(Modifier.aspectRatio(1f))
+                            } else {
+                                MockupDayCell(cell, marks[cell], onDayClick)
+                            }
+                        }
+                    }
+                    Row(
+                        Modifier.padding(top = 14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        LegendItem(NominaDesign.Green, "Día trabajado")
+                        LegendItem(NominaDesign.TextMuted, "Día no trabajado")
+                    }
+                }
+            }
+        }
+
+        item {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                shape = NominaDesign.CardShape,
+                color = NominaDesign.SurfaceElevated,
+            ) {
+                Row(
+                    Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(NominaDesign.CardShape)
+                            .background(NominaDesign.Green.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, null, tint = NominaDesign.Green)
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text("Resumen de ${monthLabel.lowercase()}", color = NominaDesign.TextMuted, fontSize = 13.sp)
+                        Row(
+                            Modifier.padding(top = 6.dp),
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            SummaryStat(workedCount.toString(), "días trabajados", NominaDesign.Green)
+                            Box(
+                                Modifier
+                                    .size(width = 1.dp, height = 28.dp)
+                                    .background(NominaDesign.TextMuted.copy(alpha = 0.25f)),
+                            )
+                            SummaryStat(pendingCount.toString(), "días pendientes", MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+            }
         }
 
         payroll?.let { p ->
             item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = NominaDesign.CardShape,
+                    color = NominaDesign.SurfaceElevated,
                 ) {
                     Row(
                         Modifier.fillMaxWidth().padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column {
-                            Text("Neto estimado", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                            Text("Neto estimado del mes", color = NominaDesign.TextMuted, fontSize = 13.sp)
                             Text(
                                 Formatters.money(p.netTotal),
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = NominaDesign.Green,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 22.sp,
                             )
                         }
-                        Text("${p.workedDays} días", color = MaterialTheme.colorScheme.secondary)
+                        Text("${p.workedDays} días", color = NominaDesign.Cyan, fontWeight = FontWeight.Medium)
                     }
                 }
             }
         }
 
-        item {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(7),
-                modifier = Modifier.height(gridHeight),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                userScrollEnabled = false,
-            ) {
-                items(listOf("D", "L", "M", "M", "J", "V", "S")) { label ->
-                    Text(label, modifier = Modifier.padding(4.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                }
-                items(days) { cell ->
-                    if (cell == null) {
-                        Box(Modifier.aspectRatio(1f))
-                    } else {
-                        DayCell(cell, marks[cell], onDayClick)
-                    }
-                }
-            }
+        if (dashboard.isNotEmpty()) {
+            item { Box(Modifier.height(8.dp)) }
         }
-
-        item { Box(Modifier.height(8.dp)) }
     }
 }
 
 @Composable
-private fun DayCell(date: LocalDate, mark: CalendarMark?, onClick: (LocalDate) -> Unit) {
+private fun MockupDayCell(date: LocalDate, mark: CalendarMark?, onClick: (LocalDate) -> Unit) {
     val isToday = date == LocalDate.now()
-    val bg = when {
-        mark?.worked == true -> Color(0x334ADE80)
-        mark?.manualHoliday == true -> Color(0x33F59E0B)
-        mark?.officialHoliday == true || mark?.sunday == true -> Color(0x33F87171)
-        date.dayOfWeek.value == 6 -> Color(0x3322D3EE)
-        else -> MaterialTheme.colorScheme.surface
-    }
-    Box(
+    val worked = mark?.worked == true
+
+    Column(
         modifier = Modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(8.dp))
-            .background(bg)
-            .border(
-                width = if (isToday) 2.dp else 1.dp,
-                color = if (isToday) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(8.dp),
-            )
-            .clickable { onClick(date) }
-            .padding(4.dp),
+            .clickable { onClick(date) },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Text("${date.dayOfMonth}", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.bodyMedium.fontSize)
-        if (mark?.worked == true) {
-            Icon(Icons.Default.WorkHistory, null, modifier = Modifier.align(Alignment.TopEnd).size(12.dp), tint = MaterialTheme.colorScheme.primary)
+        Box(contentAlignment = Alignment.Center) {
+            if (worked) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(NominaDesign.Green),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "${date.dayOfMonth}",
+                        color = Color(0xFF052E16),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .then(
+                            if (isToday) {
+                                Modifier.border(2.dp, NominaDesign.Green, CircleShape)
+                            } else {
+                                Modifier
+                            },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "${date.dayOfMonth}",
+                        color = if (isToday) NominaDesign.Green else NominaDesign.TextMuted,
+                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 14.sp,
+                    )
+                }
+            }
         }
-        if (mark?.manualHoliday == true || (mark?.officialHoliday == true && mark.worked.not())) {
-            Icon(Icons.Default.Star, null, modifier = Modifier.align(Alignment.BottomEnd).size(10.dp), tint = MaterialTheme.colorScheme.tertiary)
+        if (worked) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .size(5.dp)
+                    .clip(CircleShape)
+                    .background(NominaDesign.Green),
+            )
         }
     }
 }
 
+@Composable
+private fun LegendItem(color: Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(
+            Modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(color),
+        )
+        Text(label, color = NominaDesign.TextMuted, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun SummaryStat(value: String, label: String, valueColor: Color) {
+    Column {
+        Text(value, color = valueColor, fontWeight = FontWeight.Bold, fontSize = 24.sp)
+        Text(label, color = NominaDesign.TextMuted, fontSize = 12.sp)
+    }
+}
+
+private fun countPendingWeekdays(ym: YearMonth, marks: Map<LocalDate, CalendarMark>): Int {
+    val today = LocalDate.now()
+    val end = if (ym == YearMonth.from(today)) today else ym.atEndOfMonth()
+    if (ym.isBefore(YearMonth.from(today))) return 0
+    var pending = 0
+    var d = ym.atDay(1)
+    while (!d.isAfter(end)) {
+        if (d.dayOfWeek != DayOfWeek.SATURDAY && d.dayOfWeek != DayOfWeek.SUNDAY) {
+            if (marks[d]?.worked != true) pending++
+        }
+        d = d.plusDays(1)
+    }
+    return pending
+}
+
 private fun buildCalendarDays(ym: YearMonth): List<LocalDate?> {
     val first = ym.atDay(1)
-    val offset = first.dayOfWeek.value % 7
+    val offset = (first.dayOfWeek.value + 6) % 7
     val result = mutableListOf<LocalDate?>()
     repeat(offset) { result.add(null) }
-    for (d in 1..ym.lengthOfMonth()) result.add(ym.atDay(d))
+    for (day in 1..ym.lengthOfMonth()) result.add(ym.atDay(day))
     return result
 }

@@ -9,9 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -39,6 +36,7 @@ import com.nominacopro.ui.auth.AuthViewModel
 import com.nominacopro.ui.auth.BiometricGate
 import com.nominacopro.ui.auth.promptLocalBiometric
 import com.nominacopro.ui.navigation.NominaTab
+import com.nominacopro.ui.components.NominaBottomBar
 import com.nominacopro.ui.screens.CalendarScreen
 import com.nominacopro.ui.screens.DayEditorDialog
 import com.nominacopro.ui.screens.LoginScreen
@@ -222,16 +220,7 @@ private fun MainNominaScaffold(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
-            NavigationBar {
-                NominaTab.entries.forEach { item ->
-                    NavigationBarItem(
-                        selected = tab == item,
-                        onClick = { tab = item },
-                        icon = { Icon(item.icon, contentDescription = item.label) },
-                        label = { Text(item.label) },
-                    )
-                }
-            }
+            NominaBottomBar(selected = tab, onSelect = { tab = it })
         },
     ) { padding ->
         when (tab) {
@@ -262,6 +251,9 @@ private fun MainNominaScaffold(
                         manualDeductions = manualDeductions,
                         yearSettlement = yearSettlement,
                         pendingVacationDays = profile?.pendingVacationDays ?: 0,
+                        employeeName = profile?.name,
+                        employeeJobTitle = profile?.jobTitle,
+                        employeeDocumentId = profile?.documentId,
                         onPendingVacationDaysChange = vm::updatePendingVacationDays,
                         use24Hour = preferences.use24HourFormat,
                         profileMissing = profile == null,

@@ -1,6 +1,7 @@
 package com.nominacopro.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nominacopro.R
+import com.nominacopro.ui.components.NominaTopBar
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
@@ -82,6 +84,7 @@ fun SettingsScreen(
     var editingSchedule by rememberSaveable { mutableStateOf(false) }
     var editingReminder by rememberSaveable { mutableStateOf(false) }
     var showSignOutDialog by rememberSaveable { mutableStateOf(false) }
+    var showDonationDialog by rememberSaveable { mutableStateOf(false) }
 
     fun buildPrefs(
         use24: Boolean = preferences.use24HourFormat,
@@ -122,20 +125,22 @@ fun SettingsScreen(
 
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }, modifier = modifier) { padding ->
         LazyColumn(
-            Modifier.fillMaxSize().padding(padding).padding(16.dp),
+            Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(start = 0.dp, end = 0.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item { NominaTopBar(title = "Ajustes") }
             item {
-                Text("Preferencias", style = MaterialTheme.typography.titleLarge)
                 Text(
                     "Apariencia, horario, recordatorio y seguridad local.",
+                    modifier = Modifier.padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 )
             }
 
             if (accountEmail != null || onSyncNow != null) {
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Cuenta Supabase", fontWeight = FontWeight.SemiBold)
                             accountEmail?.let { email ->
@@ -165,7 +170,7 @@ fun SettingsScreen(
 
             onSignOut?.let {
                 item {
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Sesión", fontWeight = FontWeight.SemiBold)
                             Text(
@@ -185,7 +190,7 @@ fun SettingsScreen(
             }
 
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Apariencia y acceso", fontWeight = FontWeight.SemiBold)
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -238,7 +243,7 @@ fun SettingsScreen(
             }
 
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Horario por defecto", fontWeight = FontWeight.SemiBold)
                         if (!editingSchedule) {
@@ -277,7 +282,7 @@ fun SettingsScreen(
             }
 
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
@@ -322,7 +327,7 @@ fun SettingsScreen(
 
             item { Text("Parámetros legales 2026", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp)) }
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Column(Modifier.padding(16.dp)) {
                         LegalRow("SMMLV 2026", Formatters.money(ColombiaLaborLaw2026.SMMLV))
                         LegalRow("Auxilio transporte", Formatters.money(ColombiaLaborLaw2026.SUBSIDIO_TRANSPORTE))
@@ -341,7 +346,7 @@ fun SettingsScreen(
                 item { Text("No hay festivos manuales.", modifier = Modifier.padding(8.dp)) }
             } else {
                 items(manualHolidays.sortedDescending().toList()) { date ->
-                    Card(Modifier.fillMaxWidth()) {
+                    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text("${date.dayOfMonth}/${date.monthValue}/${date.year}")
                             IconButton(onClick = { onRemoveHoliday(date) }) {
@@ -352,19 +357,47 @@ fun SettingsScreen(
                 }
             }
 
-            item { Text(stringResource(R.string.credits_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp)) }
             item {
-                Card(Modifier.fillMaxWidth()) {
+                Text(
+                    stringResource(R.string.donation_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp),
+                )
+            }
+            item {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            stringResource(R.string.donation_summary),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        )
+                        OutlinedButton(
+                            onClick = { showDonationDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.donation_button))
+                        }
+                    }
+                }
+            }
+
+            item { Text(stringResource(R.string.credits_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)) }
+            item {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(R.string.credits_app) + " v1.6.1", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.credits_developer))
-                        Text(stringResource(R.string.credits_github), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
                         Text(stringResource(R.string.credits_legal), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                         Text("© 2026 Angel Berrocal · Colombia", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }
             }
         }
+    }
+
+    if (showDonationDialog) {
+        DonationDialog(onDismiss = { showDonationDialog = false })
     }
 
     if (showSignOutDialog) {

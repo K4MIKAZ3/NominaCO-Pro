@@ -1,4 +1,4 @@
-package com.nominacopro.ui
+package com.nominacopro.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

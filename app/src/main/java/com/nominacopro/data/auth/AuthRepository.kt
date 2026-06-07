@@ -1,9 +1,9 @@
 package com.nominacopro.data.auth
 
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.providers.builtin.Email
-import io.github.jan.supabase.auth.status.SessionStatus
-import io.github.jan.supabase.auth.user.UserInfo
+import io.github.jan.supabase.gotrue.SessionStatus
+import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.builtin.Email
+import io.github.jan.supabase.gotrue.user.UserInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,9 +36,9 @@ class AuthRepository {
         supabase.auth.sessionStatus.collect { status ->
             _state.value = when (status) {
                 is SessionStatus.Authenticated -> status.session.user.toAuthenticated()
-                SessionStatus.NotAuthenticated -> AuthUiState.Unauthenticated
+                is SessionStatus.NotAuthenticated -> AuthUiState.Unauthenticated
                 SessionStatus.LoadingFromStorage -> AuthUiState.Loading
-                is SessionStatus.RefreshFailure -> AuthUiState.Unauthenticated
+                SessionStatus.NetworkError -> AuthUiState.Unauthenticated
             }
         }
     }

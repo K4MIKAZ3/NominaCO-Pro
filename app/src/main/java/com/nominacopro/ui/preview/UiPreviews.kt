@@ -87,7 +87,12 @@ private fun PreviewPayroll() {
                 WorkDayEntry(LocalDate.of(2026, 6, 7), LocalTime.of(10, 0), LocalTime.of(18, 0), DayType.FESTIVO_DOMINICAL),
             ),
             manualDeductions = listOf(
-                ManualDeduction(1, YearMonth.of(2026, 6), "Préstamo empleador", 120_000),
+                ManualDeduction(
+                    id = 1,
+                    yearMonth = YearMonth.of(2026, 6),
+                    label = "Préstamo empleador",
+                    amount = 120_000,
+                ),
             ),
             use24Hour = true,
             profileMissing = false,

@@ -95,17 +95,13 @@ class CloudSyncRepository(
     suspend fun pushProfile(profile: EmployeeProfile) {
         val userId = activeUserId ?: return
         val pg = postgrest ?: return
-        pg.from(TABLE_PROFILES).upsert(profile.toRemote(userId)) {
-            onConflict = "user_id"
-        }
+        pg.from(TABLE_PROFILES).upsert(profile.toRemote(userId), onConflict = "user_id")
     }
 
     suspend fun pushWorkDay(entry: WorkDayEntry) {
         val userId = activeUserId ?: return
         val pg = postgrest ?: return
-        pg.from(TABLE_WORK_DAYS).upsert(entry.toRemote(userId)) {
-            onConflict = "user_id,date_iso"
-        }
+        pg.from(TABLE_WORK_DAYS).upsert(entry.toRemote(userId), onConflict = "user_id,date_iso")
     }
 
     suspend fun deleteWorkDay(date: LocalDate) {
@@ -124,9 +120,8 @@ class CloudSyncRepository(
         val pg = postgrest ?: return
         pg.from(TABLE_MANUAL_HOLIDAYS).upsert(
             RemoteManualHoliday(userId, date.format(iso), label),
-        ) {
-            onConflict = "user_id,date_iso"
-        }
+            onConflict = "user_id,date_iso",
+        )
     }
 
     suspend fun deleteManualHoliday(date: LocalDate) {
@@ -152,9 +147,8 @@ class CloudSyncRepository(
                 label = deduction.label,
                 amount = deduction.amount,
             ),
-        ) {
-            onConflict = "id"
-        }
+            onConflict = "id",
+        )
         return deduction.copy(cloudId = cloudId)
     }
 
@@ -169,9 +163,7 @@ class CloudSyncRepository(
     suspend fun pushPreferences(prefs: AppPreferences) {
         val userId = activeUserId ?: return
         val pg = postgrest ?: return
-        pg.from(TABLE_APP_PREFERENCES).upsert(prefs.toRemote(userId)) {
-            onConflict = "user_id"
-        }
+        pg.from(TABLE_APP_PREFERENCES).upsert(prefs.toRemote(userId), onConflict = "user_id")
     }
 
     private suspend fun hasRemoteData(userId: String): Boolean {
@@ -230,21 +222,21 @@ class CloudSyncRepository(
         val pg = postgrest ?: error("Supabase no disponible")
         val profile = profileDao.get()
         if (profile != null) {
-            pg.from(TABLE_PROFILES).upsert(profile.toRemote(userId)) {
-                onConflict = "user_id"
-            }
+            pg.from(TABLE_PROFILES).upsert(profile.toRemote(userId), onConflict = "user_id")
         }
         val workDays = workDayDao.observeAll().first()
         if (workDays.isNotEmpty()) {
-            pg.from(TABLE_WORK_DAYS).upsert(workDays.map { it.toRemote(userId) }) {
-                onConflict = "user_id,date_iso"
-            }
+            pg.from(TABLE_WORK_DAYS).upsert(
+                workDays.map { it.toRemote(userId) },
+                onConflict = "user_id,date_iso",
+            )
         }
         val holidays = holidayDao.observeAll().first()
         if (holidays.isNotEmpty()) {
-            pg.from(TABLE_MANUAL_HOLIDAYS).upsert(holidays.map { it.toRemote(userId) }) {
-                onConflict = "user_id,date_iso"
-            }
+            pg.from(TABLE_MANUAL_HOLIDAYS).upsert(
+                holidays.map { it.toRemote(userId) },
+                onConflict = "user_id,date_iso",
+            )
         }
         val deductions = deductionDao.observeAll().first()
         if (deductions.isNotEmpty()) {
@@ -253,14 +245,13 @@ class CloudSyncRepository(
                 entity.copy(cloudId = cloudId)
             }
             deductionDao.upsertAll(withCloudIds)
-            pg.from(TABLE_MANUAL_DEDUCTIONS).upsert(withCloudIds.map { it.toRemote(userId) }) {
-                onConflict = "id"
-            }
+            pg.from(TABLE_MANUAL_DEDUCTIONS).upsert(
+                withCloudIds.map { it.toRemote(userId) },
+                onConflict = "id",
+            )
         }
         val prefs = preferencesStore.observe().first()
-        pg.from(TABLE_APP_PREFERENCES).upsert(prefs.toRemote(userId)) {
-            onConflict = "user_id"
-        }
+        pg.from(TABLE_APP_PREFERENCES).upsert(prefs.toRemote(userId), onConflict = "user_id")
     }
 
     private suspend fun clearLocalData() {

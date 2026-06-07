@@ -191,7 +191,7 @@ fun ProfileScreen(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("Período de cobro") },
-                        supportingText = { Text("Semanal, quincenal o ventana de 21 días") },
+                        supportingText = { Text("Mensual = mes completo; otros activan subperíodos en nómina") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = payPeriodExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
                     )

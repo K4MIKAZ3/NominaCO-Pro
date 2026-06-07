@@ -356,7 +356,7 @@ fun SettingsScreen(
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(R.string.credits_app) + " v1.5.0", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.credits_app) + " v1.6.0", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.credits_developer))
                         Text(stringResource(R.string.credits_github), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
                         Text(stringResource(R.string.credits_legal), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))

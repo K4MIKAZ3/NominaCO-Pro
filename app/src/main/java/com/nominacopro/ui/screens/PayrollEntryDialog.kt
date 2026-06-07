@@ -31,10 +31,12 @@ fun PayrollEntryDialog(
     val title = when (entryType) {
         PayrollEntryType.ADVANCE -> "Registrar avance recibido"
         PayrollEntryType.DEDUCTION -> "Agregar egreso / préstamo"
+        PayrollEntryType.BONUS -> "Agregar bono"
     }
     val hint = when (entryType) {
         PayrollEntryType.ADVANCE -> "Dinero que ya te pagó el patrón en este período."
         PayrollEntryType.DEDUCTION -> "Descuento manual del neto (préstamo, libranza, etc.)"
+        PayrollEntryType.BONUS -> "Ingreso adicional (bonificación, incentivo, etc.)."
     }
 
     AlertDialog(

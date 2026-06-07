@@ -7,10 +7,13 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 enum class PayPeriodType(val label: String) {
+    MONTHLY("Mensual"),
     WEEKLY("Semanal"),
     BIWEEKLY("Quincenal"),
     VENTEEN("Ventena (21 días)"),
     ;
+
+    val hasSubPeriods: Boolean get() = this != MONTHLY
 
     companion object {
         fun fromStored(value: String?): PayPeriodType =
@@ -33,12 +36,14 @@ object PayPeriodCalculator {
 
     fun periodsInMonth(type: PayPeriodType, yearMonth: YearMonth): List<PayPeriod> =
         when (type) {
+            PayPeriodType.MONTHLY -> emptyList()
             PayPeriodType.WEEKLY -> weeklyPeriods(yearMonth)
             PayPeriodType.BIWEEKLY -> biweeklyPeriods(yearMonth)
             PayPeriodType.VENTEEN -> venteenPeriods(yearMonth)
         }
 
     fun defaultPeriodIndex(type: PayPeriodType, yearMonth: YearMonth, today: LocalDate = LocalDate.now()): Int {
+        if (!type.hasSubPeriods) return 0
         val periods = periodsInMonth(type, yearMonth)
         if (periods.isEmpty()) return 0
         if (yearMonth != YearMonth.from(today)) return 0

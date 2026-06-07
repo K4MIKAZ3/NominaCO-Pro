@@ -16,6 +16,12 @@ object ColombiaLaborLaw2026 {
     const val DESCUENTO_PENSION = 0.04
     const val DIAS_MES_REFERENCIA = 30
 
+    /** Año comercial laboral para prima, cesantías e intereses (CST). */
+    const val DIAS_ANIO_PRESTACIONES = 360
+
+    /** Interés anual sobre cesantías — 12 % (1 % mensual, Ley 52/1975). */
+    const val INTERES_CESANTIAS_ANUAL = 0.12
+
     /** Días lun–vie que debe laborar para devengar dominical y festivo remunerado (CST art. 179–186). */
     const val ORDINARY_WORK_DAYS_PER_WEEK = 5
 

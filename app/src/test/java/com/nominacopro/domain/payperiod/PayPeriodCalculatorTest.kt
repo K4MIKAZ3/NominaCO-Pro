@@ -9,6 +9,18 @@ import java.time.YearMonth
 class PayPeriodCalculatorTest {
 
     @Test
+    fun monthlyPeriods_returnsEmpty() {
+        val periods = PayPeriodCalculator.periodsInMonth(PayPeriodType.MONTHLY, YearMonth.of(2026, 6))
+        assertTrue(periods.isEmpty())
+    }
+
+    @Test
+    fun monthly_hasNoSubPeriods() {
+        assertTrue(!PayPeriodType.MONTHLY.hasSubPeriods)
+        assertTrue(PayPeriodType.BIWEEKLY.hasSubPeriods)
+    }
+
+    @Test
     fun biweeklyPeriods_splitsMonthInTwo() {
         val periods = PayPeriodCalculator.periodsInMonth(PayPeriodType.BIWEEKLY, YearMonth.of(2026, 6))
         assertEquals(2, periods.size)
@@ -32,5 +44,15 @@ class PayPeriodCalculatorTest {
             LocalDate.of(2026, 6, 20),
         )
         assertEquals(1, index)
+    }
+
+    @Test
+    fun defaultPeriodIndex_monthlyIsZero() {
+        val index = PayPeriodCalculator.defaultPeriodIndex(
+            PayPeriodType.MONTHLY,
+            YearMonth.of(2026, 6),
+            LocalDate.of(2026, 6, 20),
+        )
+        assertEquals(0, index)
     }
 }

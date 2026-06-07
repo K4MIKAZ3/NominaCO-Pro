@@ -16,9 +16,11 @@ import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
 import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.model.PeriodPayrollSummary
+import com.nominacopro.domain.model.YearSettlementReport
 import com.nominacopro.domain.model.WorkDayEntry
 import com.nominacopro.domain.payperiod.PayPeriod
 import com.nominacopro.domain.payperiod.PayPeriodCalculator
+import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.export.PdfExporter
 import com.nominacopro.notifications.ReminderScheduler
@@ -94,8 +96,13 @@ class MainViewModel(
     val selectedPeriodIndex: StateFlow<Int> = _selectedPeriodIndex.asStateFlow()
 
     val payPeriods: StateFlow<List<PayPeriod>> = combine(profile, _yearMonth) { p, ym ->
-        if (p == null) emptyList() else PayPeriodCalculator.periodsInMonth(p.payPeriodType, ym)
+        if (p == null || !p.payPeriodType.hasSubPeriods) emptyList()
+        else PayPeriodCalculator.periodsInMonth(p.payPeriodType, ym)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val yearSettlement: StateFlow<YearSettlementReport?> = _yearMonth
+        .flatMapLatest { ym -> repository.observeYearSettlement(ym.year) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val selectedPayPeriod: StateFlow<PayPeriod?> = combine(payPeriods, _selectedPeriodIndex) { periods, index ->
         periods.getOrNull(index.coerceIn(0, (periods.size - 1).coerceAtLeast(0)))
@@ -208,17 +215,25 @@ class MainViewModel(
         addPayrollEntry(PayrollEntryType.ADVANCE, label, amount)
     }
 
+    fun addBonus(label: String, amount: Long) {
+        addPayrollEntry(PayrollEntryType.BONUS, label, amount)
+    }
+
     private fun addPayrollEntry(type: PayrollEntryType, label: String, amount: Long) {
+        val p = profile.value
         val period = selectedPayPeriod.value
-        val effectiveDate = LocalDate.now().coerceIn(
-            period?.start ?: LocalDate.now(),
-            period?.end ?: LocalDate.now(),
-        )
-        val ym = YearMonth.from(effectiveDate)
+        val ym = _yearMonth.value
+        val effectiveDate = when {
+            period != null -> LocalDate.now().coerceIn(period.start, period.end)
+            p?.payPeriodType == PayPeriodType.MONTHLY ->
+                LocalDate.now().coerceIn(ym.atDay(1), ym.atEndOfMonth())
+            else -> LocalDate.now()
+        }
+        val entryYm = YearMonth.from(effectiveDate)
         viewModelScope.launch {
             repository.addManualDeduction(
                 ManualDeduction(
-                    yearMonth = ym,
+                    yearMonth = entryYm,
                     effectiveDate = effectiveDate,
                     label = label,
                     amount = amount,

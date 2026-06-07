@@ -105,6 +105,31 @@ class PayrollEngineTest {
     }
 
     @Test
+    fun applyManualEntries_bonusIncreasesGrossAndNet() {
+        val base = PayrollEngine.liquidateMonth(
+            profile, 2026, 6,
+            listOf(WorkDayEntry(LocalDate.of(2026, 6, 3), LocalTime.of(8, 0), LocalTime.of(16, 0))),
+            emptySet(),
+        )
+        val withBonus = PayrollEngine.applyManualEntries(
+            base,
+            listOf(
+                ManualDeduction(
+                    yearMonth = YearMonth.of(2026, 6),
+                    effectiveDate = LocalDate.of(2026, 6, 10),
+                    label = "Bono productividad",
+                    amount = 200_000,
+                    entryType = com.nominacopro.domain.model.PayrollEntryType.BONUS,
+                ),
+            ),
+        )
+
+        assertEquals(base.grossTotal + 200_000, withBonus.grossTotal)
+        assertTrue(withBonus.netTotal > base.netTotal)
+        assertEquals(1, withBonus.manualBonuses.size)
+    }
+
+    @Test
     fun hourlyRate_usesSmmlvReferenceMonth() {
         val rate = ColombiaLaborLaw2026.hourlyRate(ColombiaLaborLaw2026.SMMLV, 8)
         assertTrue(rate > 0)

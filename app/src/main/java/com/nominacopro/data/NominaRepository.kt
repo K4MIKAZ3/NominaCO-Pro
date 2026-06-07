@@ -10,6 +10,7 @@ import com.nominacopro.data.local.entity.WorkDayEntity
 import com.nominacopro.data.preferences.AppPreferencesStore
 import com.nominacopro.data.sync.CloudSyncRepository
 import com.nominacopro.domain.calculator.PayrollEngine
+import com.nominacopro.domain.calculator.SettlementCalculator
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.ContractType
@@ -19,6 +20,7 @@ import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.model.PeriodPayrollSummary
 import com.nominacopro.domain.model.MonthSummary
+import com.nominacopro.domain.model.YearSettlementReport
 import com.nominacopro.domain.payperiod.PayPeriod
 import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.domain.model.MonthlyPayroll
@@ -174,7 +176,7 @@ class NominaRepository(context: Context) {
         ) { profile, entries, manual, deductions ->
             profile?.let { p ->
                 val base = PayrollEngine.liquidateMonth(p, year, month, entries, manual)
-                PayrollEngine.applyManualDeductions(base, deductions)
+                PayrollEngine.applyManualEntries(base, deductions)
             }
         }
 
@@ -195,13 +197,12 @@ class NominaRepository(context: Context) {
                 val entries = allWork
                     .filter { it.dateIso.startsWith(prefix) }
                     .map { it.toDomain() }
-                val deductions = allDeductions
+                val monthEntries = allDeductions
                     .filter { it.yearMonth == prefix }
                     .map { it.toDomain() }
-                    .filter { it.entryType == PayrollEntryType.DEDUCTION }
-                val payroll = PayrollEngine.applyManualDeductions(
+                val payroll = PayrollEngine.applyManualEntries(
                     PayrollEngine.liquidateMonth(p, ym.year, ym.monthValue, entries, manual),
-                    deductions,
+                    monthEntries.filter { it.entryType != PayrollEntryType.ADVANCE },
                 )
                 MonthSummary(
                     yearMonth = ym,
@@ -209,6 +210,23 @@ class NominaRepository(context: Context) {
                     legalDeductions = payroll.legalDeductions.sumOf { it.amount },
                     manualDeductions = payroll.manualDeductions.sumOf { it.amount },
                     netTotal = payroll.netTotal,
+                )
+            }
+        }
+
+    fun observeYearSettlement(year: Int): Flow<YearSettlementReport?> =
+        combine(
+            observeProfile(),
+            workDayDao.observeAll(),
+            observeManualHolidays(),
+        ) { profile, allWork, manual ->
+            profile?.let { p ->
+                val entries = allWork.map { it.toDomain() }.filter { it.date.year == year }
+                SettlementCalculator.calculate(
+                    profile = p,
+                    year = year,
+                    entries = entries,
+                    manualHolidays = manual,
                 )
             }
         }

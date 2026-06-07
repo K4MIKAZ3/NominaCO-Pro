@@ -168,19 +168,44 @@ object PayrollEngine {
         )
     }
 
-    fun applyManualDeductions(
+    fun applyManualEntries(
         payroll: MonthlyPayroll,
         manual: List<ManualDeduction>,
     ): MonthlyPayroll {
         val deductions = manual.filter { it.entryType == PayrollEntryType.DEDUCTION }
-        if (deductions.isEmpty()) return payroll
-        val lines = deductions.map { PayrollLine(it.label, it.amount, isDeduction = true) }
-        val total = deductions.sumOf { it.amount }
+        val bonuses = manual.filter { it.entryType == PayrollEntryType.BONUS }
+        if (deductions.isEmpty() && bonuses.isEmpty()) return payroll
+
+        val bonusLines = bonuses.map { PayrollLine(it.label, it.amount, code = "BON") }
+        val deductionLines = deductions.map { PayrollLine(it.label, it.amount, isDeduction = true) }
+        val bonusTotal = bonuses.sumOf { it.amount }
+        val deductionTotal = deductions.sumOf { it.amount }
+
+        val gross = payroll.grossTotal + bonusTotal
+        val salud = (gross * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong()
+        val pension = (gross * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
+        val legalDeductions = listOf(
+            PayrollLine("Aporte salud (4%)", salud, isDeduction = true, code = "SAL"),
+            PayrollLine("Aporte pensión (4%)", pension, isDeduction = true, code = "PEN"),
+        )
+
         return payroll.copy(
-            manualDeductions = lines,
-            netTotal = payroll.netTotal - total,
+            earnings = payroll.earnings + bonusLines,
+            manualBonuses = bonusLines,
+            manualDeductions = deductionLines,
+            legalDeductions = legalDeductions,
+            grossTotal = gross,
+            netTotal = gross - salud - pension - deductionTotal,
         )
     }
+
+    fun applyManualDeductions(
+        payroll: MonthlyPayroll,
+        manual: List<ManualDeduction>,
+    ): MonthlyPayroll = applyManualEntries(
+        payroll,
+        manual.filter { it.entryType == PayrollEntryType.DEDUCTION },
+    )
 
     fun buildPeriodSummary(
         payroll: MonthlyPayroll,
@@ -191,7 +216,11 @@ object PayrollEngine {
     ): PeriodPayrollSummary {
         val deductions = manualEntries.filter { it.entryType == PayrollEntryType.DEDUCTION }
         val advances = manualEntries.filter { it.entryType == PayrollEntryType.ADVANCE }
-        val payrollWithDeductions = applyManualDeductions(payroll, deductions)
+        val bonuses = manualEntries.filter { it.entryType == PayrollEntryType.BONUS }
+        val payrollWithEntries = applyManualEntries(
+            payroll,
+            deductions + bonuses,
+        )
         val advancesTotal = advances.sumOf { it.amount }
         return PeriodPayrollSummary(
             periodLabel = periodLabel,
@@ -199,12 +228,13 @@ object PayrollEngine {
             periodEnd = periodEnd,
             workedDays = payroll.workedDays,
             dailyRate = payroll.dailyRate,
-            grossTotal = payroll.grossTotal,
-            legalDeductions = payroll.legalDeductions.sumOf { it.amount },
+            grossTotal = payrollWithEntries.grossTotal,
+            legalDeductions = payrollWithEntries.legalDeductions.sumOf { it.amount },
             manualDeductions = deductions.sumOf { it.amount },
+            bonuses = bonuses.sumOf { it.amount },
             advances = advancesTotal,
-            netTotal = payrollWithDeductions.netTotal,
-            pendingBalance = payrollWithDeductions.netTotal - advancesTotal,
+            netTotal = payrollWithEntries.netTotal,
+            pendingBalance = payrollWithEntries.netTotal - advancesTotal,
         )
     }
 

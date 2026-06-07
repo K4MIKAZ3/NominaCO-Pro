@@ -49,6 +49,7 @@ data class HourBreakdown(
 enum class PayrollEntryType(val label: String) {
     DEDUCTION("Egreso / préstamo"),
     ADVANCE("Avance recibido"),
+    BONUS("Bono"),
     ;
 
     companion object {
@@ -95,6 +96,7 @@ data class MonthlyPayroll(
     val earnings: List<PayrollLine>,
     val legalDeductions: List<PayrollLine>,
     val manualDeductions: List<PayrollLine> = emptyList(),
+    val manualBonuses: List<PayrollLine> = emptyList(),
     val grossTotal: Long,
     val netTotal: Long,
     val dailyRate: Long = 0,
@@ -120,9 +122,41 @@ data class PeriodPayrollSummary(
     val grossTotal: Long,
     val legalDeductions: Long,
     val manualDeductions: Long,
+    val bonuses: Long,
     val advances: Long,
     val netTotal: Long,
     val pendingBalance: Long,
+)
+
+data class SemesterSettlement(
+    val label: String,
+    val start: LocalDate,
+    val end: LocalDate,
+    val workedDays: Int,
+    val remuneratedRestDays: Int,
+    val primaAmount: Long,
+    val paymentDeadline: String,
+) {
+    val totalDays: Int get() = workedDays + remuneratedRestDays
+}
+
+data class LiquidationEstimate(
+    val cesantias: Long,
+    val interesesCesantias: Long,
+    val primaProporcional: Long,
+    val vacaciones: Long,
+    val pendingVacationDays: Int,
+    val periodEnd: LocalDate,
+    val total: Long,
+)
+
+data class YearSettlementReport(
+    val year: Int,
+    val firstSemester: SemesterSettlement,
+    val secondSemester: SemesterSettlement,
+    val annualCesantias: Long,
+    val annualInteresesCesantias: Long,
+    val liquidation: LiquidationEstimate,
 )
 
 data class AppPreferences(

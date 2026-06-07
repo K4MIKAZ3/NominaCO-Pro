@@ -137,7 +137,7 @@ fun NominaAppRoot(app: NominaApp) {
                 NominaTab.Settings -> SettingsScreen(
                     preferences = preferences,
                     manualHolidays = manual,
-                    onSavePreferences = vm::updatePreferences,
+                    onSavePreferences = vm::savePreferences,
                     onRemoveHoliday = vm::removeManualHoliday,
                     onRequestNotificationPermission = ::requestNotificationPermission,
                     modifier = Modifier.padding(padding),

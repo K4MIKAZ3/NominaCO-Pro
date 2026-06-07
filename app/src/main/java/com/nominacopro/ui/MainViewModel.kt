@@ -134,16 +134,19 @@ class MainViewModel(
         viewModelScope.launch { repository.removeManualDeduction(id) }
     }
 
-    fun updatePreferences(transform: (AppPreferences) -> AppPreferences) {
+    fun savePreferences(prefs: AppPreferences) {
         viewModelScope.launch {
-            val updated = transform(preferences.value)
-            repository.setPreferences(updated)
-            if (updated.reminderEnabled) {
-                ReminderScheduler.schedule(getApplication(), updated.reminderHour, updated.reminderMinute)
+            repository.setPreferences(prefs)
+            if (prefs.reminderEnabled) {
+                ReminderScheduler.schedule(getApplication(), prefs.reminderHour, prefs.reminderMinute)
             } else {
                 ReminderScheduler.cancel(getApplication())
             }
         }
+    }
+
+    fun updatePreferences(transform: (AppPreferences) -> AppPreferences) {
+        savePreferences(transform(preferences.value))
     }
 
     fun exportPayrollPdf(onReady: (File) -> Unit) {

@@ -118,7 +118,7 @@ class NominaRepository(context: Context) {
             deductionDao.observeAll(),
         ) { profile, allWork, allHolidays, allDeductions ->
             if (profile == null) return@combine emptyList()
-            val p = profile.toDomain()
+            val p = profile
             val manual = allHolidays.map { LocalDate.parse(it.dateIso, iso) }.toSet()
             val now = YearMonth.now()
             (0 until monthCount).map { offset ->

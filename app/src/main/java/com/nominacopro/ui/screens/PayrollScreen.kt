@@ -430,8 +430,11 @@ private fun SettlementContent(
         color = MaterialTheme.colorScheme.primary,
     )
     OutlinedTextField(
-        value = vacationDaysInput,
-        onValueChange = onVacationDaysChange,
+        value = vacationText,
+        onValueChange = {
+            vacationText = it.filter(Char::isDigit)
+            onVacationDaysChange(vacationText.toIntOrNull()?.coerceAtLeast(0) ?: 0)
+        },
         label = { Text("Días de vacaciones pendientes") },
         supportingText = { Text("15 días hábiles/año (CST art. 186). Ingresa los pendientes.") },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

@@ -4,7 +4,6 @@ import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.HourBreakdown
 import com.nominacopro.domain.model.WorkDayEntry
 import java.time.LocalTime
-import kotlin.math.floorMod
 import kotlin.math.min
 
 /**
@@ -123,7 +122,7 @@ object HourCalculator {
     }
 
     private fun isNightAt(minute: Int): Boolean {
-        val m = floorMod(minute, MINUTES_PER_DAY)
+        val m = minute % MINUTES_PER_DAY
         return m < NIGHT_END_MORNING || m >= NIGHT_START
     }
 

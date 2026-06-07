@@ -74,6 +74,8 @@ interface ManualDeductionDao {
 
     @Query("SELECT * FROM manual_deductions WHERE effectiveDateIso >= :startIso AND effectiveDateIso <= :endIso ORDER BY effectiveDateIso, id")
     fun observeRange(startIso: String, endIso: String): Flow<List<ManualDeductionEntity>>
+
+    @Query("SELECT * FROM manual_deductions ORDER BY yearMonth DESC, id")
     fun observeAll(): Flow<List<ManualDeductionEntity>>
 
     @Query("SELECT * FROM manual_deductions WHERE id = :id LIMIT 1")

@@ -2,6 +2,7 @@ package com.nominacopro.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.nominacopro.domain.model.ContractType
 
 @Entity(tableName = "profile")
 data class ProfileEntity(
@@ -11,6 +12,7 @@ data class ProfileEntity(
     val jobTitle: String,
     val monthlySalary: Long,
     val dailyHours: Int,
+    val contractType: String = ContractType.INDEFINIDO.name,
 )
 
 @Entity(tableName = "work_days")

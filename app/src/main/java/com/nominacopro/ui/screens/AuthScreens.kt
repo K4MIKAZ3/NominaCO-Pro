@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -34,16 +36,74 @@ fun LoginScreen(
     onLogin: (email: String, password: String) -> Unit,
     onGoToRegister: () -> Unit,
     onContinueLocal: () -> Unit,
+    onForgotPassword: (email: String, onResult: (Boolean, String?) -> Unit) -> Unit,
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var showForgotDialog by rememberSaveable { mutableStateOf(false) }
+    var forgotEmail by rememberSaveable { mutableStateOf("") }
+    var forgotMessage by remember { mutableStateOf<String?>(null) }
+    var forgotIsError by remember { mutableStateOf(false) }
+    var forgotBusy by remember { mutableStateOf(false) }
+
+    if (showForgotDialog) {
+        AlertDialog(
+            onDismissRequest = { if (!forgotBusy) showForgotDialog = false },
+            title = { Text("Recuperar contraseña") },
+            text = {
+                Column {
+                    Text(
+                        "Te enviaremos un enlace a tu correo (vía Supabase).",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = forgotEmail,
+                        onValueChange = { forgotEmail = it },
+                        label = { Text("Correo") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    forgotMessage?.let {
+                        Text(
+                            it,
+                            color = if (forgotIsError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        forgotBusy = true
+                        forgotMessage = null
+                        onForgotPassword(forgotEmail) { ok, msg ->
+                            forgotBusy = false
+                            forgotMessage = msg
+                            forgotIsError = !ok
+                        }
+                    },
+                    enabled = forgotEmail.isNotBlank() && !forgotBusy,
+                ) { Text("Enviar enlace") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showForgotDialog = false }, enabled = !forgotBusy) {
+                    Text("Cancelar")
+                }
+            },
+        )
+    }
 
     Column(
         Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("NominaCO Pro", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
+        Text("NominaApp", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
         Text(
             "Inicia sesión para respaldar tu cuenta",
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
@@ -68,6 +128,15 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
+
+        TextButton(
+            onClick = {
+                forgotEmail = email
+                forgotMessage = null
+                showForgotDialog = true
+            },
+            modifier = Modifier.align(Alignment.End),
+        ) { Text("Olvidé mi contraseña") }
 
         errorMessage?.let {
             Text(
@@ -150,8 +219,8 @@ fun RegisterScreen(
             value = confirm,
             onValueChange = { confirm = it },
             label = { Text("Confirmar contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )

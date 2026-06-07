@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     job_title TEXT NOT NULL DEFAULT '',
     monthly_salary BIGINT NOT NULL DEFAULT 0,
     daily_hours INT NOT NULL DEFAULT 8,
+    contract_type TEXT NOT NULL DEFAULT 'INDEFINIDO',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

@@ -23,4 +23,7 @@ object Formatters {
         val pattern = if (use24Hour) "HH:mm" else "h:mm a"
         return time.format(DateTimeFormatter.ofPattern(pattern, locale))
     }
+
+    fun hours(value: Double): String =
+        if (value % 1.0 == 0.0) value.toInt().toString() else String.format(locale, "%.1f", value)
 }

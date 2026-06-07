@@ -11,6 +11,7 @@ data class RemoteProfile(
     @SerialName("job_title") val jobTitle: String = "",
     @SerialName("monthly_salary") val monthlySalary: Long = 0,
     @SerialName("daily_hours") val dailyHours: Int = 8,
+    @SerialName("contract_type") val contractType: String = "INDEFINIDO",
 )
 
 @Serializable

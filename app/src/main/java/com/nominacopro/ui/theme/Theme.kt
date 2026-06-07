@@ -1,7 +1,9 @@
 package com.nominacopro.ui.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
@@ -21,10 +23,23 @@ private val DarkColors = darkColorScheme(
     onSurface = Color(0xFFE8EAF0),
 )
 
+private val LightColors = lightColorScheme(
+    primary = Color(0xFF15803D),
+    secondary = Color(0xFF0891B2),
+    tertiary = Color(0xFFD97706),
+    background = Color(0xFFF4F6FA),
+    surface = Color(0xFFFFFFFF),
+    onBackground = Color(0xFF1A1D24),
+    onSurface = Color(0xFF1A1D24),
+)
+
 @Composable
-fun NominaTheme(content: @Composable () -> Unit) {
+fun NominaTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit,
+) {
     MaterialTheme(
-        colorScheme = DarkColors,
+        colorScheme = if (darkTheme) DarkColors else LightColors,
         content = content,
     )
 }

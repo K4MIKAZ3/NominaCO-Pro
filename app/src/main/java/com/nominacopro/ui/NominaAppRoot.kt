@@ -31,9 +31,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nominacopro.NominaApp
 import com.nominacopro.data.auth.AuthUiState
+import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.notifications.ReminderScheduler
 import com.nominacopro.ui.auth.AuthViewModel
+import com.nominacopro.ui.auth.BiometricGate
+import com.nominacopro.ui.auth.promptLocalBiometric
 import com.nominacopro.ui.navigation.NominaTab
 import com.nominacopro.ui.screens.CalendarScreen
 import com.nominacopro.ui.screens.DayEditorDialog
@@ -52,6 +55,8 @@ import java.time.LocalTime
 
 @Composable
 fun NominaAppRoot(app: NominaApp) {
+    val preferences by app.repository.observePreferences()
+        .collectAsState(initial = AppPreferences())
     val authVm: AuthViewModel = viewModel(factory = AuthViewModel.Factory(app.authRepository))
     val authState by authVm.authState.collectAsState()
     var showRegister by rememberSaveable { mutableStateOf(false) }
@@ -60,7 +65,7 @@ fun NominaAppRoot(app: NominaApp) {
     var authMessage by remember { mutableStateOf<String?>(null) }
     var authIsError by remember { mutableStateOf(true) }
 
-    NominaTheme {
+    NominaTheme(darkTheme = preferences.darkModeEnabled) {
         when {
             authState is AuthUiState.NotConfigured || localBypass -> {
                 MainNominaScaffold(
@@ -144,6 +149,9 @@ fun NominaAppRoot(app: NominaApp) {
                             authMessage = null
                         },
                         onContinueLocal = { localBypass = true },
+                        onForgotPassword = { email, onResult ->
+                            authVm.resetPassword(email, onResult)
+                        },
                     )
                 }
             }
@@ -198,6 +206,7 @@ private fun MainNominaScaffold(
         context.startActivity(Intent.createChooser(vm.sharePdf(file), "Compartir PDF"))
     }
 
+    BiometricGate(enabled = preferences.biometricEnabled) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
@@ -271,10 +280,14 @@ private fun MainNominaScaffold(
                 onSavePreferences = vm::savePreferences,
                 onRemoveHoliday = vm::removeManualHoliday,
                 onRequestNotificationPermission = ::requestNotificationPermission,
+                onRequestBiometricEnable = { onSuccess ->
+                    promptLocalBiometric(context, onSuccess)
+                },
                 onSignOut = onSignOut,
                 modifier = Modifier.padding(padding),
             )
         }
+    }
     }
 
     selectedDay?.let { date ->

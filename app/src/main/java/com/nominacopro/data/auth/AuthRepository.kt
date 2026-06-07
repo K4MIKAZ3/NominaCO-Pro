@@ -72,6 +72,13 @@ class AuthRepository {
         }
     }
 
+    suspend fun resetPassword(email: String): String? = try {
+        requireClient().auth.resetPasswordForEmail(email.trim())
+        null
+    } catch (e: Exception) {
+        parseError(e)
+    }
+
     private fun requireClient() =
         supabase ?: error("Supabase no configurado. Añade SUPABASE_URL y SUPABASE_ANON_KEY.")
 

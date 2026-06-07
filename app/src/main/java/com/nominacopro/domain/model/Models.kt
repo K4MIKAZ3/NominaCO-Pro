@@ -10,6 +10,18 @@ enum class DayType {
     FESTIVO_NOCTURNO,
 }
 
+enum class ContractType(val label: String) {
+    INDEFINIDO("Indefinido"),
+    OBRA_LABOR("Obra o labor"),
+    TERMINO_DEFINIDO("Término definido"),
+    ;
+
+    companion object {
+        fun fromStored(value: String?): ContractType =
+            entries.find { it.name == value } ?: INDEFINIDO
+    }
+}
+
 data class WorkDayEntry(
     val date: LocalDate,
     val start: LocalTime,
@@ -39,12 +51,15 @@ data class EmployeeProfile(
     val jobTitle: String,
     val monthlySalary: Long,
     val dailyHours: Int = 8,
+    val contractType: ContractType = ContractType.INDEFINIDO,
 )
 
 data class PayrollLine(
     val label: String,
     val amount: Long,
     val isDeduction: Boolean = false,
+    val code: String? = null,
+    val hours: Double? = null,
 )
 
 data class ManualDeduction(
@@ -87,4 +102,6 @@ data class AppPreferences(
     val reminderEnabled: Boolean = false,
     val reminderHour: Int = 18,
     val reminderMinute: Int = 0,
+    val darkModeEnabled: Boolean = true,
+    val biometricEnabled: Boolean = false,
 )

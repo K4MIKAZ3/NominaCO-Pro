@@ -12,6 +12,7 @@ import com.nominacopro.data.sync.CloudSyncRepository
 import com.nominacopro.domain.calculator.PayrollEngine
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
+import com.nominacopro.domain.model.ContractType
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.ManualDeduction
@@ -69,6 +70,7 @@ class NominaRepository(context: Context) {
                 jobTitle = profile.jobTitle,
                 monthlySalary = profile.monthlySalary,
                 dailyHours = profile.dailyHours,
+                contractType = profile.contractType.name,
             ),
         )
         runCatching { cloudSync.pushProfile(profile) }
@@ -200,6 +202,7 @@ private fun ProfileEntity.toDomain() = EmployeeProfile(
     jobTitle = jobTitle,
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
+    contractType = ContractType.fromStored(contractType),
 )
 
 private fun WorkDayEntity.toDomain() = WorkDayEntry(

@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthlyPayroll
+import com.nominacopro.domain.model.PayrollLine
 import com.nominacopro.domain.model.WorkDayEntry
 import com.nominacopro.ui.Formatters
 
@@ -89,12 +90,12 @@ fun PayrollScreen(
                 Column(Modifier.padding(16.dp)) {
                     Text("Devengado", fontWeight = FontWeight.SemiBold)
                     payroll.earnings.forEach { line ->
-                        RowAmount(line.label, line.amount, false)
+                        PayrollRow(line, false)
                     }
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                     Text("Descuentos legales", fontWeight = FontWeight.SemiBold)
                     payroll.legalDeductions.forEach { line ->
-                        RowAmount(line.label, line.amount, true)
+                        PayrollRow(line, true)
                     }
 
                     Row(
@@ -178,6 +179,36 @@ fun PayrollScreen(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             )
         }
+    }
+}
+
+@Composable
+private fun PayrollRow(line: PayrollLine, deduction: Boolean, bold: Boolean = false) {
+    val label = buildString {
+        append(line.code ?: line.label.take(3).uppercase())
+        line.hours?.let { h ->
+            if (h > 0) append(" · ${Formatters.hours(h)} h")
+        }
+    }
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(label, fontWeight = if (bold) FontWeight.Bold else FontWeight.SemiBold)
+            if (line.code != null && line.label != line.code) {
+                Text(
+                    line.label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                )
+            }
+        }
+        Text(
+            (if (deduction) "- " else "") + Formatters.money(line.amount),
+            color = if (deduction) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+        )
     }
 }
 

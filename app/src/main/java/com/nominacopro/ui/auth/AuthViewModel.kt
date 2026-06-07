@@ -44,6 +44,17 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         viewModelScope.launch { repository.signOut() }
     }
 
+    fun resetPassword(email: String, onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val error = repository.resetPassword(email)
+            if (error == null) {
+                onResult(true, "Revisa tu correo para restablecer la contraseña.")
+            } else {
+                onResult(false, error)
+            }
+        }
+    }
+
     class Factory(private val repository: AuthRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =

@@ -214,7 +214,12 @@ class CloudSyncRepository(
             }
         }
         remotePrefs?.let { prefs ->
-            preferencesStore.update { _ -> prefs.toDomain() }
+            preferencesStore.update { current ->
+                prefs.toDomain().copy(
+                    darkModeEnabled = current.darkModeEnabled,
+                    biometricEnabled = current.biometricEnabled,
+                )
+            }
         }
     }
 
@@ -282,6 +287,7 @@ private fun EmployeeProfile.toRemote(userId: String) = RemoteProfile(
     jobTitle = jobTitle,
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
+    contractType = contractType.name,
 )
 
 private fun ProfileEntity.toRemote(userId: String) = RemoteProfile(
@@ -291,6 +297,7 @@ private fun ProfileEntity.toRemote(userId: String) = RemoteProfile(
     jobTitle = jobTitle,
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
+    contractType = contractType,
 )
 
 private fun RemoteProfile.toEntity() = ProfileEntity(
@@ -299,6 +306,7 @@ private fun RemoteProfile.toEntity() = ProfileEntity(
     jobTitle = jobTitle,
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
+    contractType = contractType,
 )
 
 private fun WorkDayEntry.toRemote(userId: String) = RemoteWorkDay(

@@ -1,4 +1,4 @@
-# NominaCO Pro
+# NominaApp
 
 App Android nativa para liquidación de nómina personal en Colombia, con motor legal actualizado a **2026**.
 

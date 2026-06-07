@@ -56,23 +56,37 @@ object PayrollEngine {
         val extraDomNocturna = pay(hourly, breakdown.extraDominicalNocturna, ColombiaLaborLaw2026.extraDominicalNocturnaFactor(LocalDate.of(year, month, 15)))
 
         val earnings = buildList {
-            add(PayrollLine("Salario base proporcional", baseProportional))
-            if (transport > 0) add(PayrollLine("Subsidio de transporte", transport))
-            if (recargoNocturno > 0) add(PayrollLine("Recargo nocturno (+35%)", recargoNocturno))
-            if (extraDiurna > 0) add(PayrollLine("Horas extra diurnas (+25%)", extraDiurna))
-            if (extraNocturna > 0) add(PayrollLine("Horas extra nocturnas (+75%)", extraNocturna))
-            if (recargoDomDiurno > 0) add(PayrollLine("Recargo dominical/festivo diurno", recargoDomDiurno))
-            if (recargoDomNocturno > 0) add(PayrollLine("Recargo dominical/festivo nocturno", recargoDomNocturno))
-            if (extraDomDiurna > 0) add(PayrollLine("Extra dominical/festivo diurna", extraDomDiurna))
-            if (extraDomNocturna > 0) add(PayrollLine("Extra dominical/festivo nocturna", extraDomNocturna))
+            add(PayrollLine("Salario base proporcional", baseProportional, code = "SBP"))
+            if (transport > 0) add(PayrollLine("Subsidio de transporte", transport, code = "ST"))
+            if (recargoNocturno > 0) {
+                add(PayrollLine("Recargo nocturno (+35%)", recargoNocturno, code = "RN", hours = breakdown.nocturnaOrdinaria))
+            }
+            if (extraDiurna > 0) {
+                add(PayrollLine("Horas extra diurnas (+25%)", extraDiurna, code = "HED", hours = breakdown.extraDiurna))
+            }
+            if (extraNocturna > 0) {
+                add(PayrollLine("Horas extra nocturnas (+75%)", extraNocturna, code = "HEN", hours = breakdown.extraNocturna))
+            }
+            if (recargoDomDiurno > 0) {
+                add(PayrollLine("Recargo dominical/festivo diurno", recargoDomDiurno, code = "RDD", hours = breakdown.dominicalDiurna))
+            }
+            if (recargoDomNocturno > 0) {
+                add(PayrollLine("Recargo dominical/festivo nocturno", recargoDomNocturno, code = "RDN", hours = breakdown.dominicalNocturna))
+            }
+            if (extraDomDiurna > 0) {
+                add(PayrollLine("Extra dominical/festivo diurna", extraDomDiurna, code = "EDD", hours = breakdown.extraDominicalDiurna))
+            }
+            if (extraDomNocturna > 0) {
+                add(PayrollLine("Extra dominical/festivo nocturna", extraDomNocturna, code = "EDN", hours = breakdown.extraDominicalNocturna))
+            }
         }
 
         val gross = earnings.sumOf { it.amount }
         val salud = (gross * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong()
         val pension = (gross * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
         val legalDeductions = listOf(
-            PayrollLine("Aporte salud (4%)", salud, isDeduction = true),
-            PayrollLine("Aporte pensión (4%)", pension, isDeduction = true),
+            PayrollLine("Aporte salud (4%)", salud, isDeduction = true, code = "SAL"),
+            PayrollLine("Aporte pensión (4%)", pension, isDeduction = true, code = "PEN"),
         )
 
         return MonthlyPayroll(

@@ -10,4 +10,5 @@
     <string name="credits_developer">Desarrollado por Berrocal</string>
     <string name="credits_github">GitHub: K4MIKAZ3/NominaCO-Pro</string>
     <string name="credits_legal">Motor legal Colombia 2026 · Uso personal</string>
+    <string name="auth_sign_out">Cerrar sesión</string>
 </resources>

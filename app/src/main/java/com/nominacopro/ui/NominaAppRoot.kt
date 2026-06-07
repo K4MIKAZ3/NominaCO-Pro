@@ -5,7 +5,10 @@ import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -19,18 +22,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nominacopro.NominaApp
+import com.nominacopro.data.auth.AuthUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
+import com.nominacopro.ui.auth.AuthViewModel
 import com.nominacopro.ui.navigation.NominaTab
 import com.nominacopro.ui.screens.CalendarScreen
 import com.nominacopro.ui.screens.DayEditorDialog
+import com.nominacopro.ui.screens.LoginScreen
 import com.nominacopro.ui.screens.ManualDeductionDialog
 import com.nominacopro.ui.screens.PayrollScreen
 import com.nominacopro.ui.screens.ProfileScreen
+import com.nominacopro.ui.screens.RegisterScreen
 import com.nominacopro.ui.screens.SettingsScreen
 import com.nominacopro.ui.theme.NominaTheme
 import kotlinx.coroutines.launch
@@ -40,6 +49,97 @@ import java.time.LocalTime
 
 @Composable
 fun NominaAppRoot(app: NominaApp) {
+    val authVm: AuthViewModel = viewModel(factory = AuthViewModel.Factory(app.authRepository))
+    val authState by authVm.authState.collectAsState()
+    var showRegister by rememberSaveable { mutableStateOf(false) }
+    var localBypass by rememberSaveable { mutableStateOf(false) }
+    var authBusy by remember { mutableStateOf(false) }
+    var authMessage by remember { mutableStateOf<String?>(null) }
+    var authIsError by remember { mutableStateOf(true) }
+
+    NominaTheme {
+        when {
+            authState is AuthUiState.NotConfigured || localBypass -> {
+                MainNominaScaffold(
+                    app = app,
+                    accountEmail = null,
+                    onSignOut = null,
+                )
+            }
+            authState is AuthUiState.Loading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            authState is AuthUiState.Authenticated -> {
+                val user = authState as AuthUiState.Authenticated
+                MainNominaScaffold(
+                    app = app,
+                    accountEmail = user.email,
+                    onSignOut = authVm::signOut,
+                )
+            }
+            else -> {
+                if (showRegister) {
+                    RegisterScreen(
+                        isLoading = authBusy,
+                        message = authMessage,
+                        isError = authIsError,
+                        onRegister = { email, password, confirm ->
+                            if (password != confirm) {
+                                authMessage = "Las contraseñas no coinciden"
+                                authIsError = true
+                                return@RegisterScreen
+                            }
+                            authBusy = true
+                            authMessage = null
+                            authVm.signUp(email, password) { ok, msg ->
+                                authBusy = false
+                                authMessage = msg
+                                authIsError = !ok
+                                if (ok) showRegister = false
+                            }
+                        },
+                        onBackToLogin = {
+                            showRegister = false
+                            authMessage = null
+                        },
+                    )
+                } else {
+                    val errorFromState = (authState as? AuthUiState.Error)?.message
+                    LoginScreen(
+                        isLoading = authBusy || authState is AuthUiState.Loading,
+                        errorMessage = authMessage ?: errorFromState,
+                        showLocalFallback = false,
+                        onLogin = { email, password ->
+                            authBusy = true
+                            authMessage = null
+                            authVm.signIn(email, password) { ok, msg ->
+                                authBusy = false
+                                if (!ok) {
+                                    authMessage = msg
+                                    authIsError = true
+                                }
+                            }
+                        },
+                        onGoToRegister = {
+                            showRegister = true
+                            authMessage = null
+                        },
+                        onContinueLocal = { localBypass = true },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MainNominaScaffold(
+    app: NominaApp,
+    accountEmail: String?,
+    onSignOut: (() -> Unit)?,
+) {
     val vm: MainViewModel = viewModel(factory = MainViewModel.Factory(app.repository, app))
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -79,101 +179,101 @@ fun NominaAppRoot(app: NominaApp) {
         context.startActivity(Intent.createChooser(vm.sharePdf(file), "Compartir PDF"))
     }
 
-    NominaTheme {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbar) },
-            bottomBar = {
-                NavigationBar {
-                    NominaTab.entries.forEach { item ->
-                        NavigationBarItem(
-                            selected = tab == item,
-                            onClick = { tab = item },
-                            icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) },
-                        )
-                    }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        bottomBar = {
+            NavigationBar {
+                NominaTab.entries.forEach { item ->
+                    NavigationBarItem(
+                        selected = tab == item,
+                        onClick = { tab = item },
+                        icon = { Icon(item.icon, contentDescription = item.label) },
+                        label = { Text(item.label) },
+                    )
                 }
-            },
-        ) { padding ->
-            when (tab) {
-                NominaTab.Calendar -> CalendarScreen(
-                    dashboard = dashboard,
-                    yearMonth = yearMonth,
-                    marks = marks,
-                    payroll = payroll,
-                    onPrev = vm::prevMonth,
-                    onNext = vm::nextMonth,
-                    onToday = vm::goToday,
-                    onDayClick = { selectedDay = it },
-                    modifier = Modifier.padding(padding),
-                )
-                NominaTab.Payroll -> PayrollScreen(
-                    payroll = payroll,
-                    workDays = workDaysList,
-                    manualDeductions = manualDeductions,
-                    use24Hour = preferences.use24HourFormat,
-                    profileMissing = profile == null,
-                    onAddDeduction = { showDeductionDialog = true },
-                    onRemoveDeduction = vm::removeManualDeduction,
-                    onExportPayrollPdf = {
-                        vm.exportPayrollPdf { file ->
-                            sharePdf(file)
-                            scope.launch { snackbar.showSnackbar("PDF de nómina generado") }
-                        }
-                    },
-                    onExportWorkDaysPdf = {
-                        vm.exportWorkDaysPdf { file ->
-                            sharePdf(file)
-                            scope.launch { snackbar.showSnackbar("PDF de días laborados generado") }
-                        }
-                    },
-                    modifier = Modifier.padding(padding),
-                )
-                NominaTab.Profile -> ProfileScreen(
-                    profile = profile,
-                    onSave = vm::saveProfile,
-                    modifier = Modifier.padding(padding),
-                )
-                NominaTab.Settings -> SettingsScreen(
-                    preferences = preferences,
-                    manualHolidays = manual,
-                    onSavePreferences = vm::savePreferences,
-                    onRemoveHoliday = vm::removeManualHoliday,
-                    onRequestNotificationPermission = ::requestNotificationPermission,
-                    modifier = Modifier.padding(padding),
-                )
             }
-        }
-
-        selectedDay?.let { date ->
-            DayEditorDialog(
-                date = date,
-                existingEntry = workDays[date],
-                defaultStart = LocalTime.of(preferences.defaultStartHour, preferences.defaultStartMinute),
-                defaultEnd = LocalTime.of(preferences.defaultEndHour, preferences.defaultEndMinute),
+        },
+    ) { padding ->
+        when (tab) {
+            NominaTab.Calendar -> CalendarScreen(
+                dashboard = dashboard,
+                yearMonth = yearMonth,
+                marks = marks,
+                payroll = payroll,
+                onPrev = vm::prevMonth,
+                onNext = vm::nextMonth,
+                onToday = vm::goToday,
+                onDayClick = { selectedDay = it },
+                modifier = Modifier.padding(padding),
+            )
+            NominaTab.Payroll -> PayrollScreen(
+                payroll = payroll,
+                workDays = workDaysList,
+                manualDeductions = manualDeductions,
                 use24Hour = preferences.use24HourFormat,
-                isManualHoliday = manual.contains(date),
-                isOfficialHoliday = ColombiaLaborLaw2026.isOfficialHoliday(date),
-                onDismiss = { selectedDay = null },
-                onSave = { start, end, type, notes, manualFlag ->
-                    vm.saveWorkDay(date, start, end, type, notes, manualFlag)
-                    selectedDay = null
+                profileMissing = profile == null,
+                onAddDeduction = { showDeductionDialog = true },
+                onRemoveDeduction = vm::removeManualDeduction,
+                onExportPayrollPdf = {
+                    vm.exportPayrollPdf { file ->
+                        sharePdf(file)
+                        scope.launch { snackbar.showSnackbar("PDF de nómina generado") }
+                    }
                 },
-                onDelete = {
-                    vm.deleteWorkDay(date)
-                    selectedDay = null
+                onExportWorkDaysPdf = {
+                    vm.exportWorkDaysPdf { file ->
+                        sharePdf(file)
+                        scope.launch { snackbar.showSnackbar("PDF de días laborados generado") }
+                    }
                 },
+                modifier = Modifier.padding(padding),
+            )
+            NominaTab.Profile -> ProfileScreen(
+                profile = profile,
+                onSave = vm::saveProfile,
+                modifier = Modifier.padding(padding),
+            )
+            NominaTab.Settings -> SettingsScreen(
+                preferences = preferences,
+                manualHolidays = manual,
+                accountEmail = accountEmail,
+                onSavePreferences = vm::savePreferences,
+                onRemoveHoliday = vm::removeManualHoliday,
+                onRequestNotificationPermission = ::requestNotificationPermission,
+                onSignOut = onSignOut,
+                modifier = Modifier.padding(padding),
             )
         }
+    }
 
-        if (showDeductionDialog) {
-            ManualDeductionDialog(
-                onDismiss = { showDeductionDialog = false },
-                onSave = { label, amount ->
-                    vm.addManualDeduction(label, amount)
-                    showDeductionDialog = false
-                },
-            )
-        }
+    selectedDay?.let { date ->
+        DayEditorDialog(
+            date = date,
+            existingEntry = workDays[date],
+            defaultStart = LocalTime.of(preferences.defaultStartHour, preferences.defaultStartMinute),
+            defaultEnd = LocalTime.of(preferences.defaultEndHour, preferences.defaultEndMinute),
+            use24Hour = preferences.use24HourFormat,
+            isManualHoliday = manual.contains(date),
+            isOfficialHoliday = ColombiaLaborLaw2026.isOfficialHoliday(date),
+            onDismiss = { selectedDay = null },
+            onSave = { start, end, type, notes, manualFlag ->
+                vm.saveWorkDay(date, start, end, type, notes, manualFlag)
+                selectedDay = null
+            },
+            onDelete = {
+                vm.deleteWorkDay(date)
+                selectedDay = null
+            },
+        )
+    }
+
+    if (showDeductionDialog) {
+        ManualDeductionDialog(
+            onDismiss = { showDeductionDialog = false },
+            onSave = { label, amount ->
+                vm.addManualDeduction(label, amount)
+                showDeductionDialog = false
+            },
+        )
     }
 }

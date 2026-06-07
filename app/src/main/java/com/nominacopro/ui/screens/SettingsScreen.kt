@@ -15,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -39,9 +40,11 @@ import java.time.LocalDate
 fun SettingsScreen(
     preferences: AppPreferences,
     manualHolidays: Set<LocalDate>,
+    accountEmail: String? = null,
     onSavePreferences: (AppPreferences) -> Unit,
     onRemoveHoliday: (LocalDate) -> Unit,
     onRequestNotificationPermission: () -> Unit,
+    onSignOut: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var startH by rememberSaveable(preferences) { mutableStateOf(preferences.defaultStartHour.toString().padStart(2, '0')) }
@@ -72,6 +75,22 @@ fun SettingsScreen(
                 "Horario global, formato de hora y recordatorio diario.",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             )
+        }
+
+        if (accountEmail != null) {
+            item {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Cuenta Supabase", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                        Text(accountEmail, color = MaterialTheme.colorScheme.primary)
+                        onSignOut?.let { signOut ->
+                            OutlinedButton(onClick = signOut) {
+                                Text(stringResource(R.string.auth_sign_out))
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         item {
@@ -246,7 +265,7 @@ fun SettingsScreen(
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        stringResource(R.string.credits_app) + " v1.1.1",
+                        stringResource(R.string.credits_app) + " v1.2.0",
                         fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
                     )

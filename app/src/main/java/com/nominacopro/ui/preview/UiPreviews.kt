@@ -104,20 +104,13 @@ private fun PreviewPayroll() {
 private fun PreviewSettings() {
     NominaTheme {
         SettingsScreen(
-            preferences = AppPreferences(
-                defaultStartHour = 8,
-                defaultStartMinute = 0,
-                defaultEndHour = 16,
-                defaultEndMinute = 30,
-                use24HourFormat = true,
-                reminderEnabled = true,
-                reminderHour = 18,
-                reminderMinute = 0,
-            ),
-            manualHolidays = setOf(LocalDate.of(2026, 5, 18)),
+            preferences = AppPreferences(),
+            manualHolidays = emptySet(),
+            accountEmail = "usuario@ejemplo.com",
             onSavePreferences = {},
             onRemoveHoliday = {},
             onRequestNotificationPermission = {},
+            onSignOut = {},
         )
     }
 }

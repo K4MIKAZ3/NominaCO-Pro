@@ -10,6 +10,9 @@ room = "2.6.1"
 ksp = "1.9.22-1.0.17"
 material3 = "1.2.0"
 datastore = "1.0.0"
+supabase = "2.6.1"
+ktor = "2.3.12"
+kotlinx-serialization = "1.6.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -26,8 +29,13 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-datastore = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+supabase-bom = { group = "io.github.jan-tennert.supabase", name = "bom", version.ref = "supabase" }
+supabase-auth = { group = "io.github.jan-tennert.supabase", name = "auth-kt" }
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

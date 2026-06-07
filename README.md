@@ -22,6 +22,7 @@ App Android nativa para liquidación de nómina personal en Colombia, con motor 
 
 ## Funciones
 
+- **Login con Supabase** (correo/contraseña, sesión persistente)
 - Calendario mensual con marcas de días trabajados, domingos y festivos
 - Registro de jornada por día (entrada/salida, notas, festivo manual)
 - Liquidación mensual con desglose de devengados y descuentos
@@ -37,6 +38,20 @@ Requisitos: JDK 17, Android SDK 34.
 ```
 
 Para firmar releases locales, copia `keystore.properties.example` a `keystore.properties` y configura tu keystore.
+
+### Supabase (login)
+
+1. Crea un proyecto en [Supabase](https://supabase.com/dashboard)
+2. En **Authentication → Providers**, activa **Email**
+3. Copia **Project URL** y **anon public key**
+4. Crea `local.properties` (ver `local.properties.example`):
+
+```properties
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+```
+
+Para CI, añade secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub. Sin ellos, la app funciona en modo solo local (sin pantalla de login).
 
 ## CI
 

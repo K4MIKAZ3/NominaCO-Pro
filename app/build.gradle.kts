@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
 }
 
@@ -13,6 +14,14 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
+
+fun prop(name: String) = localProperties.getProperty(name, "")
+
 android {
     namespace = "com.nominacopro"
     compileSdk = 34
@@ -21,8 +30,11 @@ android {
         applicationId = "com.nominacopro"
         minSdk = 26
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.1.1"
+        versionCode = 4
+        versionName = "1.2.0"
+
+        buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${prop("SUPABASE_ANON_KEY")}\"")
     }
 
     signingConfigs {
@@ -56,6 +68,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -88,6 +101,11 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons)
+
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.auth)
+    implementation(libs.ktor.client.android)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)

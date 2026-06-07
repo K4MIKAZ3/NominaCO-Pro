@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     daily_hours INT NOT NULL DEFAULT 8,
     contract_type TEXT NOT NULL DEFAULT 'INDEFINIDO',
     pay_period_type TEXT NOT NULL DEFAULT 'BIWEEKLY',
+    pending_vacation_days INT NOT NULL DEFAULT 0,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

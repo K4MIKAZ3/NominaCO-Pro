@@ -289,6 +289,7 @@ private fun EmployeeProfile.toRemote(userId: String) = RemoteProfile(
     dailyHours = dailyHours,
     contractType = contractType.name,
     payPeriodType = payPeriodType.name,
+    pendingVacationDays = pendingVacationDays,
 )
 
 private fun ProfileEntity.toRemote(userId: String) = RemoteProfile(
@@ -300,6 +301,7 @@ private fun ProfileEntity.toRemote(userId: String) = RemoteProfile(
     dailyHours = dailyHours,
     contractType = contractType,
     payPeriodType = payPeriodType,
+    pendingVacationDays = pendingVacationDays,
 )
 
 private fun RemoteProfile.toEntity() = ProfileEntity(
@@ -310,6 +312,7 @@ private fun RemoteProfile.toEntity() = ProfileEntity(
     dailyHours = dailyHours,
     contractType = contractType,
     payPeriodType = payPeriodType,
+    pendingVacationDays = pendingVacationDays,
 )
 
 private fun WorkDayEntry.toRemote(userId: String) = RemoteWorkDay(

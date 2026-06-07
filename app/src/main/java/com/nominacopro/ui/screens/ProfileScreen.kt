@@ -58,6 +58,7 @@ fun ProfileScreen(
     var hours by rememberSaveable { mutableStateOf(profile?.dailyHours?.toString() ?: "8") }
     var contractType by rememberSaveable { mutableStateOf(profile?.contractType ?: ContractType.INDEFINIDO) }
     var payPeriodType by rememberSaveable { mutableStateOf(profile?.payPeriodType ?: PayPeriodType.BIWEEKLY) }
+    var vacationDays by rememberSaveable { mutableStateOf(profile?.pendingVacationDays?.toString() ?: "") }
     var contractExpanded by remember { mutableStateOf(false) }
     var payPeriodExpanded by remember { mutableStateOf(false) }
 
@@ -70,6 +71,7 @@ fun ProfileScreen(
             hours = profile.dailyHours.toString()
             contractType = profile.contractType
             payPeriodType = profile.payPeriodType
+            vacationDays = if (profile.pendingVacationDays > 0) profile.pendingVacationDays.toString() else ""
         }
     }
 
@@ -81,6 +83,7 @@ fun ProfileScreen(
         hours = p.dailyHours.toString()
         contractType = p.contractType
         payPeriodType = p.payPeriodType
+        vacationDays = if (p.pendingVacationDays > 0) p.pendingVacationDays.toString() else ""
     }
 
     Scaffold(
@@ -111,6 +114,7 @@ fun ProfileScreen(
                         Text("Jornada: ${profile.dailyHours} h/día")
                         Text("Contrato: ${profile.contractType.label}")
                         Text("Período de cobro: ${profile.payPeriodType.label}")
+                        Text("Vacaciones pendientes: ${profile.pendingVacationDays} día(s)")
                         OutlinedButton(
                             onClick = {
                                 loadFromProfile(profile)
@@ -210,6 +214,14 @@ fun ProfileScreen(
                         }
                     }
                 }
+                OutlinedTextField(
+                    value = vacationDays,
+                    onValueChange = { vacationDays = it.filter(Char::isDigit) },
+                    label = { Text("Días de vacaciones pendientes") },
+                    supportingText = { Text("Para liquidación (CST art. 186). 15 días hábiles/año.") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                )
                 Button(
                     onClick = {
                         val s = salary.toLongOrNull() ?: 0L
@@ -224,6 +236,7 @@ fun ProfileScreen(
                                     dailyHours = h,
                                     contractType = contractType,
                                     payPeriodType = payPeriodType,
+                                    pendingVacationDays = vacationDays.toIntOrNull()?.coerceAtLeast(0) ?: 0,
                                 ),
                             )
                             isEditing = false

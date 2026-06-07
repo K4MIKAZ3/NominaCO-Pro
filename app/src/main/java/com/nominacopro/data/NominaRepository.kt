@@ -78,6 +78,7 @@ class NominaRepository(context: Context) {
                 dailyHours = profile.dailyHours,
                 contractType = profile.contractType.name,
                 payPeriodType = profile.payPeriodType.name,
+                pendingVacationDays = profile.pendingVacationDays,
             ),
         )
         runCatching { cloudSync.pushProfile(profile) }
@@ -227,6 +228,7 @@ class NominaRepository(context: Context) {
                     year = year,
                     entries = entries,
                     manualHolidays = manual,
+                    pendingVacationDays = p.pendingVacationDays,
                 )
             }
         }
@@ -264,6 +266,7 @@ private fun ProfileEntity.toDomain() = EmployeeProfile(
     dailyHours = dailyHours,
     contractType = ContractType.fromStored(contractType),
     payPeriodType = PayPeriodType.fromStored(payPeriodType),
+    pendingVacationDays = pendingVacationDays,
 )
 
 private fun WorkDayEntity.toDomain() = WorkDayEntry(

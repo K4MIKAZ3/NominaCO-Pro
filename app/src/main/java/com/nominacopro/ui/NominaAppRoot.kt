@@ -256,6 +256,8 @@ private fun MainNominaScaffold(
                 periodWorkDays = periodWorkDays,
                 manualDeductions = manualDeductions,
                 yearSettlement = yearSettlement,
+                pendingVacationDays = profile?.pendingVacationDays ?: 0,
+                onPendingVacationDaysChange = vm::updatePendingVacationDays,
                 use24Hour = preferences.use24HourFormat,
                 profileMissing = profile == null,
                 onAddDeduction = { showDeductionDialog = true },

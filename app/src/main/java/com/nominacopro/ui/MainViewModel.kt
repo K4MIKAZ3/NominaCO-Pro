@@ -185,6 +185,12 @@ class MainViewModel(
         viewModelScope.launch { repository.saveProfile(profile) }
     }
 
+    fun updatePendingVacationDays(days: Int) {
+        val p = profile.value ?: return
+        if (p.pendingVacationDays == days) return
+        viewModelScope.launch { repository.saveProfile(p.copy(pendingVacationDays = days.coerceAtLeast(0))) }
+    }
+
     fun saveWorkDay(
         date: LocalDate,
         start: LocalTime,

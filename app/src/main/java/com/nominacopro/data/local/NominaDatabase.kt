@@ -18,7 +18,7 @@ import com.nominacopro.data.local.entity.WorkDayEntity
         ManualHolidayEntity::class,
         ManualDeductionEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class NominaDatabase : RoomDatabase() {

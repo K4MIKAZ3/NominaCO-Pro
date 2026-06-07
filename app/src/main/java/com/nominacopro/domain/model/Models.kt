@@ -66,6 +66,7 @@ data class EmployeeProfile(
     val dailyHours: Int = 8,
     val contractType: ContractType = ContractType.INDEFINIDO,
     val payPeriodType: PayPeriodType = PayPeriodType.BIWEEKLY,
+    val pendingVacationDays: Int = 0,
 )
 
 data class PayrollLine(

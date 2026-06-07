@@ -13,6 +13,7 @@ data class RemoteProfile(
     @SerialName("daily_hours") val dailyHours: Int = 8,
     @SerialName("contract_type") val contractType: String = "INDEFINIDO",
     @SerialName("pay_period_type") val payPeriodType: String = "BIWEEKLY",
+    @SerialName("pending_vacation_days") val pendingVacationDays: Int = 0,
 )
 
 @Serializable

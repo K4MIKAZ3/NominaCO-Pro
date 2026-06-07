@@ -30,8 +30,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -65,6 +68,8 @@ fun PayrollScreen(
     periodWorkDays: List<WorkDayEntry>,
     manualDeductions: List<ManualDeduction>,
     yearSettlement: YearSettlementReport?,
+    pendingVacationDays: Int,
+    onPendingVacationDaysChange: (Int) -> Unit,
     use24Hour: Boolean,
     profileMissing: Boolean,
     onAddDeduction: () -> Unit,
@@ -97,22 +102,8 @@ fun PayrollScreen(
     var monthExpanded by rememberSaveable { mutableStateOf(!showSubPeriods) }
     var daysExpanded by rememberSaveable { mutableStateOf(false) }
     var settlementExpanded by rememberSaveable { mutableStateOf(false) }
-    var vacationDaysInput by rememberSaveable { mutableStateOf("") }
 
-    val settlementWithVacation = yearSettlement?.let { report ->
-        val days = vacationDaysInput.filter(Char::isDigit).toIntOrNull() ?: 0
-        val vac = payroll.dailyRate * days
-        report.copy(
-            liquidation = report.liquidation.copy(
-                pendingVacationDays = days,
-                vacaciones = vac,
-                total = report.liquidation.cesantias +
-                    report.liquidation.interesesCesantias +
-                    report.liquidation.primaProporcional +
-                    vac,
-            ),
-        )
-    }
+    val vacationDaysInput = if (pendingVacationDays > 0) pendingVacationDays.toString() else ""
 
     LazyColumn(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -233,7 +224,7 @@ fun PayrollScreen(
             }
         }
 
-        settlementWithVacation?.let { report ->
+        yearSettlement?.let { report ->
             item {
                 CollapsibleSection(
                     title = "Prima, cesantías y liquidación ${report.year}",
@@ -244,7 +235,7 @@ fun PayrollScreen(
                     SettlementContent(
                         report = report,
                         vacationDaysInput = vacationDaysInput,
-                        onVacationDaysChange = { vacationDaysInput = it.filter(Char::isDigit) },
+                        onVacationDaysChange = onPendingVacationDaysChange,
                     )
                 }
             }
@@ -404,8 +395,11 @@ private fun MonthDetailContent(
 private fun SettlementContent(
     report: YearSettlementReport,
     vacationDaysInput: String,
-    onVacationDaysChange: (String) -> Unit,
+    onVacationDaysChange: (Int) -> Unit,
 ) {
+    var vacationText by remember { mutableStateOf(vacationDaysInput) }
+    LaunchedEffect(vacationDaysInput) { vacationText = vacationDaysInput }
+
     Text(
         "Estimación con jornadas registradas en la app. Pago prima: 1.er semestre antes del ${report.firstSemester.paymentDeadline}; 2.º semestre antes del ${report.secondSemester.paymentDeadline}.",
         style = MaterialTheme.typography.bodySmall,

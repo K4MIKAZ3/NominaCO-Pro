@@ -124,6 +124,8 @@ private fun PreviewPayroll() {
                 ),
             ),
             yearSettlement = null,
+            pendingVacationDays = 3,
+            onPendingVacationDaysChange = {},
             use24Hour = true,
             profileMissing = false,
             onAddDeduction = {},

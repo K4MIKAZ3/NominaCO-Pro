@@ -14,6 +14,7 @@ data class ProfileEntity(
     val dailyHours: Int,
     val contractType: String = ContractType.INDEFINIDO.name,
     val payPeriodType: String = "BIWEEKLY",
+    val pendingVacationDays: Int = 0,
 )
 
 @Entity(tableName = "work_days")

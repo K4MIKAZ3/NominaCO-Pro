@@ -17,7 +17,7 @@ class PayrollEngineTest {
         name = "Test",
         documentId = "1",
         jobTitle = "Dev",
-        monthlySalary = 2_000_000,
+        monthlySalary = 3_000_000,
         dailyHours = 8,
     )
 
@@ -32,6 +32,44 @@ class PayrollEngineTest {
         assertEquals(1, payroll.workedDays)
         assertTrue(payroll.legalDeductions.size == 2)
         assertTrue(payroll.netTotal < payroll.grossTotal)
+    }
+
+    @Test
+    fun proportionalBase_usesWorkedDaysOnly() {
+        val entries = (1..15).map { day ->
+            WorkDayEntry(
+                LocalDate.of(2026, 6, day),
+                LocalTime.of(8, 0),
+                LocalTime.of(16, 0),
+            )
+        }
+        val payroll = PayrollEngine.liquidateMonth(profile, 2026, 6, entries, emptySet())
+
+        assertEquals(15, payroll.workedDays)
+        assertEquals(100_000L, payroll.dailyRate)
+        assertEquals(1_500_000L, payroll.earnings.first { it.code == "SBP" }.amount)
+    }
+
+    @Test
+    fun transportSubsidy_isProportionalToWorkedDays() {
+        val entries = listOf(
+            WorkDayEntry(LocalDate.of(2026, 6, 2), LocalTime.of(8, 0), LocalTime.of(16, 0)),
+            WorkDayEntry(LocalDate.of(2026, 6, 3), LocalTime.of(8, 0), LocalTime.of(16, 0)),
+        )
+        val payroll = PayrollEngine.liquidateMonth(profile, 2026, 6, entries, emptySet())
+
+        val expected = ColombiaLaborLaw2026.transportSubsidyForDays(2)
+        assertEquals(expected, payroll.earnings.first { it.code == "ST" }.amount)
+    }
+
+    @Test
+    fun hourlyRate_isDailyRateDividedByJornada() {
+        val entries = listOf(
+            WorkDayEntry(LocalDate.of(2026, 6, 2), LocalTime.of(8, 0), LocalTime.of(16, 0)),
+        )
+        val payroll = PayrollEngine.liquidateMonth(profile, 2026, 6, entries, emptySet())
+
+        assertEquals(ColombiaLaborLaw2026.hourlyRate(profile.monthlySalary, profile.dailyHours), payroll.hourlyRate, 0.01)
     }
 
     @Test

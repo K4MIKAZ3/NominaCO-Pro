@@ -20,6 +20,7 @@ object PayrollEngine {
         manualHolidays: Set<LocalDate>,
     ): MonthlyPayroll {
         val ym = YearMonth.of(year, month)
+        val dailyRate = ColombiaLaborLaw2026.dailyRate(profile.monthlySalary)
         val hourly = ColombiaLaborLaw2026.hourlyRate(profile.monthlySalary, profile.dailyHours)
         val daysInMonth = ym.lengthOfMonth()
 
@@ -42,10 +43,12 @@ object PayrollEngine {
 
         val domFactor = ColombiaLaborLaw2026.dominicalFactor(LocalDate.of(year, month, 15))
 
-        val baseProportional = proportionalBase(profile.monthlySalary, workedDays, restDays, daysInMonth)
+        val baseProportional = ColombiaLaborLaw2026.proportionalBaseSalary(profile.monthlySalary, workedDays)
         val transport = if (ColombiaLaborLaw2026.qualifiesTransport(profile.monthlySalary)) {
-            (ColombiaLaborLaw2026.SUBSIDIO_TRANSPORTE * workedDays / workingDaysInMonth(year, month, manualHolidays)).toLong()
-        } else 0L
+            ColombiaLaborLaw2026.transportSubsidyForDays(workedDays)
+        } else {
+            0L
+        }
 
         val recargoNocturno = pay(hourly, breakdown.nocturnaOrdinaria, ColombiaLaborLaw2026.Factors.NOCTURNA - 1.0)
         val extraDiurna = pay(hourly, breakdown.extraDiurna, ColombiaLaborLaw2026.Factors.EXTRA_DIURNA)
@@ -94,6 +97,8 @@ object PayrollEngine {
             month = month,
             workedDays = workedDays,
             restDays = restDays,
+            dailyRate = dailyRate.toLong(),
+            hourlyRate = hourly,
             breakdown = breakdown,
             earnings = earnings,
             legalDeductions = legalDeductions,
@@ -114,22 +119,6 @@ object PayrollEngine {
             manualDeductions = lines,
             netTotal = payroll.netTotal - total,
         )
-    }
-
-    private fun proportionalBase(salary: Long, worked: Int, rest: Int, daysInMonth: Int): Long {
-        val paidDays = worked + rest
-        return (salary * paidDays / ColombiaLaborLaw2026.DIAS_MES_REFERENCIA.toDouble()).toLong()
-            .coerceAtMost(salary)
-    }
-
-    private fun workingDaysInMonth(year: Int, month: Int, manual: Set<LocalDate>): Int {
-        val ym = YearMonth.of(year, month)
-        var count = 0
-        for (d in 1..ym.lengthOfMonth()) {
-            val date = LocalDate.of(year, month, d)
-            if (!ColombiaLaborLaw2026.isRestDay(date, manual)) count++
-        }
-        return count.coerceAtLeast(1)
     }
 
     private fun pay(hourly: Double, hours: Double, factor: Double): Long =

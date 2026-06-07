@@ -67,8 +67,12 @@ class AuthRepository {
     }
 
     suspend fun signOut() {
-        if (SupabaseProvider.isConfigured && supabase != null) {
-            supabase.auth.signOut()
+        try {
+            if (SupabaseProvider.isConfigured && supabase != null) {
+                supabase.auth.signOut()
+            }
+        } finally {
+            _state.value = AuthUiState.Unauthenticated
         }
     }
 

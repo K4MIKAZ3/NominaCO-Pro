@@ -68,8 +68,13 @@ fun PayrollScreen(
                 fontWeight = FontWeight.Bold,
             )
             Text(
-                "${payroll.workedDays} días trabajados · ${payroll.restDays} descansos remunerados",
+                "${payroll.workedDays} días laborados · Valor día ${Formatters.money(payroll.dailyRate)} · Valor hora ${Formatters.money(payroll.hourlyRate.toLong())}",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            )
+            Text(
+                "Salario base = valor día × días laborados · Transporte = auxilio ÷ 30 × días laborados",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
             )
         }
 

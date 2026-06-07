@@ -11,5 +11,9 @@
     <string name="credits_github">GitHub: K4MIKAZ3/NominaCO-Pro</string>
     <string name="credits_legal">Motor legal Colombia 2026 · Uso personal</string>
     <string name="auth_sign_out">Cerrar sesión</string>
+    <string name="auth_sign_out_confirm_title">¿Cerrar sesión?</string>
+    <string name="auth_sign_out_confirm_message">Saldrás de tu cuenta en este dispositivo. Tus datos locales se conservan.</string>
+    <string name="auth_sign_out_confirm_yes">Sí, cerrar sesión</string>
+    <string name="auth_sign_out_confirm_no">Cancelar</string>
     <string name="sync_now">Sincronizar ahora</string>
 </resources>

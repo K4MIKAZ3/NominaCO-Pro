@@ -75,6 +75,8 @@ data class MonthlyPayroll(
     val month: Int,
     val workedDays: Int,
     val restDays: Int,
+    val dailyRate: Long = 0,
+    val hourlyRate: Double = 0.0,
     val breakdown: HourBreakdown,
     val earnings: List<PayrollLine>,
     val legalDeductions: List<PayrollLine>,

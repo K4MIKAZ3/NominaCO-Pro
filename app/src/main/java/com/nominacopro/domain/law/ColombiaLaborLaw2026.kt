@@ -73,8 +73,25 @@ object ColombiaLaborLaw2026 {
     fun isRestDay(date: LocalDate, manualHolidays: Set<LocalDate>): Boolean =
         isSunday(date) || isOfficialHoliday(date) || manualHolidays.contains(date)
 
+    /** Valor día = salario mensual ÷ 30 (días mes referencia). */
+    fun dailyRate(monthlySalary: Long): Double =
+        monthlySalary.toDouble() / DIAS_MES_REFERENCIA
+
+    /** Valor hora = valor día ÷ horas de jornada diaria. */
     fun hourlyRate(monthlySalary: Long, dailyHours: Int): Double =
-        monthlySalary.toDouble() / (DIAS_MES_REFERENCIA * dailyHours)
+        dailyRate(monthlySalary) / dailyHours
+
+    /** Salario base = valor día × días efectivamente laborados. */
+    fun proportionalBaseSalary(monthlySalary: Long, workedDays: Int): Long {
+        if (workedDays <= 0) return 0L
+        return (dailyRate(monthlySalary) * workedDays).toLong().coerceAtMost(monthlySalary)
+    }
+
+    /** Auxilio transporte proporcional: auxilio mensual ÷ 30 × días laborados. */
+    fun transportSubsidyForDays(workedDays: Int): Long {
+        if (workedDays <= 0) return 0L
+        return (SUBSIDIO_TRANSPORTE.toDouble() * workedDays / DIAS_MES_REFERENCIA).toLong()
+    }
 
     fun qualifiesTransport(salary: Long): Boolean = salary <= TOPE_SUBSIDIO_TRANSPORTE
 }

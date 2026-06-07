@@ -10,7 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -72,6 +74,7 @@ fun SettingsScreen(
     var reminderM by rememberSaveable(preferences) { mutableStateOf(preferences.reminderMinute.toString().padStart(2, '0')) }
     var editingSchedule by rememberSaveable { mutableStateOf(false) }
     var editingReminder by rememberSaveable { mutableStateOf(false) }
+    var showSignOutDialog by rememberSaveable { mutableStateOf(false) }
 
     fun buildPrefs(
         use24: Boolean = preferences.use24HourFormat,
@@ -118,12 +121,14 @@ fun SettingsScreen(
                 )
             }
 
-            if (accountEmail != null) {
+            if (accountEmail != null || onSyncNow != null) {
                 item {
                     Card(Modifier.fillMaxWidth()) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Cuenta Supabase", fontWeight = FontWeight.SemiBold)
-                            Text(accountEmail, color = MaterialTheme.colorScheme.primary)
+                            accountEmail?.let { email ->
+                                Text(email, color = MaterialTheme.colorScheme.primary)
+                            }
                             when (syncState) {
                                 SyncUiState.Syncing -> Row(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -141,8 +146,31 @@ fun SettingsScreen(
                                     Text(stringResource(R.string.sync_now))
                                 }
                             }
-                            onSignOut?.let { signOut ->
-                                OutlinedButton(onClick = signOut) { Text(stringResource(R.string.auth_sign_out)) }
+                        }
+                    }
+                }
+            }
+
+            onSignOut?.let {
+                item {
+                    Card(Modifier.fillMaxWidth()) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Sesión", fontWeight = FontWeight.SemiBold)
+                            Text(
+                                "Cierra la cuenta sincronizada en este dispositivo.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            )
+                            OutlinedButton(
+                                onClick = { showSignOutDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp),
+                                )
+                                Text(stringResource(R.string.auth_sign_out))
                             }
                         }
                     }
@@ -304,7 +332,7 @@ fun SettingsScreen(
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(R.string.credits_app) + " v1.4.0", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        Text(stringResource(R.string.credits_app) + " v1.4.1", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.credits_developer))
                         Text(stringResource(R.string.credits_github), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary)
                         Text(stringResource(R.string.credits_legal), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
@@ -313,6 +341,29 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (showSignOutDialog) {
+        AlertDialog(
+            onDismissRequest = { showSignOutDialog = false },
+            title = { Text(stringResource(R.string.auth_sign_out_confirm_title)) },
+            text = { Text(stringResource(R.string.auth_sign_out_confirm_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSignOutDialog = false
+                        onSignOut?.invoke()
+                    },
+                ) {
+                    Text(stringResource(R.string.auth_sign_out_confirm_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutDialog = false }) {
+                    Text(stringResource(R.string.auth_sign_out_confirm_no))
+                }
+            },
+        )
     }
 }
 

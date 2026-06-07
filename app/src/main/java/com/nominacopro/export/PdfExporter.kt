@@ -74,7 +74,11 @@ object PdfExporter {
         draw("Período: ${Formatters.monthName(payroll.month)} ${payroll.year}")
         draw("Generado: ${LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}")
         y += 8f
-        draw("Días trabajados: ${payroll.workedDays} · Descansos: ${payroll.restDays}", titlePaint)
+        draw("Días trabajados: ${payroll.workedDays}", titlePaint)
+        draw(
+            "Valor día: ${Formatters.money(payroll.dailyRate)} · Valor hora: ${Formatters.money(payroll.hourlyRate.toLong())}",
+            smallPaint,
+        )
         y += 4f
 
         draw("DEVENGADO", titlePaint)

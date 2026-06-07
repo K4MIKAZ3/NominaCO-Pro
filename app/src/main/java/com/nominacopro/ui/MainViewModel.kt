@@ -96,9 +96,13 @@ class MainViewModel(
     val selectedPeriodIndex: StateFlow<Int> = _selectedPeriodIndex.asStateFlow()
 
     val payPeriods: StateFlow<List<PayPeriod>> = combine(profile, _yearMonth) { p, ym ->
-        if (p == null || !p.payPeriodType.hasSubPeriods) emptyList()
+        if (p == null || p.payPeriodType == PayPeriodType.MONTHLY) emptyList()
         else PayPeriodCalculator.periodsInMonth(p.payPeriodType, ym)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val showPayrollSubPeriods: StateFlow<Boolean> = combine(profile, payPeriods) { p, periods ->
+        p != null && PayPeriodCalculator.shouldShowSubPeriods(p.payPeriodType, periods)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     val yearSettlement: StateFlow<YearSettlementReport?> = _yearMonth
         .flatMapLatest { ym -> repository.observeYearSettlement(ym.year) }
@@ -108,35 +112,35 @@ class MainViewModel(
         periods.getOrNull(index.coerceIn(0, (periods.size - 1).coerceAtLeast(0)))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val periodSummary: StateFlow<PeriodPayrollSummary?> = selectedPayPeriod
-        .flatMapLatest { period ->
-            if (period == null) {
-                kotlinx.coroutines.flow.flowOf(null)
-            } else {
-                repository.observePeriodSummary(period)
-            }
+    val periodSummary: StateFlow<PeriodPayrollSummary?> = combine(showPayrollSubPeriods, selectedPayPeriod) { show, period ->
+        show to period
+    }.flatMapLatest { (show, period) ->
+        if (!show || period == null) {
+            kotlinx.coroutines.flow.flowOf(null)
+        } else {
+            repository.observePeriodSummary(period)
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    val periodManualEntries: StateFlow<List<ManualDeduction>> = selectedPayPeriod
-        .flatMapLatest { period ->
-            if (period == null) {
-                kotlinx.coroutines.flow.flowOf(emptyList())
-            } else {
-                repository.observeManualEntriesInRange(period.start, period.end)
-            }
+    val periodManualEntries: StateFlow<List<ManualDeduction>> = combine(showPayrollSubPeriods, selectedPayPeriod) { show, period ->
+        show to period
+    }.flatMapLatest { (show, period) ->
+        if (!show || period == null) {
+            kotlinx.coroutines.flow.flowOf(emptyList())
+        } else {
+            repository.observeManualEntriesInRange(period.start, period.end)
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val periodWorkDays: StateFlow<List<WorkDayEntry>> = selectedPayPeriod
-        .flatMapLatest { period ->
-            if (period == null) {
-                kotlinx.coroutines.flow.flowOf(emptyList())
-            } else {
-                repository.observeWorkDaysInRange(period.start, period.end)
-            }
+    val periodWorkDays: StateFlow<List<WorkDayEntry>> = combine(showPayrollSubPeriods, selectedPayPeriod) { show, period ->
+        show to period
+    }.flatMapLatest { (show, period) ->
+        if (!show || period == null) {
+            kotlinx.coroutines.flow.flowOf(emptyList())
+        } else {
+            repository.observeWorkDaysInRange(period.start, period.end)
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val dashboard: StateFlow<List<MonthSummary>> = repository.observeDashboard(3).stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),

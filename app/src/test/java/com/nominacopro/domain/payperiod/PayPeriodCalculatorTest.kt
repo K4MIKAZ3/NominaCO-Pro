@@ -18,6 +18,22 @@ class PayPeriodCalculatorTest {
     fun monthly_hasNoSubPeriods() {
         assertTrue(!PayPeriodType.MONTHLY.hasSubPeriods)
         assertTrue(PayPeriodType.BIWEEKLY.hasSubPeriods)
+        assertTrue(!PayPeriodCalculator.shouldShowSubPeriods(PayPeriodType.MONTHLY, emptyList()))
+    }
+
+    @Test
+    fun weeklyPeriods_hasSemLabels() {
+        val periods = PayPeriodCalculator.periodsInMonth(PayPeriodType.WEEKLY, YearMonth.of(2026, 6))
+        assertTrue(periods.size >= 4)
+        assertTrue(periods.all { it.label.startsWith("Sem ") })
+        assertTrue(PayPeriodCalculator.shouldShowSubPeriods(PayPeriodType.WEEKLY, periods))
+    }
+
+    @Test
+    fun fromStored_recognizesMonthlyNameAndLabel() {
+        assertEquals(PayPeriodType.MONTHLY, PayPeriodType.fromStored("MONTHLY"))
+        assertEquals(PayPeriodType.MONTHLY, PayPeriodType.fromStored("monthly"))
+        assertEquals(PayPeriodType.MONTHLY, PayPeriodType.fromStored("Mensual"))
     }
 
     @Test

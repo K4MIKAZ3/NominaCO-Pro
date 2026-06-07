@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -183,6 +184,7 @@ private fun MainNominaScaffold(
     val manualDeductions by vm.manualDeductions.collectAsState()
     val periodSummary by vm.periodSummary.collectAsState()
     val payPeriods by vm.payPeriods.collectAsState()
+    val showPayrollSubPeriods by vm.showPayrollSubPeriods.collectAsState()
     val selectedPeriodIndex by vm.selectedPeriodIndex.collectAsState()
     val periodManualEntries by vm.periodManualEntries.collectAsState()
     val periodWorkDays by vm.periodWorkDays.collectAsState()
@@ -244,40 +246,45 @@ private fun MainNominaScaffold(
                 onDayClick = { selectedDay = it },
                 modifier = Modifier.padding(padding),
             )
-            NominaTab.Payroll -> PayrollScreen(
-                payroll = payroll,
-                periodSummary = periodSummary,
-                payPeriodType = profile?.payPeriodType ?: PayPeriodType.MONTHLY,
-                payPeriods = payPeriods,
-                selectedPeriodIndex = selectedPeriodIndex,
-                onSelectPeriod = vm::selectPayPeriod,
-                periodManualEntries = periodManualEntries,
-                workDays = workDaysList,
-                periodWorkDays = periodWorkDays,
-                manualDeductions = manualDeductions,
-                yearSettlement = yearSettlement,
-                pendingVacationDays = profile?.pendingVacationDays ?: 0,
-                onPendingVacationDaysChange = vm::updatePendingVacationDays,
-                use24Hour = preferences.use24HourFormat,
-                profileMissing = profile == null,
-                onAddDeduction = { showDeductionDialog = true },
-                onAddAdvance = { showAdvanceDialog = true },
-                onAddBonus = { showBonusDialog = true },
-                onRemoveManualEntry = vm::removeManualDeduction,
-                onExportPayrollPdf = {
-                    vm.exportPayrollPdf { file ->
-                        sharePdf(file)
-                        scope.launch { snackbar.showSnackbar("PDF de nómina generado") }
-                    }
-                },
-                onExportWorkDaysPdf = {
-                    vm.exportWorkDaysPdf { file ->
-                        sharePdf(file)
-                        scope.launch { snackbar.showSnackbar("PDF de días laborados generado") }
-                    }
-                },
-                modifier = Modifier.padding(padding),
-            )
+            NominaTab.Payroll -> {
+                val payPeriodType = profile?.payPeriodType ?: PayPeriodType.MONTHLY
+                key(payPeriodType) {
+                    PayrollScreen(
+                        payroll = payroll,
+                        periodSummary = if (showPayrollSubPeriods) periodSummary else null,
+                        payPeriodType = payPeriodType,
+                        payPeriods = if (showPayrollSubPeriods) payPeriods else emptyList(),
+                        selectedPeriodIndex = selectedPeriodIndex,
+                        onSelectPeriod = vm::selectPayPeriod,
+                        periodManualEntries = if (showPayrollSubPeriods) periodManualEntries else emptyList(),
+                        workDays = workDaysList,
+                        periodWorkDays = if (showPayrollSubPeriods) periodWorkDays else emptyList(),
+                        manualDeductions = manualDeductions,
+                        yearSettlement = yearSettlement,
+                        pendingVacationDays = profile?.pendingVacationDays ?: 0,
+                        onPendingVacationDaysChange = vm::updatePendingVacationDays,
+                        use24Hour = preferences.use24HourFormat,
+                        profileMissing = profile == null,
+                        onAddDeduction = { showDeductionDialog = true },
+                        onAddAdvance = { showAdvanceDialog = true },
+                        onAddBonus = { showBonusDialog = true },
+                        onRemoveManualEntry = vm::removeManualDeduction,
+                        onExportPayrollPdf = {
+                            vm.exportPayrollPdf { file ->
+                                sharePdf(file)
+                                scope.launch { snackbar.showSnackbar("PDF de nómina generado") }
+                            }
+                        },
+                        onExportWorkDaysPdf = {
+                            vm.exportWorkDaysPdf { file ->
+                                sharePdf(file)
+                                scope.launch { snackbar.showSnackbar("PDF de días laborados generado") }
+                            }
+                        },
+                        modifier = Modifier.padding(padding),
+                    )
+                }
+            }
             NominaTab.Profile -> ProfileScreen(
                 profile = profile,
                 onSave = vm::saveProfile,

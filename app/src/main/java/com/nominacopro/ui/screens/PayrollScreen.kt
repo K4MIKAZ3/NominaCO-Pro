@@ -36,7 +36,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -52,6 +51,7 @@ import com.nominacopro.domain.model.SemesterSettlement
 import com.nominacopro.domain.model.WorkDayEntry
 import com.nominacopro.domain.model.YearSettlementReport
 import com.nominacopro.domain.payperiod.PayPeriod
+import com.nominacopro.domain.payperiod.PayPeriodCalculator
 import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.ui.Formatters
 
@@ -89,7 +89,7 @@ fun PayrollScreen(
         return
     }
 
-    val showSubPeriods = payPeriodType.hasSubPeriods
+    val showSubPeriods = PayPeriodCalculator.shouldShowSubPeriods(payPeriodType, payPeriods)
     val advances = periodManualEntries.filter { it.entryType == PayrollEntryType.ADVANCE }
     val monthAdvances = if (showSubPeriods) advances else manualDeductions.filter { it.entryType == PayrollEntryType.ADVANCE }
     val monthBonuses = if (showSubPeriods) {
@@ -98,10 +98,17 @@ fun PayrollScreen(
         manualDeductions.filter { it.entryType == PayrollEntryType.BONUS }
     }
 
-    var periodExpanded by rememberSaveable { mutableStateOf(false) }
-    var monthExpanded by rememberSaveable { mutableStateOf(!showSubPeriods) }
-    var daysExpanded by rememberSaveable { mutableStateOf(false) }
-    var settlementExpanded by rememberSaveable { mutableStateOf(false) }
+    var periodExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(false) }
+    var monthExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(!showSubPeriods) }
+    var daysExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(false) }
+    var settlementExpanded by rememberSaveable(payPeriodType.name) { mutableStateOf(false) }
+
+    LaunchedEffect(showSubPeriods) {
+        if (!showSubPeriods) {
+            periodExpanded = false
+            monthExpanded = true
+        }
+    }
 
     val vacationDaysInput = if (pendingVacationDays > 0) pendingVacationDays.toString() else ""
 
@@ -191,7 +198,7 @@ fun PayrollScreen(
         }
 
         item {
-            val daysToShow = if (showSubPeriods && periodWorkDays.isNotEmpty()) periodWorkDays else workDays
+            val daysToShow = if (showSubPeriods) periodWorkDays else workDays
             CollapsibleSection(
                 title = if (showSubPeriods) "Días del subperíodo" else "Días del mes",
                 subtitle = "${daysToShow.size} jornada(s) registrada(s)",

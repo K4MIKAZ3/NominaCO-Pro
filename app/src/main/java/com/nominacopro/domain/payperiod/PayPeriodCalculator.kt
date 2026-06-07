@@ -16,8 +16,12 @@ enum class PayPeriodType(val label: String) {
     val hasSubPeriods: Boolean get() = this != MONTHLY
 
     companion object {
-        fun fromStored(value: String?): PayPeriodType =
-            entries.find { it.name == value } ?: BIWEEKLY
+        fun fromStored(value: String?): PayPeriodType {
+            if (value.isNullOrBlank()) return BIWEEKLY
+            entries.find { it.name.equals(value, ignoreCase = true) }?.let { return it }
+            entries.find { it.label.equals(value, ignoreCase = true) }?.let { return it }
+            return BIWEEKLY
+        }
     }
 }
 
@@ -33,6 +37,9 @@ data class PayPeriod(
 
 object PayPeriodCalculator {
     private val locale = Locale("es", "CO")
+
+    fun shouldShowSubPeriods(type: PayPeriodType, periods: List<PayPeriod>): Boolean =
+        type.hasSubPeriods && periods.isNotEmpty()
 
     fun periodsInMonth(type: PayPeriodType, yearMonth: YearMonth): List<PayPeriod> =
         when (type) {

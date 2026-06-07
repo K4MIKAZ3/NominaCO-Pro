@@ -81,7 +81,7 @@ class PayrollEngineTest {
         )
         val withLoan = PayrollEngine.applyManualDeductions(
             base,
-            listOf(ManualDeduction(yearMonth = YearMonth.of(2026, 6), label = "Préstamo", amount = 100_000)),
+            listOf(ManualDeduction(yearMonth = YearMonth.of(2026, 6), effectiveDate = LocalDate.of(2026, 6, 3), label = "Préstamo", amount = 100_000)),
         )
 
         assertEquals(100_000, base.netTotal - withLoan.netTotal)

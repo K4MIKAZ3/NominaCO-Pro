@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     monthly_salary BIGINT NOT NULL DEFAULT 0,
     daily_hours INT NOT NULL DEFAULT 8,
     contract_type TEXT NOT NULL DEFAULT 'INDEFINIDO',
+    pay_period_type TEXT NOT NULL DEFAULT 'BIWEEKLY',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -39,8 +40,10 @@ CREATE TABLE IF NOT EXISTS public.manual_deductions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     year_month TEXT NOT NULL,
+    effective_date_iso TEXT,
     label TEXT NOT NULL,
     amount BIGINT NOT NULL,
+    entry_type TEXT NOT NULL DEFAULT 'DEDUCTION',
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

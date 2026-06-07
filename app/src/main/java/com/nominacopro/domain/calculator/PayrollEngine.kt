@@ -4,7 +4,9 @@ import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.HourBreakdown
 import com.nominacopro.domain.model.ManualDeduction
+import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.model.MonthlyPayroll
+import com.nominacopro.domain.model.PeriodPayrollSummary
 import com.nominacopro.domain.model.PayrollLine
 import com.nominacopro.domain.model.WorkDayEntry
 import java.time.LocalDate
@@ -20,28 +22,51 @@ object PayrollEngine {
         manualHolidays: Set<LocalDate>,
     ): MonthlyPayroll {
         val ym = YearMonth.of(year, month)
+        return liquidateDateRange(
+            profile = profile,
+            start = ym.atDay(1),
+            end = ym.atEndOfMonth(),
+            entries = entries,
+            manualHolidays = manualHolidays,
+            referenceYear = year,
+            referenceMonth = month,
+        )
+    }
+
+    fun liquidateDateRange(
+        profile: EmployeeProfile,
+        start: LocalDate,
+        end: LocalDate,
+        entries: List<WorkDayEntry>,
+        manualHolidays: Set<LocalDate>,
+        referenceYear: Int = start.year,
+        referenceMonth: Int = start.monthValue,
+    ): MonthlyPayroll {
         val dailyRate = ColombiaLaborLaw2026.dailyRate(profile.monthlySalary)
         val hourly = ColombiaLaborLaw2026.hourlyRate(profile.monthlySalary, profile.dailyHours)
-        val daysInMonth = ym.lengthOfMonth()
 
         var breakdown = HourBreakdown()
         var workedDays = 0
         var restDays = 0
 
-        for (d in 1..daysInMonth) {
-            val date = LocalDate.of(year, month, d)
+        var date = start
+        while (!date.isAfter(end)) {
             if (ColombiaLaborLaw2026.isRestDay(date, manualHolidays)) restDays++
-            val entry = entries.find { it.date == date } ?: continue
-            workedDays++
-            val dayBreakdown = HourCalculator.calculate(
-                entry = entry,
-                dailyHours = profile.dailyHours,
-                isRestDay = ColombiaLaborLaw2026.isRestDay(date, manualHolidays),
-            )
-            breakdown = breakdown + dayBreakdown
+            val entry = entries.find { it.date == date }
+            if (entry != null) {
+                workedDays++
+                val dayBreakdown = HourCalculator.calculate(
+                    entry = entry,
+                    dailyHours = profile.dailyHours,
+                    isRestDay = ColombiaLaborLaw2026.isRestDay(date, manualHolidays),
+                )
+                breakdown = breakdown + dayBreakdown
+            }
+            date = date.plusDays(1)
         }
 
-        val domFactor = ColombiaLaborLaw2026.dominicalFactor(LocalDate.of(year, month, 15))
+        val midDate = start.plusDays((java.time.temporal.ChronoUnit.DAYS.between(start, end) / 2).coerceAtLeast(0))
+        val domFactor = ColombiaLaborLaw2026.dominicalFactor(midDate)
 
         val baseProportional = ColombiaLaborLaw2026.proportionalBaseSalary(profile.monthlySalary, workedDays)
         val transport = if (ColombiaLaborLaw2026.qualifiesTransport(profile.monthlySalary)) {
@@ -55,8 +80,8 @@ object PayrollEngine {
         val extraNocturna = pay(hourly, breakdown.extraNocturna, ColombiaLaborLaw2026.Factors.EXTRA_NOCTURNA)
         val recargoDomDiurno = pay(hourly, breakdown.dominicalDiurna, domFactor - 1.0)
         val recargoDomNocturno = pay(hourly, breakdown.dominicalNocturna, (domFactor - 1.0) + (ColombiaLaborLaw2026.Factors.NOCTURNA - 1.0))
-        val extraDomDiurna = pay(hourly, breakdown.extraDominicalDiurna, ColombiaLaborLaw2026.extraDominicalDiurnaFactor(LocalDate.of(year, month, 15)))
-        val extraDomNocturna = pay(hourly, breakdown.extraDominicalNocturna, ColombiaLaborLaw2026.extraDominicalNocturnaFactor(LocalDate.of(year, month, 15)))
+        val extraDomDiurna = pay(hourly, breakdown.extraDominicalDiurna, ColombiaLaborLaw2026.extraDominicalDiurnaFactor(midDate))
+        val extraDomNocturna = pay(hourly, breakdown.extraDominicalNocturna, ColombiaLaborLaw2026.extraDominicalNocturnaFactor(midDate))
 
         val earnings = buildList {
             add(PayrollLine("Salario base proporcional", baseProportional, code = "SBP"))
@@ -93,8 +118,8 @@ object PayrollEngine {
         )
 
         return MonthlyPayroll(
-            year = year,
-            month = month,
+            year = referenceYear,
+            month = referenceMonth,
             workedDays = workedDays,
             restDays = restDays,
             dailyRate = dailyRate.toLong(),
@@ -112,12 +137,39 @@ object PayrollEngine {
         payroll: MonthlyPayroll,
         manual: List<ManualDeduction>,
     ): MonthlyPayroll {
-        if (manual.isEmpty()) return payroll
-        val lines = manual.map { PayrollLine(it.label, it.amount, isDeduction = true) }
-        val total = manual.sumOf { it.amount }
+        val deductions = manual.filter { it.entryType == PayrollEntryType.DEDUCTION }
+        if (deductions.isEmpty()) return payroll
+        val lines = deductions.map { PayrollLine(it.label, it.amount, isDeduction = true) }
+        val total = deductions.sumOf { it.amount }
         return payroll.copy(
             manualDeductions = lines,
             netTotal = payroll.netTotal - total,
+        )
+    }
+
+    fun buildPeriodSummary(
+        payroll: MonthlyPayroll,
+        periodLabel: String,
+        periodStart: LocalDate,
+        periodEnd: LocalDate,
+        manualEntries: List<ManualDeduction>,
+    ): PeriodPayrollSummary {
+        val deductions = manualEntries.filter { it.entryType == PayrollEntryType.DEDUCTION }
+        val advances = manualEntries.filter { it.entryType == PayrollEntryType.ADVANCE }
+        val payrollWithDeductions = applyManualDeductions(payroll, deductions)
+        val advancesTotal = advances.sumOf { it.amount }
+        return PeriodPayrollSummary(
+            periodLabel = periodLabel,
+            periodStart = periodStart,
+            periodEnd = periodEnd,
+            workedDays = payroll.workedDays,
+            dailyRate = payroll.dailyRate,
+            grossTotal = payroll.grossTotal,
+            legalDeductions = payroll.legalDeductions.sumOf { it.amount },
+            manualDeductions = deductions.sumOf { it.amount },
+            advances = advancesTotal,
+            netTotal = payrollWithDeductions.netTotal,
+            pendingBalance = payrollWithDeductions.netTotal - advancesTotal,
         )
     }
 

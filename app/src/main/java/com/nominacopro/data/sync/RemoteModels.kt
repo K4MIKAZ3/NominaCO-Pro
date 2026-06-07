@@ -12,6 +12,7 @@ data class RemoteProfile(
     @SerialName("monthly_salary") val monthlySalary: Long = 0,
     @SerialName("daily_hours") val dailyHours: Int = 8,
     @SerialName("contract_type") val contractType: String = "INDEFINIDO",
+    @SerialName("pay_period_type") val payPeriodType: String = "BIWEEKLY",
 )
 
 @Serializable
@@ -38,6 +39,8 @@ data class RemoteManualDeduction(
     @SerialName("year_month") val yearMonth: String,
     val label: String,
     val amount: Long,
+    @SerialName("effective_date_iso") val effectiveDateIso: String? = null,
+    @SerialName("entry_type") val entryType: String = "DEDUCTION",
 )
 
 @Serializable

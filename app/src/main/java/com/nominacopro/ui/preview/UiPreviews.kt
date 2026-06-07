@@ -3,6 +3,9 @@ package com.nominacopro.ui.preview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.nominacopro.data.CalendarMark
+import com.nominacopro.domain.model.PeriodPayrollSummary
+import com.nominacopro.domain.payperiod.PayPeriod
+import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
@@ -82,14 +85,38 @@ private fun PreviewPayroll() {
     NominaTheme {
         PayrollScreen(
             payroll = samplePayroll,
+            periodSummary = PeriodPayrollSummary(
+                periodLabel = "1–15 jun",
+                periodStart = LocalDate.of(2026, 6, 1),
+                periodEnd = LocalDate.of(2026, 6, 15),
+                workedDays = 10,
+                dailyRate = 93_333,
+                grossTotal = 1_100_000,
+                legalDeductions = 88_000,
+                manualDeductions = 50_000,
+                advances = 200_000,
+                netTotal = 962_000,
+                pendingBalance = 762_000,
+            ),
+            payPeriods = listOf(
+                PayPeriod(LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 15), "1–15 jun", 0),
+                PayPeriod(LocalDate.of(2026, 6, 16), LocalDate.of(2026, 6, 30), "16–30 jun", 1),
+            ),
+            selectedPeriodIndex = 0,
+            onSelectPeriod = {},
+            periodManualEntries = emptyList(),
             workDays = listOf(
                 WorkDayEntry(LocalDate.of(2026, 6, 2), LocalTime.of(8, 0), LocalTime.of(16, 30)),
                 WorkDayEntry(LocalDate.of(2026, 6, 7), LocalTime.of(10, 0), LocalTime.of(18, 0), DayType.FESTIVO_DOMINICAL),
+            ),
+            periodWorkDays = listOf(
+                WorkDayEntry(LocalDate.of(2026, 6, 2), LocalTime.of(8, 0), LocalTime.of(16, 30)),
             ),
             manualDeductions = listOf(
                 ManualDeduction(
                     id = 1,
                     yearMonth = YearMonth.of(2026, 6),
+                    effectiveDate = LocalDate.of(2026, 6, 5),
                     label = "Préstamo empleador",
                     amount = 120_000,
                 ),
@@ -97,7 +124,8 @@ private fun PreviewPayroll() {
             use24Hour = true,
             profileMissing = false,
             onAddDeduction = {},
-            onRemoveDeduction = {},
+            onAddAdvance = {},
+            onRemoveManualEntry = {},
             onExportPayrollPdf = {},
             onExportWorkDaysPdf = {},
         )

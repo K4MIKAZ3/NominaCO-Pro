@@ -41,7 +41,8 @@ import com.nominacopro.ui.navigation.NominaTab
 import com.nominacopro.ui.screens.CalendarScreen
 import com.nominacopro.ui.screens.DayEditorDialog
 import com.nominacopro.ui.screens.LoginScreen
-import com.nominacopro.ui.screens.ManualDeductionDialog
+import com.nominacopro.domain.model.PayrollEntryType
+import com.nominacopro.ui.screens.PayrollEntryDialog
 import com.nominacopro.ui.screens.PayrollScreen
 import com.nominacopro.ui.screens.ProfileScreen
 import com.nominacopro.ui.screens.RegisterScreen
@@ -179,6 +180,11 @@ private fun MainNominaScaffold(
     val workDays by vm.workDaysByDate.collectAsState()
     val workDaysList by vm.workDaysList.collectAsState()
     val manualDeductions by vm.manualDeductions.collectAsState()
+    val periodSummary by vm.periodSummary.collectAsState()
+    val payPeriods by vm.payPeriods.collectAsState()
+    val selectedPeriodIndex by vm.selectedPeriodIndex.collectAsState()
+    val periodManualEntries by vm.periodManualEntries.collectAsState()
+    val periodWorkDays by vm.periodWorkDays.collectAsState()
     val preferences by vm.preferences.collectAsState()
     val dashboard by vm.dashboard.collectAsState()
     val syncState by vm.syncState.collectAsState()
@@ -186,6 +192,7 @@ private fun MainNominaScaffold(
     var tab by remember { mutableStateOf(NominaTab.Calendar) }
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
     var showDeductionDialog by remember { mutableStateOf(false) }
+    var showAdvanceDialog by remember { mutableStateOf(false) }
 
     val notificationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -236,12 +243,19 @@ private fun MainNominaScaffold(
             )
             NominaTab.Payroll -> PayrollScreen(
                 payroll = payroll,
+                periodSummary = periodSummary,
+                payPeriods = payPeriods,
+                selectedPeriodIndex = selectedPeriodIndex,
+                onSelectPeriod = vm::selectPayPeriod,
+                periodManualEntries = periodManualEntries,
                 workDays = workDaysList,
+                periodWorkDays = periodWorkDays,
                 manualDeductions = manualDeductions,
                 use24Hour = preferences.use24HourFormat,
                 profileMissing = profile == null,
                 onAddDeduction = { showDeductionDialog = true },
-                onRemoveDeduction = vm::removeManualDeduction,
+                onAddAdvance = { showAdvanceDialog = true },
+                onRemoveManualEntry = vm::removeManualDeduction,
                 onExportPayrollPdf = {
                     vm.exportPayrollPdf { file ->
                         sharePdf(file)
@@ -296,6 +310,7 @@ private fun MainNominaScaffold(
             existingEntry = workDays[date],
             defaultStart = LocalTime.of(preferences.defaultStartHour, preferences.defaultStartMinute),
             defaultEnd = LocalTime.of(preferences.defaultEndHour, preferences.defaultEndMinute),
+            dailyHours = profile?.dailyHours ?: 8,
             use24Hour = preferences.use24HourFormat,
             isManualHoliday = manual.contains(date),
             isOfficialHoliday = ColombiaLaborLaw2026.isOfficialHoliday(date),
@@ -312,11 +327,23 @@ private fun MainNominaScaffold(
     }
 
     if (showDeductionDialog) {
-        ManualDeductionDialog(
+        PayrollEntryDialog(
+            entryType = PayrollEntryType.DEDUCTION,
             onDismiss = { showDeductionDialog = false },
             onSave = { label, amount ->
                 vm.addManualDeduction(label, amount)
                 showDeductionDialog = false
+            },
+        )
+    }
+
+    if (showAdvanceDialog) {
+        PayrollEntryDialog(
+            entryType = PayrollEntryType.ADVANCE,
+            onDismiss = { showAdvanceDialog = false },
+            onSave = { label, amount ->
+                vm.addAdvance(label, amount)
+                showAdvanceDialog = false
             },
         )
     }

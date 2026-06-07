@@ -13,6 +13,7 @@ data class ProfileEntity(
     val monthlySalary: Long,
     val dailyHours: Int,
     val contractType: String = ContractType.INDEFINIDO.name,
+    val payPeriodType: String = "BIWEEKLY",
 )
 
 @Entity(tableName = "work_days")
@@ -35,6 +36,8 @@ data class ManualDeductionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val cloudId: String? = null,
     val yearMonth: String,
+    val effectiveDateIso: String,
     val label: String,
     val amount: Long,
+    val entryType: String = "DEDUCTION",
 )

@@ -14,7 +14,11 @@ import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
+import com.nominacopro.domain.model.PayrollEntryType
+import com.nominacopro.domain.model.PeriodPayrollSummary
 import com.nominacopro.domain.model.WorkDayEntry
+import com.nominacopro.domain.payperiod.PayPeriod
+import com.nominacopro.domain.payperiod.PayPeriodCalculator
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.export.PdfExporter
 import com.nominacopro.notifications.ReminderScheduler
@@ -23,6 +27,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -84,6 +90,47 @@ class MainViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    private val _selectedPeriodIndex = MutableStateFlow(0)
+    val selectedPeriodIndex: StateFlow<Int> = _selectedPeriodIndex.asStateFlow()
+
+    val payPeriods: StateFlow<List<PayPeriod>> = combine(profile, _yearMonth) { p, ym ->
+        if (p == null) emptyList() else PayPeriodCalculator.periodsInMonth(p.payPeriodType, ym)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val selectedPayPeriod: StateFlow<PayPeriod?> = combine(payPeriods, _selectedPeriodIndex) { periods, index ->
+        periods.getOrNull(index.coerceIn(0, (periods.size - 1).coerceAtLeast(0)))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val periodSummary: StateFlow<PeriodPayrollSummary?> = selectedPayPeriod
+        .flatMapLatest { period ->
+            if (period == null) {
+                kotlinx.coroutines.flow.flowOf(null)
+            } else {
+                repository.observePeriodSummary(period)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    val periodManualEntries: StateFlow<List<ManualDeduction>> = selectedPayPeriod
+        .flatMapLatest { period ->
+            if (period == null) {
+                kotlinx.coroutines.flow.flowOf(emptyList())
+            } else {
+                repository.observeManualEntriesInRange(period.start, period.end)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val periodWorkDays: StateFlow<List<WorkDayEntry>> = selectedPayPeriod
+        .flatMapLatest { period ->
+            if (period == null) {
+                kotlinx.coroutines.flow.flowOf(emptyList())
+            } else {
+                repository.observeWorkDaysInRange(period.start, period.end)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val dashboard: StateFlow<List<MonthSummary>> = repository.observeDashboard(3).stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
     )
@@ -92,9 +139,40 @@ class MainViewModel(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), SyncUiState.Idle,
     )
 
-    fun prevMonth() { _yearMonth.value = _yearMonth.value.minusMonths(1) }
-    fun nextMonth() { _yearMonth.value = _yearMonth.value.plusMonths(1) }
-    fun goToday() { _yearMonth.value = YearMonth.now() }
+    fun prevMonth() {
+        _yearMonth.value = _yearMonth.value.minusMonths(1)
+        resetPeriodIndexForCurrentMonth()
+    }
+
+    fun nextMonth() {
+        _yearMonth.value = _yearMonth.value.plusMonths(1)
+        resetPeriodIndexForCurrentMonth()
+    }
+
+    fun goToday() {
+        _yearMonth.value = YearMonth.now()
+        resetPeriodIndexForCurrentMonth()
+    }
+
+    fun selectPayPeriod(index: Int) {
+        _selectedPeriodIndex.value = index.coerceAtLeast(0)
+    }
+
+    private fun resetPeriodIndexForCurrentMonth() {
+        val p = profile.value ?: return
+        _selectedPeriodIndex.value = PayPeriodCalculator.defaultPeriodIndex(p.payPeriodType, _yearMonth.value)
+    }
+
+    init {
+        viewModelScope.launch {
+            combine(profile, _yearMonth) { p, ym -> p to ym }
+                .collect { (p, ym) ->
+                    if (p != null) {
+                        _selectedPeriodIndex.value = PayPeriodCalculator.defaultPeriodIndex(p.payPeriodType, ym)
+                    }
+                }
+        }
+    }
 
     fun saveProfile(profile: EmployeeProfile) {
         viewModelScope.launch { repository.saveProfile(profile) }
@@ -123,13 +201,28 @@ class MainViewModel(
     }
 
     fun addManualDeduction(label: String, amount: Long) {
-        val ym = _yearMonth.value
+        addPayrollEntry(PayrollEntryType.DEDUCTION, label, amount)
+    }
+
+    fun addAdvance(label: String, amount: Long) {
+        addPayrollEntry(PayrollEntryType.ADVANCE, label, amount)
+    }
+
+    private fun addPayrollEntry(type: PayrollEntryType, label: String, amount: Long) {
+        val period = selectedPayPeriod.value
+        val effectiveDate = LocalDate.now().coerceIn(
+            period?.start ?: LocalDate.now(),
+            period?.end ?: LocalDate.now(),
+        )
+        val ym = YearMonth.from(effectiveDate)
         viewModelScope.launch {
             repository.addManualDeduction(
                 ManualDeduction(
                     yearMonth = ym,
+                    effectiveDate = effectiveDate,
                     label = label,
                     amount = amount,
+                    entryType = type,
                 ),
             )
         }

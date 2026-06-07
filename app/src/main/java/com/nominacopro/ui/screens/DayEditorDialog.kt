@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -19,8 +20,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
+import com.nominacopro.domain.calculator.HourCalculator
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.WorkDayEntry
 import com.nominacopro.ui.Formatters
@@ -35,6 +38,7 @@ fun DayEditorDialog(
     existingEntry: WorkDayEntry?,
     defaultStart: LocalTime,
     defaultEnd: LocalTime,
+    dailyHours: Int,
     use24Hour: Boolean,
     isManualHoliday: Boolean,
     isOfficialHoliday: Boolean,
@@ -56,6 +60,15 @@ fun DayEditorDialog(
 
     val isSunday = ColombiaLaborLaw2026.isSunday(date)
     val isRestDay = isOfficialHoliday || isSunday || manual
+
+    val previewStart = TimeInput.toLocalTime(startFields, use24Hour, defaultStart)
+    val previewEnd = TimeInput.toLocalTime(endFields, use24Hour, defaultEnd)
+    val previewBreakdown = HourCalculator.calculate(
+        WorkDayEntry(date, previewStart, previewEnd),
+        dailyHours = dailyHours,
+        isRestDay = isRestDay,
+    )
+    val overnightHint = !previewEnd.isAfter(previewStart)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -96,6 +109,25 @@ fun DayEditorDialog(
                     onMinuteChange = { endFields = endFields.copy(minute = it) },
                     onAmPmChange = { endFields = endFields.copy(amPm = it) },
                 )
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Vista previa", fontWeight = FontWeight.SemiBold)
+                        Text("Horas netas: ${Formatters.hours(previewBreakdown.totalHours)} h")
+                        if (previewBreakdown.extraDiurna > 0) {
+                            Text("Extra diurna: ${Formatters.hours(previewBreakdown.extraDiurna)} h")
+                        }
+                        if (previewBreakdown.extraNocturna > 0) {
+                            Text("Extra nocturna: ${Formatters.hours(previewBreakdown.extraNocturna)} h")
+                        }
+                        if (overnightHint && previewBreakdown.totalHours > dailyHours) {
+                            Text(
+                                "Turno cruza medianoche (válido si trabajaste de noche).",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },

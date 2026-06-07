@@ -1,5 +1,6 @@
 package com.nominacopro.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,14 +9,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -24,29 +25,36 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthlyPayroll
+import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.model.PayrollLine
+import com.nominacopro.domain.model.PeriodPayrollSummary
 import com.nominacopro.domain.model.WorkDayEntry
+import com.nominacopro.domain.payperiod.PayPeriod
 import com.nominacopro.ui.Formatters
 
 @Composable
 fun PayrollScreen(
     payroll: MonthlyPayroll?,
+    periodSummary: PeriodPayrollSummary?,
+    payPeriods: List<PayPeriod>,
+    selectedPeriodIndex: Int,
+    onSelectPeriod: (Int) -> Unit,
+    periodManualEntries: List<ManualDeduction>,
     workDays: List<WorkDayEntry>,
+    periodWorkDays: List<WorkDayEntry>,
     manualDeductions: List<ManualDeduction>,
     use24Hour: Boolean,
     profileMissing: Boolean,
     onAddDeduction: () -> Unit,
-    onRemoveDeduction: (Long) -> Unit,
+    onAddAdvance: () -> Unit,
+    onRemoveManualEntry: (Long) -> Unit,
     onExportPayrollPdf: () -> Unit,
     onExportWorkDaysPdf: () -> Unit,
     modifier: Modifier = Modifier,
@@ -60,6 +68,9 @@ fun PayrollScreen(
         return
     }
 
+    val advances = periodManualEntries.filter { it.entryType == PayrollEntryType.ADVANCE }
+    val deductions = periodManualEntries.filter { it.entryType == PayrollEntryType.DEDUCTION }
+
     LazyColumn(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Text(
@@ -67,15 +78,61 @@ fun PayrollScreen(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
-            Text(
-                "${payroll.workedDays} días laborados · Valor día ${Formatters.money(payroll.dailyRate)} · Valor hora ${Formatters.money(payroll.hourlyRate.toLong())}",
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            )
-            Text(
-                "Salario base = valor día × días laborados · Transporte = auxilio ÷ 30 × días laborados",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-            )
+        }
+
+        if (payPeriods.isNotEmpty()) {
+            item {
+                Text("Período de cobro", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    payPeriods.forEach { period ->
+                        FilterChip(
+                            selected = period.indexInMonth == selectedPeriodIndex,
+                            onClick = { onSelectPeriod(period.indexInMonth) },
+                            label = { Text(period.label) },
+                        )
+                    }
+                }
+            }
+        }
+
+        periodSummary?.let { summary ->
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                    ),
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("Resumen del período", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            "${summary.periodStart.dayOfMonth}/${summary.periodStart.monthValue} – ${summary.periodEnd.dayOfMonth}/${summary.periodEnd.monthValue}",
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("Días trabajados")
+                            Text("${summary.workedDays}", color = MaterialTheme.colorScheme.primary)
+                        }
+                        RowAmount("Valor día", summary.dailyRate, false)
+                        RowAmount("Devengado bruto", summary.grossTotal, false)
+                        RowAmount("Descuentos legales", summary.legalDeductions, true)
+                        if (summary.manualDeductions > 0) {
+                            RowAmount("Egresos / préstamos", summary.manualDeductions, true)
+                        }
+                        RowAmount("Neto del período", summary.netTotal, false, bold = true)
+                        HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                        RowAmount("Avances recibidos", summary.advances, true)
+                        RowAmount("Saldo pendiente por cobrar", summary.pendingBalance, false, bold = true)
+                    }
+                }
+            }
         }
 
         item {
@@ -93,67 +150,80 @@ fun PayrollScreen(
         item {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("Devengado", fontWeight = FontWeight.SemiBold)
-                    payroll.earnings.forEach { line ->
-                        PayrollRow(line, false)
-                    }
+                    Text("Mes completo", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "${payroll.workedDays} días · Valor día ${Formatters.money(payroll.dailyRate)}",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    payroll.earnings.forEach { line -> PayrollRow(line, false) }
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                    Text("Descuentos legales", fontWeight = FontWeight.SemiBold)
-                    payroll.legalDeductions.forEach { line ->
-                        PayrollRow(line, true)
+                    payroll.legalDeductions.forEach { line -> PayrollRow(line, true) }
+
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("Avances del período", fontWeight = FontWeight.SemiBold)
+                        IconButton(onClick = onAddAdvance) {
+                            Icon(Icons.Default.Add, contentDescription = "Agregar avance")
+                        }
+                    }
+                    if (advances.isEmpty()) {
+                        Text(
+                            "Sin avances registrados en este período.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        )
+                    } else {
+                        advances.forEach { entry ->
+                            ManualEntryRow(entry, onRemoveManualEntry)
+                        }
                     }
 
                     Row(
                         Modifier.fillMaxWidth().padding(top = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("Egresos / préstamos", fontWeight = FontWeight.SemiBold)
+                        Text("Egresos del mes", fontWeight = FontWeight.SemiBold)
                         IconButton(onClick = onAddDeduction) {
                             Icon(Icons.Default.Add, contentDescription = "Agregar egreso")
                         }
                     }
-                    if (manualDeductions.isEmpty()) {
+                    if (manualDeductions.filter { it.entryType == PayrollEntryType.DEDUCTION }.isEmpty()) {
                         Text(
                             "Sin egresos manuales este mes.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         )
                     } else {
-                        manualDeductions.forEach { d ->
-                            Row(
-                                Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                            ) {
-                                Text(d.label, modifier = Modifier.weight(1f))
-                                Text("- ${Formatters.money(d.amount)}", color = MaterialTheme.colorScheme.error)
-                                IconButton(onClick = { onRemoveDeduction(d.id) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Eliminar")
-                                }
-                            }
+                        manualDeductions.filter { it.entryType == PayrollEntryType.DEDUCTION }.forEach { d ->
+                            ManualEntryRow(d, onRemoveManualEntry)
                         }
                     }
 
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
-                    RowAmount("NETO A RECIBIR", payroll.netTotal, false, bold = true)
+                    RowAmount("NETO MES", payroll.netTotal, false, bold = true)
                 }
             }
         }
 
         item {
-            Text("Días laborados", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Días del período", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
 
-        if (workDays.isEmpty()) {
+        val daysToShow = if (periodWorkDays.isNotEmpty()) periodWorkDays else workDays
+        if (daysToShow.isEmpty()) {
             item {
                 Text(
-                    "No hay jornadas registradas este mes.",
+                    "No hay jornadas en este período.",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
             }
         } else {
-            items(workDays.sortedBy { it.date }) { entry ->
+            items(daysToShow.sortedBy { it.date }) { entry ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(12.dp)) {
                         Text(
@@ -164,14 +234,6 @@ fun PayrollScreen(
                             "${Formatters.formatTime(entry.start, use24Hour)} – ${Formatters.formatTime(entry.end, use24Hour)}",
                             color = MaterialTheme.colorScheme.primary,
                         )
-                        Text(
-                            entry.dayType.name.replace('_', ' '),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        )
-                        if (entry.notes.isNotBlank()) {
-                            Text(entry.notes, style = MaterialTheme.typography.bodySmall)
-                        }
                     }
                 }
             }
@@ -183,6 +245,28 @@ fun PayrollScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             )
+        }
+    }
+}
+
+@Composable
+private fun ManualEntryRow(entry: ManualDeduction, onRemove: (Long) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(entry.label)
+            Text(
+                entry.entryType.label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+            )
+        }
+        Text("- ${Formatters.money(entry.amount)}", color = MaterialTheme.colorScheme.error)
+        IconButton(onClick = { onRemove(entry.id) }) {
+            Icon(Icons.Default.Delete, contentDescription = "Eliminar")
         }
     }
 }

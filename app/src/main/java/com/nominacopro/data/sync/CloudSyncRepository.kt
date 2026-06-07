@@ -288,6 +288,7 @@ private fun EmployeeProfile.toRemote(userId: String) = RemoteProfile(
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
     contractType = contractType.name,
+    payPeriodType = payPeriodType.name,
 )
 
 private fun ProfileEntity.toRemote(userId: String) = RemoteProfile(
@@ -298,6 +299,7 @@ private fun ProfileEntity.toRemote(userId: String) = RemoteProfile(
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
     contractType = contractType,
+    payPeriodType = payPeriodType,
 )
 
 private fun RemoteProfile.toEntity() = ProfileEntity(
@@ -307,6 +309,7 @@ private fun RemoteProfile.toEntity() = ProfileEntity(
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
     contractType = contractType,
+    payPeriodType = payPeriodType,
 )
 
 private fun WorkDayEntry.toRemote(userId: String) = RemoteWorkDay(
@@ -352,16 +355,20 @@ private fun ManualDeductionEntity.toRemote(userId: String): RemoteManualDeductio
         id = cloudId,
         userId = userId,
         yearMonth = yearMonth,
+        effectiveDateIso = effectiveDateIso,
         label = label,
         amount = amount,
+        entryType = entryType,
     )
 }
 
 private fun RemoteManualDeduction.toEntity() = ManualDeductionEntity(
     cloudId = id,
     yearMonth = yearMonth,
+    effectiveDateIso = effectiveDateIso ?: "${yearMonth}-01",
     label = label,
     amount = amount,
+    entryType = entryType,
 )
 
 private fun AppPreferences.toRemote(userId: String) = RemoteAppPreferences(

@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.ContractType
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.ui.Formatters
 import kotlinx.coroutines.launch
 
@@ -56,7 +57,9 @@ fun ProfileScreen(
     var salary by rememberSaveable { mutableStateOf(profile?.monthlySalary?.toString() ?: "") }
     var hours by rememberSaveable { mutableStateOf(profile?.dailyHours?.toString() ?: "8") }
     var contractType by rememberSaveable { mutableStateOf(profile?.contractType ?: ContractType.INDEFINIDO) }
+    var payPeriodType by rememberSaveable { mutableStateOf(profile?.payPeriodType ?: PayPeriodType.BIWEEKLY) }
     var contractExpanded by remember { mutableStateOf(false) }
+    var payPeriodExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(profile) {
         if (profile != null && !isEditing) {
@@ -66,6 +69,7 @@ fun ProfileScreen(
             salary = profile.monthlySalary.toString()
             hours = profile.dailyHours.toString()
             contractType = profile.contractType
+            payPeriodType = profile.payPeriodType
         }
     }
 
@@ -76,6 +80,7 @@ fun ProfileScreen(
         salary = p.monthlySalary.toString()
         hours = p.dailyHours.toString()
         contractType = p.contractType
+        payPeriodType = p.payPeriodType
     }
 
     Scaffold(
@@ -105,6 +110,7 @@ fun ProfileScreen(
                         Text("Salario: ${Formatters.money(profile.monthlySalary)}")
                         Text("Jornada: ${profile.dailyHours} h/día")
                         Text("Contrato: ${profile.contractType.label}")
+                        Text("Período de cobro: ${profile.payPeriodType.label}")
                         OutlinedButton(
                             onClick = {
                                 loadFromProfile(profile)
@@ -175,6 +181,35 @@ fun ProfileScreen(
                         }
                     }
                 }
+                ExposedDropdownMenuBox(
+                    expanded = payPeriodExpanded,
+                    onExpandedChange = { payPeriodExpanded = it },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                ) {
+                    OutlinedTextField(
+                        value = payPeriodType.label,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Período de cobro") },
+                        supportingText = { Text("Semanal, quincenal o ventana de 21 días") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = payPeriodExpanded) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = payPeriodExpanded,
+                        onDismissRequest = { payPeriodExpanded = false },
+                    ) {
+                        PayPeriodType.entries.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type.label) },
+                                onClick = {
+                                    payPeriodType = type
+                                    payPeriodExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
                 Button(
                     onClick = {
                         val s = salary.toLongOrNull() ?: 0L
@@ -188,6 +223,7 @@ fun ProfileScreen(
                                     monthlySalary = s,
                                     dailyHours = h,
                                     contractType = contractType,
+                                    payPeriodType = payPeriodType,
                                 ),
                             )
                             isEditing = false

@@ -30,8 +30,8 @@ android {
         applicationId = "com.nominacopro"
         minSdk = 26
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.4.1"
+        versionCode = 8
+        versionName = "1.5.0"
 
         buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${prop("SUPABASE_ANON_KEY")}\"")

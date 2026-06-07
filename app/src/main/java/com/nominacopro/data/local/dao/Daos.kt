@@ -33,6 +33,9 @@ interface WorkDayDao {
     @Query("SELECT * FROM work_days ORDER BY dateIso")
     fun observeAll(): Flow<List<WorkDayEntity>>
 
+    @Query("SELECT * FROM work_days WHERE dateIso >= :startIso AND dateIso <= :endIso ORDER BY dateIso")
+    fun observeRange(startIso: String, endIso: String): Flow<List<WorkDayEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: WorkDayEntity)
 
@@ -69,7 +72,8 @@ interface ManualDeductionDao {
     @Query("SELECT * FROM manual_deductions WHERE yearMonth = :yearMonth ORDER BY id")
     fun observeMonth(yearMonth: String): Flow<List<ManualDeductionEntity>>
 
-    @Query("SELECT * FROM manual_deductions ORDER BY yearMonth DESC, id")
+    @Query("SELECT * FROM manual_deductions WHERE effectiveDateIso >= :startIso AND effectiveDateIso <= :endIso ORDER BY effectiveDateIso, id")
+    fun observeRange(startIso: String, endIso: String): Flow<List<ManualDeductionEntity>>
     fun observeAll(): Flow<List<ManualDeductionEntity>>
 
     @Query("SELECT * FROM manual_deductions WHERE id = :id LIMIT 1")

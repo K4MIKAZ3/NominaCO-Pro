@@ -1,5 +1,6 @@
 package com.nominacopro.domain.model
 
+import com.nominacopro.domain.payperiod.PayPeriodType
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -45,6 +46,17 @@ data class HourBreakdown(
             dominicalDiurna + dominicalNocturna + extraDominicalDiurna + extraDominicalNocturna
 }
 
+enum class PayrollEntryType(val label: String) {
+    DEDUCTION("Egreso / préstamo"),
+    ADVANCE("Avance recibido"),
+    ;
+
+    companion object {
+        fun fromStored(value: String?): PayrollEntryType =
+            entries.find { it.name == value } ?: DEDUCTION
+    }
+}
+
 data class EmployeeProfile(
     val name: String,
     val documentId: String,
@@ -52,6 +64,7 @@ data class EmployeeProfile(
     val monthlySalary: Long,
     val dailyHours: Int = 8,
     val contractType: ContractType = ContractType.INDEFINIDO,
+    val payPeriodType: PayPeriodType = PayPeriodType.BIWEEKLY,
 )
 
 data class PayrollLine(
@@ -66,8 +79,10 @@ data class ManualDeduction(
     val id: Long = 0,
     val cloudId: String? = null,
     val yearMonth: YearMonth,
+    val effectiveDate: LocalDate,
     val label: String,
     val amount: Long,
+    val entryType: PayrollEntryType = PayrollEntryType.DEDUCTION,
 )
 
 data class MonthlyPayroll(
@@ -93,6 +108,20 @@ data class MonthSummary(
     val legalDeductions: Long,
     val manualDeductions: Long,
     val netTotal: Long,
+)
+
+data class PeriodPayrollSummary(
+    val periodLabel: String,
+    val periodStart: LocalDate,
+    val periodEnd: LocalDate,
+    val workedDays: Int,
+    val dailyRate: Long,
+    val grossTotal: Long,
+    val legalDeductions: Long,
+    val manualDeductions: Long,
+    val advances: Long,
+    val netTotal: Long,
+    val pendingBalance: Long,
 )
 
 data class AppPreferences(

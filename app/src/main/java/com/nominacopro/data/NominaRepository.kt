@@ -16,7 +16,11 @@ import com.nominacopro.domain.model.ContractType
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.ManualDeduction
+import com.nominacopro.domain.model.PayrollEntryType
+import com.nominacopro.domain.model.PeriodPayrollSummary
 import com.nominacopro.domain.model.MonthSummary
+import com.nominacopro.domain.payperiod.PayPeriod
+import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.domain.model.MonthlyPayroll
 import com.nominacopro.domain.model.WorkDayEntry
 import kotlinx.coroutines.flow.Flow
@@ -71,6 +75,7 @@ class NominaRepository(context: Context) {
                 monthlySalary = profile.monthlySalary,
                 dailyHours = profile.dailyHours,
                 contractType = profile.contractType.name,
+                payPeriodType = profile.payPeriodType.name,
             ),
         )
         runCatching { cloudSync.pushProfile(profile) }
@@ -80,6 +85,10 @@ class NominaRepository(context: Context) {
         val prefix = YearMonth.of(year, month).toString()
         return workDayDao.observeMonth(prefix).map { list -> list.map { it.toDomain() } }
     }
+
+    fun observeWorkDaysInRange(start: LocalDate, end: LocalDate): Flow<List<WorkDayEntry>> =
+        workDayDao.observeRange(start.format(iso), end.format(iso))
+            .map { list -> list.map { it.toDomain() } }
 
     suspend fun saveWorkDay(entry: WorkDayEntry) {
         workDayDao.upsert(entry.toEntity())
@@ -104,6 +113,38 @@ class NominaRepository(context: Context) {
             runCatching { cloudSync.deleteManualHoliday(date) }
         }
     }
+
+    fun observeManualEntriesInRange(start: LocalDate, end: LocalDate): Flow<List<ManualDeduction>> =
+        deductionDao.observeRange(start.format(iso), end.format(iso))
+            .map { list -> list.map { it.toDomain() } }
+
+    fun observePeriodSummary(period: PayPeriod): Flow<PeriodPayrollSummary?> =
+        combine(
+            observeProfile(),
+            workDayDao.observeRange(period.start.format(iso), period.end.format(iso))
+                .map { list -> list.map { it.toDomain() } },
+            observeManualHolidays(),
+            observeManualEntriesInRange(period.start, period.end),
+        ) { profile, entries, manual, manualEntries ->
+            profile?.let { p ->
+                val payroll = PayrollEngine.liquidateDateRange(
+                    profile = p,
+                    start = period.start,
+                    end = period.end,
+                    entries = entries,
+                    manualHolidays = manual,
+                    referenceYear = period.start.year,
+                    referenceMonth = period.start.monthValue,
+                )
+                PayrollEngine.buildPeriodSummary(
+                    payroll = payroll,
+                    periodLabel = period.label,
+                    periodStart = period.start,
+                    periodEnd = period.end,
+                    manualEntries = manualEntries,
+                )
+            }
+        }
 
     fun observeManualDeductions(year: Int, month: Int): Flow<List<ManualDeduction>> {
         val ym = YearMonth.of(year, month).toString()
@@ -157,6 +198,7 @@ class NominaRepository(context: Context) {
                 val deductions = allDeductions
                     .filter { it.yearMonth == prefix }
                     .map { it.toDomain() }
+                    .filter { it.entryType == PayrollEntryType.DEDUCTION }
                 val payroll = PayrollEngine.applyManualDeductions(
                     PayrollEngine.liquidateMonth(p, ym.year, ym.monthValue, entries, manual),
                     deductions,
@@ -203,6 +245,7 @@ private fun ProfileEntity.toDomain() = EmployeeProfile(
     monthlySalary = monthlySalary,
     dailyHours = dailyHours,
     contractType = ContractType.fromStored(contractType),
+    payPeriodType = PayPeriodType.fromStored(payPeriodType),
 )
 
 private fun WorkDayEntity.toDomain() = WorkDayEntry(
@@ -225,14 +268,18 @@ private fun ManualDeductionEntity.toDomain() = ManualDeduction(
     id = id,
     cloudId = cloudId,
     yearMonth = YearMonth.parse(yearMonth),
+    effectiveDate = LocalDate.parse(effectiveDateIso, DateTimeFormatter.ISO_LOCAL_DATE),
     label = label,
     amount = amount,
+    entryType = PayrollEntryType.fromStored(entryType),
 )
 
 private fun ManualDeduction.toEntity() = ManualDeductionEntity(
     id = id,
     cloudId = cloudId,
     yearMonth = yearMonth.toString(),
+    effectiveDateIso = effectiveDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
     label = label,
     amount = amount,
+    entryType = entryType.name,
 )

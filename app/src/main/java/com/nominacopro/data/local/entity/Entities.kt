@@ -27,3 +27,11 @@ data class ManualHolidayEntity(
     @PrimaryKey val dateIso: String,
     val label: String = "",
 )
+
+@Entity(tableName = "manual_deductions")
+data class ManualDeductionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val yearMonth: String,
+    val label: String,
+    val amount: Long,
+)

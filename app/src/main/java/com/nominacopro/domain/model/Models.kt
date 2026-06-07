@@ -2,6 +2,7 @@ package com.nominacopro.domain.model
 
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.YearMonth
 
 enum class DayType {
     NORMAL,
@@ -46,6 +47,13 @@ data class PayrollLine(
     val isDeduction: Boolean = false,
 )
 
+data class ManualDeduction(
+    val id: Long = 0,
+    val yearMonth: YearMonth,
+    val label: String,
+    val amount: Long,
+)
+
 data class MonthlyPayroll(
     val year: Int,
     val month: Int,
@@ -53,7 +61,29 @@ data class MonthlyPayroll(
     val restDays: Int,
     val breakdown: HourBreakdown,
     val earnings: List<PayrollLine>,
-    val deductions: List<PayrollLine>,
+    val legalDeductions: List<PayrollLine>,
+    val manualDeductions: List<PayrollLine> = emptyList(),
     val grossTotal: Long,
     val netTotal: Long,
+) {
+    val allDeductions: List<PayrollLine> = legalDeductions + manualDeductions
+}
+
+data class MonthSummary(
+    val yearMonth: YearMonth,
+    val grossTotal: Long,
+    val legalDeductions: Long,
+    val manualDeductions: Long,
+    val netTotal: Long,
+)
+
+data class AppPreferences(
+    val defaultStartHour: Int = 8,
+    val defaultStartMinute: Int = 0,
+    val defaultEndHour: Int = 16,
+    val defaultEndMinute: Int = 30,
+    val use24HourFormat: Boolean = true,
+    val reminderEnabled: Boolean = false,
+    val reminderHour: Int = 18,
+    val reminderMinute: Int = 0,
 )

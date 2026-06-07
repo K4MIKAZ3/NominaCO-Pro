@@ -3,36 +3,50 @@ package com.nominacopro.data
 import android.content.Context
 import androidx.room.Room
 import com.nominacopro.data.local.NominaDatabase
+import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
 import com.nominacopro.data.local.entity.ProfileEntity
 import com.nominacopro.data.local.entity.WorkDayEntity
+import com.nominacopro.data.preferences.AppPreferencesStore
 import com.nominacopro.domain.calculator.PayrollEngine
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
+import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.model.ManualDeduction
+import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
 import com.nominacopro.domain.model.WorkDayEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 class NominaRepository(context: Context) {
 
+    private val appContext = context.applicationContext
+
     private val db = Room.databaseBuilder(
-        context.applicationContext,
+        appContext,
         NominaDatabase::class.java,
         "nomina_co_pro.db",
-    ).build()
+    ).fallbackToDestructiveMigration().build()
 
     private val profileDao = db.profileDao()
     private val workDayDao = db.workDayDao()
     private val holidayDao = db.manualHolidayDao()
+    private val deductionDao = db.manualDeductionDao()
+    val preferencesStore = AppPreferencesStore(appContext)
 
     private val iso = DateTimeFormatter.ISO_LOCAL_DATE
+
+    fun observePreferences(): Flow<AppPreferences> = preferencesStore.observe()
+
+    suspend fun setPreferences(prefs: AppPreferences) {
+        preferencesStore.update { prefs }
+    }
 
     fun observeProfile() = profileDao.observe().map { it?.toDomain() }
 
@@ -70,13 +84,64 @@ class NominaRepository(context: Context) {
         else holidayDao.delete(isoDate)
     }
 
+    fun observeManualDeductions(year: Int, month: Int): Flow<List<ManualDeduction>> {
+        val ym = YearMonth.of(year, month).toString()
+        return deductionDao.observeMonth(ym).map { list -> list.map { it.toDomain() } }
+    }
+
+    suspend fun addManualDeduction(deduction: ManualDeduction) {
+        deductionDao.upsert(deduction.toEntity())
+    }
+
+    suspend fun removeManualDeduction(id: Long) {
+        deductionDao.delete(id)
+    }
+
     fun observeMonthlyPayroll(year: Int, month: Int): Flow<MonthlyPayroll?> =
         combine(
             observeProfile(),
             observeWorkDays(year, month),
             observeManualHolidays(),
-        ) { profile, entries, manual ->
-            profile?.let { PayrollEngine.liquidateMonth(it, year, month, entries, manual) }
+            observeManualDeductions(year, month),
+        ) { profile, entries, manual, deductions ->
+            profile?.let { p ->
+                val base = PayrollEngine.liquidateMonth(p, year, month, entries, manual)
+                PayrollEngine.applyManualDeductions(base, deductions)
+            }
+        }
+
+    fun observeDashboard(monthCount: Int = 3): Flow<List<MonthSummary>> =
+        combine(
+            observeProfile(),
+            workDayDao.observeAll(),
+            holidayDao.observeAll(),
+            deductionDao.observeAll(),
+        ) { profile, allWork, allHolidays, allDeductions ->
+            if (profile == null) return@combine emptyList()
+            val p = profile.toDomain()
+            val manual = allHolidays.map { LocalDate.parse(it.dateIso, iso) }.toSet()
+            val now = YearMonth.now()
+            (0 until monthCount).map { offset ->
+                val ym = now.minusMonths((monthCount - 1 - offset).toLong())
+                val prefix = ym.toString()
+                val entries = allWork
+                    .filter { it.dateIso.startsWith(prefix) }
+                    .map { it.toDomain() }
+                val deductions = allDeductions
+                    .filter { it.yearMonth == prefix }
+                    .map { it.toDomain() }
+                val payroll = PayrollEngine.applyManualDeductions(
+                    PayrollEngine.liquidateMonth(p, ym.year, ym.monthValue, entries, manual),
+                    deductions,
+                )
+                MonthSummary(
+                    yearMonth = ym,
+                    grossTotal = payroll.grossTotal,
+                    legalDeductions = payroll.legalDeductions.sumOf { it.amount },
+                    manualDeductions = payroll.manualDeductions.sumOf { it.amount },
+                    netTotal = payroll.netTotal,
+                )
+            }
         }
 
     fun observeCalendarMarks(year: Int, month: Int): Flow<Map<LocalDate, CalendarMark>> =
@@ -114,8 +179,8 @@ private fun ProfileEntity.toDomain() = EmployeeProfile(
 
 private fun WorkDayEntity.toDomain() = WorkDayEntry(
     date = LocalDate.parse(dateIso, DateTimeFormatter.ISO_LOCAL_DATE),
-    start = LocalTime.parse(startTime),
-    end = LocalTime.parse(endTime),
+    start = java.time.LocalTime.parse(startTime),
+    end = java.time.LocalTime.parse(endTime),
     dayType = DayType.valueOf(dayType),
     notes = notes,
 )
@@ -126,4 +191,18 @@ private fun WorkDayEntry.toEntity() = WorkDayEntity(
     endTime = end.toString(),
     dayType = dayType.name,
     notes = notes,
+)
+
+private fun ManualDeductionEntity.toDomain() = ManualDeduction(
+    id = id,
+    yearMonth = YearMonth.parse(yearMonth),
+    label = label,
+    amount = amount,
+)
+
+private fun ManualDeduction.toEntity() = ManualDeductionEntity(
+    id = id,
+    yearMonth = yearMonth.toString(),
+    label = label,
+    amount = amount,
 )

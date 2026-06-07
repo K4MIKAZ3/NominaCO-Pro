@@ -30,29 +30,36 @@ import java.time.LocalTime
 fun DayEditorDialog(
     date: LocalDate,
     existingEntry: WorkDayEntry?,
+    defaultStart: LocalTime,
+    defaultEnd: LocalTime,
+    use24Hour: Boolean,
     isManualHoliday: Boolean,
     isOfficialHoliday: Boolean,
     onDismiss: () -> Unit,
     onSave: (LocalTime, LocalTime, DayType, String, Boolean) -> Unit,
     onDelete: () -> Unit,
 ) {
-    var startH by remember(date, existingEntry) {
-        mutableStateOf(existingEntry?.start?.hour?.toString()?.padStart(2, '0') ?: "08")
+    val initialStart = existingEntry?.start ?: defaultStart
+    val initialEnd = existingEntry?.end ?: defaultEnd
+
+    var startH by remember(date, existingEntry, defaultStart) {
+        mutableStateOf(initialStart.hour.toString().padStart(2, '0'))
     }
-    var startM by remember(date, existingEntry) {
-        mutableStateOf(existingEntry?.start?.minute?.toString()?.padStart(2, '0') ?: "00")
+    var startM by remember(date, existingEntry, defaultStart) {
+        mutableStateOf(initialStart.minute.toString().padStart(2, '0'))
     }
-    var endH by remember(date, existingEntry) {
-        mutableStateOf(existingEntry?.end?.hour?.toString()?.padStart(2, '0') ?: "16")
+    var endH by remember(date, existingEntry, defaultEnd) {
+        mutableStateOf(initialEnd.hour.toString().padStart(2, '0'))
     }
-    var endM by remember(date, existingEntry) {
-        mutableStateOf(existingEntry?.end?.minute?.toString()?.padStart(2, '0') ?: "30")
+    var endM by remember(date, existingEntry, defaultEnd) {
+        mutableStateOf(initialEnd.minute.toString().padStart(2, '0'))
     }
     var notes by remember(date, existingEntry) { mutableStateOf(existingEntry?.notes ?: "") }
     var manual by remember(date, isManualHoliday) { mutableStateOf(isManualHoliday) }
 
     val isSunday = ColombiaLaborLaw2026.isSunday(date)
     val isRestDay = isOfficialHoliday || isSunday || manual
+    val hourHint = if (use24Hour) "24h" else "12h"
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -64,6 +71,13 @@ fun DayEditorDialog(
                     isSunday -> Text("Domingo — recargo dominical si trabajas")
                     manual -> Text("Festivo manual — descanso remunerado")
                 }
+                if (existingEntry == null) {
+                    Text(
+                        "Horario default: ${com.nominacopro.ui.Formatters.formatTime(defaultStart, use24Hour)} – ${com.nominacopro.ui.Formatters.formatTime(defaultEnd, use24Hour)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 if (!isOfficialHoliday) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = manual, onCheckedChange = { manual = it })
@@ -74,7 +88,7 @@ fun DayEditorDialog(
                     OutlinedTextField(
                         value = startH,
                         onValueChange = { startH = it.filter(Char::isDigit).take(2) },
-                        label = { Text("Entrada h") },
+                        label = { Text("Entrada ($hourHint)") },
                         modifier = Modifier.weight(1f),
                     )
                     OutlinedTextField(
@@ -88,7 +102,7 @@ fun DayEditorDialog(
                     OutlinedTextField(
                         value = endH,
                         onValueChange = { endH = it.filter(Char::isDigit).take(2) },
-                        label = { Text("Salida h") },
+                        label = { Text("Salida ($hourHint)") },
                         modifier = Modifier.weight(1f),
                     )
                     OutlinedTextField(
@@ -120,12 +134,12 @@ fun DayEditorDialog(
         confirmButton = {
             Button(onClick = {
                 val start = LocalTime.of(
-                    startH.toIntOrNull()?.coerceIn(0, 23) ?: 8,
-                    startM.toIntOrNull()?.coerceIn(0, 59) ?: 0,
+                    startH.toIntOrNull()?.coerceIn(0, 23) ?: defaultStart.hour,
+                    startM.toIntOrNull()?.coerceIn(0, 59) ?: defaultStart.minute,
                 )
                 val end = LocalTime.of(
-                    endH.toIntOrNull()?.coerceIn(0, 23) ?: 16,
-                    endM.toIntOrNull()?.coerceIn(0, 59) ?: 30,
+                    endH.toIntOrNull()?.coerceIn(0, 23) ?: defaultEnd.hour,
+                    endM.toIntOrNull()?.coerceIn(0, 59) ?: defaultEnd.minute,
                 )
                 val manualSet = if (manual) setOf(date) else emptySet()
                 val type = if (ColombiaLaborLaw2026.isRestDay(date, manualSet)) {

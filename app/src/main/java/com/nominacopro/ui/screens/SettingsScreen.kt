@@ -1,42 +1,198 @@
 package com.nominacopro.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
+import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.ui.Formatters
 import java.time.LocalDate
 
 @Composable
 fun SettingsScreen(
+    preferences: AppPreferences,
     manualHolidays: Set<LocalDate>,
+    onSavePreferences: (AppPreferences) -> Unit,
     onRemoveHoliday: (LocalDate) -> Unit,
+    onRequestNotificationPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(modifier.fillMaxSize().padding(16.dp)) {
+    var startH by rememberSaveable(preferences) { mutableStateOf(preferences.defaultStartHour.toString().padStart(2, '0')) }
+    var startM by rememberSaveable(preferences) { mutableStateOf(preferences.defaultStartMinute.toString().padStart(2, '0')) }
+    var endH by rememberSaveable(preferences) { mutableStateOf(preferences.defaultEndHour.toString().padStart(2, '0')) }
+    var endM by rememberSaveable(preferences) { mutableStateOf(preferences.defaultEndMinute.toString().padStart(2, '0')) }
+    var reminderH by rememberSaveable(preferences) { mutableStateOf(preferences.reminderHour.toString().padStart(2, '0')) }
+    var reminderM by rememberSaveable(preferences) { mutableStateOf(preferences.reminderMinute.toString().padStart(2, '0')) }
+
+    fun buildPrefs(
+        use24: Boolean = preferences.use24HourFormat,
+        reminderEnabled: Boolean = preferences.reminderEnabled,
+    ) = AppPreferences(
+        defaultStartHour = startH.toIntOrNull()?.coerceIn(0, 23) ?: 8,
+        defaultStartMinute = startM.toIntOrNull()?.coerceIn(0, 59) ?: 0,
+        defaultEndHour = endH.toIntOrNull()?.coerceIn(0, 23) ?: 16,
+        defaultEndMinute = endM.toIntOrNull()?.coerceIn(0, 59) ?: 30,
+        use24HourFormat = use24,
+        reminderEnabled = reminderEnabled,
+        reminderHour = reminderH.toIntOrNull()?.coerceIn(0, 23) ?: 18,
+        reminderMinute = reminderM.toIntOrNull()?.coerceIn(0, 59) ?: 0,
+    )
+
+    LazyColumn(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
-            Text("Ajustes legales", style = MaterialTheme.typography.titleLarge)
+            Text("Preferencias", style = MaterialTheme.typography.titleLarge)
             Text(
-                "Parámetros Colombia 2026 integrados en el motor de cálculo.",
+                "Horario global, formato de hora y recordatorio diario.",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(vertical = 8.dp),
             )
         }
+
         item {
-            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Horario por defecto", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                    Text(
+                        "Al abrir un día nuevo, se prellenan estas horas.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = startH,
+                            onValueChange = { startH = it.filter(Char::isDigit).take(2) },
+                            label = { Text("Entrada h") },
+                            modifier = Modifier.weight(1f),
+                        )
+                        OutlinedTextField(
+                            value = startM,
+                            onValueChange = { startM = it.filter(Char::isDigit).take(2) },
+                            label = { Text("m") },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = endH,
+                            onValueChange = { endH = it.filter(Char::isDigit).take(2) },
+                            label = { Text("Salida h") },
+                            modifier = Modifier.weight(1f),
+                        )
+                        OutlinedTextField(
+                            value = endM,
+                            onValueChange = { endM = it.filter(Char::isDigit).take(2) },
+                            label = { Text("m") },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    TextButton(onClick = { onSavePreferences(buildPrefs()) }) {
+                        Text("Guardar horario default")
+                    }
+                }
+            }
+        }
+
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Row(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Formato 24 horas")
+                        Text(
+                            if (preferences.use24HourFormat) "Mostrando 08:00 – 16:30" else "Mostrando 8:00 a. m. – 4:30 p. m.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        )
+                    }
+                    Switch(
+                        checked = preferences.use24HourFormat,
+                        onCheckedChange = { onSavePreferences(buildPrefs(use24 = it)) },
+                    )
+                }
+            }
+        }
+
+        item {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Recordatorio diario", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                            Text(
+                                "Te avisa para registrar tu jornada laboral.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            )
+                        }
+                        Switch(
+                            checked = preferences.reminderEnabled,
+                            onCheckedChange = { enabled ->
+                                if (enabled) onRequestNotificationPermission()
+                                onSavePreferences(buildPrefs(reminderEnabled = enabled))
+                            },
+                        )
+                    }
+                    if (preferences.reminderEnabled) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedTextField(
+                                value = reminderH,
+                                onValueChange = { reminderH = it.filter(Char::isDigit).take(2) },
+                                label = { Text("Hora") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(1f),
+                            )
+                            OutlinedTextField(
+                                value = reminderM,
+                                onValueChange = { reminderM = it.filter(Char::isDigit).take(2) },
+                                label = { Text("Min") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        TextButton(onClick = { onSavePreferences(buildPrefs(reminderEnabled = true)) }) {
+                            Text("Guardar hora del recordatorio")
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Text("Parámetros legales 2026", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+        }
+        item {
+            Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     LegalRow("SMMLV 2026", Formatters.money(ColombiaLaborLaw2026.SMMLV))
                     LegalRow("Auxilio transporte", Formatters.money(ColombiaLaborLaw2026.SUBSIDIO_TRANSPORTE))
@@ -49,10 +205,11 @@ fun SettingsScreen(
                 }
             }
         }
+
         item {
-            Text("Festivos manuales", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+            Text("Festivos manuales", style = MaterialTheme.typography.titleMedium)
             Text(
-                "Marca días festivo desde el calendario. Cuentan como descanso remunerado (Art. 177 CST).",
+                "Marca días festivo desde el calendario.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
@@ -61,11 +218,11 @@ fun SettingsScreen(
             item { Text("No hay festivos manuales.", modifier = Modifier.padding(8.dp)) }
         } else {
             items(manualHolidays.sortedDescending().toList()) { date ->
-                Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                    androidx.compose.foundation.layout.Row(
+                Card(Modifier.fillMaxWidth()) {
+                    Row(
                         Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text("${date.dayOfMonth}/${date.monthValue}/${date.year}")
                         IconButton(onClick = { onRemoveHoliday(date) }) {
@@ -80,9 +237,9 @@ fun SettingsScreen(
 
 @Composable
 private fun LegalRow(label: String, value: String) {
-    androidx.compose.foundation.layout.Row(
+    Row(
         Modifier.fillMaxWidth().padding(vertical = 3.dp),
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
         Text(value, color = MaterialTheme.colorScheme.primary)

@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NominaCO Pro</string>
+    <string name="notification_channel_name">Recordatorio jornada</string>
+    <string name="notification_channel_desc">Aviso diario para registrar tu día laboral</string>
+    <string name="notification_title">¿Registraste tu jornada?</string>
+    <string name="notification_body">Abre NominaCO Pro y marca las horas de hoy.</string>
 </resources>

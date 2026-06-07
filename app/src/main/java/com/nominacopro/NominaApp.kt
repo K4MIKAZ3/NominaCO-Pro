@@ -2,6 +2,11 @@ package com.nominacopro
 
 import android.app.Application
 import com.nominacopro.data.NominaRepository
+import com.nominacopro.notifications.ReminderScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class NominaApp : Application() {
     lateinit var repository: NominaRepository
@@ -10,5 +15,11 @@ class NominaApp : Application() {
     override fun onCreate() {
         super.onCreate()
         repository = NominaRepository(this)
+        CoroutineScope(Dispatchers.IO).launch {
+            val prefs = repository.preferencesStore.observe().first()
+            if (prefs.reminderEnabled) {
+                ReminderScheduler.schedule(this@NominaApp, prefs.reminderHour, prefs.reminderMinute)
+            }
+        }
     }
 }

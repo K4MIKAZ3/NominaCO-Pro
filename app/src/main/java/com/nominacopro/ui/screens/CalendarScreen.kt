@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -36,14 +37,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nominacopro.data.CalendarMark
-import com.nominacopro.domain.law.ColombiaLaborLaw2026
+import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
 import com.nominacopro.ui.Formatters
+import com.nominacopro.ui.components.DashboardCard
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlin.math.ceil
 
 @Composable
 fun CalendarScreen(
+    dashboard: List<MonthSummary>,
     yearMonth: YearMonth,
     marks: Map<LocalDate, CalendarMark>,
     payroll: MonthlyPayroll?,
@@ -53,52 +57,89 @@ fun CalendarScreen(
     onDayClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.fillMaxSize().padding(16.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onPrev) { Icon(Icons.Default.ChevronLeft, null) }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    Formatters.monthName(yearMonth.monthValue).replaceFirstChar { it.titlecase() },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text("${yearMonth.year}", color = MaterialTheme.colorScheme.primary)
-            }
-            IconButton(onClick = onNext) { Icon(Icons.Default.ChevronRight, null) }
-        }
-        Text("Hoy", modifier = Modifier.clickable { onToday() }.padding(bottom = 8.dp), color = MaterialTheme.colorScheme.secondary)
+    val days = buildCalendarDays(yearMonth)
+    val rows = ceil((days.size) / 7.0).toInt()
+    val gridHeight = (rows * 52 + (rows - 1) * 6).dp
 
-        payroll?.let {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    LazyColumn(
+        modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item { DashboardCard(dashboard, Modifier.padding(top = 8.dp)) }
+
+        item {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                IconButton(onClick = onPrev) { Icon(Icons.Default.ChevronLeft, null) }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        Formatters.monthNameFull(yearMonth.monthValue),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text("${yearMonth.year}", color = MaterialTheme.colorScheme.primary)
+                }
+                IconButton(onClick = onNext) { Icon(Icons.Default.ChevronRight, null) }
+            }
+        }
+
+        item {
+            Text(
+                "Hoy",
+                modifier = Modifier.clickable { onToday() },
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
+
+        payroll?.let { p ->
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 ) {
-                    Column {
-                        Text("Neto estimado", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
-                        Text(Formatters.money(it.netTotal), style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+                    Row(
+                        Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column {
+                            Text("Neto estimado", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                            Text(
+                                Formatters.money(p.netTotal),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Text("${p.workedDays} días", color = MaterialTheme.colorScheme.secondary)
                     }
-                    Text("${it.workedDays} días", color = MaterialTheme.colorScheme.secondary)
                 }
             }
         }
 
-        val days = buildCalendarDays(yearMonth)
-        LazyVerticalGrid(columns = GridCells.Fixed(7), modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(listOf("D", "L", "M", "M", "J", "V", "S")) { label ->
-                Text(label, modifier = Modifier.padding(4.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-            }
-            items(days) { cell ->
-                if (cell == null) {
-                    Box(Modifier.aspectRatio(1f))
-                } else {
-                    DayCell(cell, marks[cell], onDayClick)
+        item {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(7),
+                modifier = Modifier.height(gridHeight),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                userScrollEnabled = false,
+            ) {
+                items(listOf("D", "L", "M", "M", "J", "V", "S")) { label ->
+                    Text(label, modifier = Modifier.padding(4.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                }
+                items(days) { cell ->
+                    if (cell == null) {
+                        Box(Modifier.aspectRatio(1f))
+                    } else {
+                        DayCell(cell, marks[cell], onDayClick)
+                    }
                 }
             }
         }
+
+        item { Box(Modifier.height(8.dp)) }
     }
 }
 

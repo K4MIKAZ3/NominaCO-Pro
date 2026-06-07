@@ -62,10 +62,10 @@ jobs:
           fi
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME/build-tools/"* | sort -V | tail -n1)
           "$BUILD_TOOLS/apksigner" verify --verbose "$APK"
-          cp "$APK" "NominaCO-Pro-v1.0.0-signed.apk"
+          cp "$APK" "NominaCO-Pro-v1.1.0-signed.apk"
 
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
           name: NominaCO-Pro-installable
-          path: NominaCO-Pro-v1.0.0-signed.apk
+          path: NominaCO-Pro-v1.1.0-signed.apk

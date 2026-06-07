@@ -10,7 +10,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val app = application as NominaApp
-        setContent { NominaAppRoot(app) }
+        setContent { NominaAppRoot(application as NominaApp) }
     }
 }

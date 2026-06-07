@@ -3,6 +3,7 @@ package com.nominacopro.domain.calculator
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.HourBreakdown
+import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthlyPayroll
 import com.nominacopro.domain.model.PayrollLine
 import com.nominacopro.domain.model.WorkDayEntry
@@ -69,7 +70,7 @@ object PayrollEngine {
         val gross = earnings.sumOf { it.amount }
         val salud = (gross * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong()
         val pension = (gross * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
-        val deductions = listOf(
+        val legalDeductions = listOf(
             PayrollLine("Aporte salud (4%)", salud, isDeduction = true),
             PayrollLine("Aporte pensión (4%)", pension, isDeduction = true),
         )
@@ -81,9 +82,23 @@ object PayrollEngine {
             restDays = restDays,
             breakdown = breakdown,
             earnings = earnings,
-            deductions = deductions,
+            legalDeductions = legalDeductions,
+            manualDeductions = emptyList(),
             grossTotal = gross,
             netTotal = gross - salud - pension,
+        )
+    }
+
+    fun applyManualDeductions(
+        payroll: MonthlyPayroll,
+        manual: List<ManualDeduction>,
+    ): MonthlyPayroll {
+        if (manual.isEmpty()) return payroll
+        val lines = manual.map { PayrollLine(it.label, it.amount, isDeduction = true) }
+        val total = manual.sumOf { it.amount }
+        return payroll.copy(
+            manualDeductions = lines,
+            netTotal = payroll.netTotal - total,
         )
     }
 

@@ -10,8 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -166,7 +166,7 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Icon(
-                                    Icons.AutoMirrored.Filled.Logout,
+                                    Icons.Filled.Logout,
                                     contentDescription = null,
                                     modifier = Modifier.padding(end = 8.dp),
                                 )

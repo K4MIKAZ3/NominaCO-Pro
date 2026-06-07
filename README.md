@@ -17,6 +17,7 @@ App Android nativa para liquidación de nómina personal en Colombia, con motor 
 | Jornada máxima | 44 h/semana (ene–jun), 42 h (jul–dic) — Ley 2101 |
 | Recargo nocturno | 19:00–06:00, +35% — Ley 2466/2025 |
 | Recargo dominical/festivo | +80% (H1 2026), +90% (H2 2026) |
+| Dominical/festivo remunerado | Si cumple 5 días lun–vie: paga domingo y festivos no laborados |
 | Descuentos empleado | Salud 4% + Pensión 4% |
 | Festivos | Calendario oficial 2026 + festivos manuales |
 

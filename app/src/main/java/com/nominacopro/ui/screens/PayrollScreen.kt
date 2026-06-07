@@ -152,7 +152,13 @@ fun PayrollScreen(
                 Column(Modifier.padding(16.dp)) {
                     Text("Mes completo", fontWeight = FontWeight.SemiBold)
                     Text(
-                        "${payroll.workedDays} días · Valor día ${Formatters.money(payroll.dailyRate)}",
+                        buildString {
+                            append("${payroll.workedDays} días laborados")
+                            if (payroll.remuneratedRestDays > 0) {
+                                append(" + ${payroll.remuneratedRestDays} descanso remunerado")
+                            }
+                            append(" · Valor día ${Formatters.money(payroll.dailyRate)}")
+                        },
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         modifier = Modifier.padding(bottom = 8.dp),
                     )

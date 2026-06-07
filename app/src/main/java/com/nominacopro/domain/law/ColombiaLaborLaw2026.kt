@@ -16,6 +16,9 @@ object ColombiaLaborLaw2026 {
     const val DESCUENTO_PENSION = 0.04
     const val DIAS_MES_REFERENCIA = 30
 
+    /** Días lun–vie que debe laborar para devengar dominical y festivo remunerado (CST art. 179–186). */
+    const val ORDINARY_WORK_DAYS_PER_WEEK = 5
+
     /** Jornada máxima semanal: 44 h hasta 14-jul-2026, luego 42 h (Ley 2101). */
     fun weeklyHoursLimit(date: LocalDate): Int =
         if (date.isBefore(LocalDate.of(2026, 7, 15))) 44 else 42
@@ -72,6 +75,19 @@ object ColombiaLaborLaw2026 {
 
     fun isRestDay(date: LocalDate, manualHolidays: Set<LocalDate>): Boolean =
         isSunday(date) || isOfficialHoliday(date) || manualHolidays.contains(date)
+
+    /** Lunes a viernes hábil (no domingo ni festivo). */
+    fun isOrdinaryWorkday(date: LocalDate, manualHolidays: Set<LocalDate>): Boolean =
+        date.dayOfWeek.value in 1..5 && !isOfficialHoliday(date) && !manualHolidays.contains(date)
+
+    /** Festivo en día distinto al domingo (se paga aparte del dominical). */
+    fun isWeekdayHoliday(date: LocalDate, manualHolidays: Set<LocalDate>): Boolean =
+        !isSunday(date) && (isOfficialHoliday(date) || manualHolidays.contains(date))
+
+    fun remuneratedRestPay(monthlySalary: Long, paidDays: Int): Long {
+        if (paidDays <= 0) return 0L
+        return (dailyRate(monthlySalary) * paidDays).toLong()
+    }
 
     /** Valor día = salario mensual ÷ 30 (días mes referencia). */
     fun dailyRate(monthlySalary: Long): Double =

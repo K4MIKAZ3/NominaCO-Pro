@@ -89,6 +89,22 @@ class PayrollEngineTest {
     }
 
     @Test
+    fun fullWeekMonToFri_includesRemuneratedSunday() {
+        val entries = (1..5).map { day ->
+            WorkDayEntry(
+                LocalDate.of(2026, 6, day),
+                LocalTime.of(8, 0),
+                LocalTime.of(16, 0),
+            )
+        }
+        val payroll = PayrollEngine.liquidateMonth(profile, 2026, 6, entries, emptySet())
+
+        assertEquals(5, payroll.workedDays)
+        assertEquals(1, payroll.remuneratedRestDays)
+        assertEquals(100_000L, payroll.earnings.first { it.code == "DRD" }.amount)
+    }
+
+    @Test
     fun hourlyRate_usesSmmlvReferenceMonth() {
         val rate = ColombiaLaborLaw2026.hourlyRate(ColombiaLaborLaw2026.SMMLV, 8)
         assertTrue(rate > 0)

@@ -65,6 +65,22 @@ object PayrollEngine {
             date = date.plusDays(1)
         }
 
+        val workedDates = entries.map { it.date }.toSet()
+        val remuneratedRest = RemuneratedRestCalculator.calculate(
+            start = start,
+            end = end,
+            workedDates = workedDates,
+            manualHolidays = manualHolidays,
+        )
+        val dominicalPay = ColombiaLaborLaw2026.remuneratedRestPay(
+            profile.monthlySalary,
+            remuneratedRest.paidSundays,
+        )
+        val holidayPay = ColombiaLaborLaw2026.remuneratedRestPay(
+            profile.monthlySalary,
+            remuneratedRest.paidWeekdayHolidays,
+        )
+
         val midDate = start.plusDays((java.time.temporal.ChronoUnit.DAYS.between(start, end) / 2).coerceAtLeast(0))
         val domFactor = ColombiaLaborLaw2026.dominicalFactor(midDate)
 
@@ -86,6 +102,24 @@ object PayrollEngine {
         val earnings = buildList {
             add(PayrollLine("Salario base proporcional", baseProportional, code = "SBP"))
             if (transport > 0) add(PayrollLine("Subsidio de transporte", transport, code = "ST"))
+            if (dominicalPay > 0) {
+                add(
+                    PayrollLine(
+                        "Dominical remunerado (${remuneratedRest.paidSundays} día(s))",
+                        dominicalPay,
+                        code = "DRD",
+                    ),
+                )
+            }
+            if (holidayPay > 0) {
+                add(
+                    PayrollLine(
+                        "Festivo remunerado (${remuneratedRest.paidWeekdayHolidays} día(s))",
+                        holidayPay,
+                        code = "FER",
+                    ),
+                )
+            }
             if (recargoNocturno > 0) {
                 add(PayrollLine("Recargo nocturno (+35%)", recargoNocturno, code = "RN", hours = breakdown.nocturnaOrdinaria))
             }
@@ -122,6 +156,7 @@ object PayrollEngine {
             month = referenceMonth,
             workedDays = workedDays,
             restDays = restDays,
+            remuneratedRestDays = remuneratedRest.totalDays,
             dailyRate = dailyRate.toLong(),
             hourlyRate = hourly,
             breakdown = breakdown,

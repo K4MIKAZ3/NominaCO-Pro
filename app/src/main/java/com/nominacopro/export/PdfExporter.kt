@@ -75,6 +75,9 @@ object PdfExporter {
         draw("Generado: ${LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}")
         y += 8f
         draw("Días trabajados: ${payroll.workedDays}", titlePaint)
+        if (payroll.remuneratedRestDays > 0) {
+            draw("Dominical/festivo remunerado: ${payroll.remuneratedRestDays} día(s)", smallPaint)
+        }
         draw(
             "Valor día: ${Formatters.money(payroll.dailyRate)} · Valor hora: ${Formatters.money(payroll.hourlyRate.toLong())}",
             smallPaint,

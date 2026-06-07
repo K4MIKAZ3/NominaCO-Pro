@@ -35,7 +35,10 @@ class AuthRepository {
         }
         supabase.auth.sessionStatus.collect { status ->
             _state.value = when (status) {
-                is SessionStatus.Authenticated -> status.session.user.toAuthenticated()
+                is SessionStatus.Authenticated -> {
+                    val user = status.session.user
+                    if (user != null) user.toAuthenticated() else AuthUiState.Unauthenticated
+                }
                 is SessionStatus.NotAuthenticated -> AuthUiState.Unauthenticated
                 SessionStatus.LoadingFromStorage -> AuthUiState.Loading
                 SessionStatus.NetworkError -> AuthUiState.Unauthenticated

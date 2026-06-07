@@ -42,6 +42,22 @@ Para firmar releases locales, copia `keystore.properties.example` a `keystore.pr
 
 Cada push a `main` genera una APK firmada instalable como artefacto de GitHub Actions.
 
+### Actualizaciones sin desinstalar
+
+Todas las APK de CI usan **el mismo keystore** (GitHub Secrets). Así puedes instalar una versión nueva encima de la anterior si:
+
+- El `applicationId` no cambia (`com.nominacopro`)
+- El `versionCode` sube en cada release
+- La APK anterior fue firmada con el mismo certificado
+
+**Configuración única (ya hecha en el repo):**
+
+1. Actions → **Setup release signing (once)** → Run workflow
+2. Descarga el artefacto `release-keystore-setup`
+3. Ejecuta: `.\scripts\setup-github-secrets.ps1 -KeystorePath ".\release.keystore"`
+
+Guarda `release.keystore` en un lugar seguro. Si instalaste una APK de CI **antes** de este keystore fijo, desinstala **una vez** y vuelve a instalar.
+
 ## Descargo
 
 Esta app es una herramienta de apoyo personal. No sustituye asesoría contable ni legal oficial.

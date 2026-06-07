@@ -1,0 +1,63 @@
+# Ejecutar UNA sola vez desde GitHub → Actions → "Setup release signing (once)" → Run workflow
+# Descarga el artefacto release-keystore-setup y ejecuta scripts/setup-github-secrets.ps1
+
+name: Setup release signing (once)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-keystore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Generate release keystore
+        env:
+          STORE_PASS: NominaCOPro2026
+          KEY_PASS: NominaCOPro2026
+        run: |
+          keytool -genkeypair -v \
+            -keystore release.keystore \
+            -storepass "$STORE_PASS" \
+            -keypass "$KEY_PASS" \
+            -alias nominacopro \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=NominaCO Pro, OU=Mobile, O=Berrocal, L=Bogota, ST=Cundinamarca, C=CO"
+          base64 -w 0 release.keystore > release.keystore.b64
+          cat > INSTRUCCIONES.txt <<'EOF'
+          Keystore de firma permanente para NominaCO Pro
+          ==============================================
+
+          1. Descarga release.keystore de este artefacto.
+          2. En PowerShell, desde la carpeta del proyecto:
+               .\scripts\setup-github-secrets.ps1 -KeystorePath ".\release.keystore"
+
+          Secrets que se crearán en GitHub:
+            RELEASE_KEYSTORE_BASE64
+            RELEASE_STORE_PASSWORD  = NominaCOPro2026
+            RELEASE_KEY_ALIAS       = nominacopro
+            RELEASE_KEY_PASSWORD    = NominaCOPro2026
+
+          IMPORTANTE:
+          - Guarda release.keystore en un lugar seguro (copia de respaldo).
+          - Todas las APK futuras usarán esta misma firma → se instalan encima sin desinstalar.
+          - Si ya tenías una APK de CI antigua instalada, desinstálala UNA vez antes de instalar
+            la primera APK firmada con este keystore permanente.
+          EOF
+
+      - name: Upload keystore bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-keystore-setup
+          path: |
+            release.keystore
+            release.keystore.b64
+            INSTRUCCIONES.txt

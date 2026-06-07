@@ -5,4 +5,9 @@
     <string name="notification_channel_desc">Aviso diario para registrar tu día laboral</string>
     <string name="notification_title">¿Registraste tu jornada?</string>
     <string name="notification_body">Abre NominaCO Pro y marca las horas de hoy.</string>
+    <string name="credits_title">Créditos</string>
+    <string name="credits_app">NominaCO Pro</string>
+    <string name="credits_developer">Desarrollado por Berrocal</string>
+    <string name="credits_github">GitHub: K4MIKAZ3/NominaCO-Pro</string>
+    <string name="credits_legal">Motor legal Colombia 2026 · Uso personal</string>
 </resources>

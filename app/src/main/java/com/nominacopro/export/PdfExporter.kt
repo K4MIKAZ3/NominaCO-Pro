@@ -111,6 +111,7 @@ object PdfExporter {
 
         y += 8f
         draw("Base legal: Ley 2466/2025 · SMMLV ${Formatters.money(ColombiaLaborLaw2026.SMMLV)}", smallPaint)
+        draw("© 2026 Berrocal · NominaCO Pro · Uso personal", smallPaint)
 
         doc.finishPage(page)
         FileOutputStream(file).use { doc.writeTo(it) }
@@ -169,6 +170,9 @@ object PdfExporter {
                 y += 4f
             }
         }
+
+        y += 8f
+        draw("Documento generado por NominaCO Pro · Desarrollado por Berrocal", smallPaint)
 
         doc.finishPage(page)
         FileOutputStream(file).use { doc.writeTo(it) }

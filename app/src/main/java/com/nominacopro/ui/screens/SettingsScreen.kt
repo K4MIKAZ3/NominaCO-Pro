@@ -15,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -31,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.nominacopro.R
+import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.ui.Formatters
@@ -41,6 +43,8 @@ fun SettingsScreen(
     preferences: AppPreferences,
     manualHolidays: Set<LocalDate>,
     accountEmail: String? = null,
+    syncState: SyncUiState? = null,
+    onSyncNow: (() -> Unit)? = null,
     onSavePreferences: (AppPreferences) -> Unit,
     onRemoveHoliday: (LocalDate) -> Unit,
     onRequestNotificationPermission: () -> Unit,
@@ -83,6 +87,42 @@ fun SettingsScreen(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Cuenta Supabase", fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
                         Text(accountEmail, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            "Perfil, jornadas, egresos y preferencias se sincronizan con la nube.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        )
+                        when (syncState) {
+                            SyncUiState.Syncing -> {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(4.dp))
+                                    Text("Sincronizando…", style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                            is SyncUiState.Success -> {
+                                Text(
+                                    syncState.message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                            is SyncUiState.Error -> {
+                                Text(
+                                    syncState.message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            }
+                            else -> Unit
+                        }
+                        onSyncNow?.let { sync ->
+                            OutlinedButton(onClick = sync, enabled = syncState != SyncUiState.Syncing) {
+                                Text(stringResource(R.string.sync_now))
+                            }
+                        }
                         onSignOut?.let { signOut ->
                             OutlinedButton(onClick = signOut) {
                                 Text(stringResource(R.string.auth_sign_out))
@@ -265,7 +305,7 @@ fun SettingsScreen(
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        stringResource(R.string.credits_app) + " v1.2.0",
+                        stringResource(R.string.credits_app) + " v1.3.0",
                         fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
                     )

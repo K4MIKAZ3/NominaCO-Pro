@@ -49,6 +49,7 @@ data class PayrollLine(
 
 data class ManualDeduction(
     val id: Long = 0,
+    val cloudId: String? = null,
     val yearMonth: YearMonth,
     val label: String,
     val amount: Long,

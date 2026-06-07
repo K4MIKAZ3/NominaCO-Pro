@@ -23,6 +23,7 @@ App Android nativa para liquidación de nómina personal en Colombia, con motor 
 ## Funciones
 
 - **Login con Supabase** (correo/contraseña, sesión persistente)
+- **Sincronización en nube** (perfil, jornadas, festivos, egresos y preferencias)
 - Calendario mensual con marcas de días trabajados, domingos y festivos
 - Registro de jornada por día (entrada/salida, notas, festivo manual)
 - Liquidación mensual con desglose de devengados y descuentos
@@ -52,6 +53,15 @@ SUPABASE_ANON_KEY=eyJ...
 ```
 
 Para CI, añade secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub. Sin ellos, la app funciona en modo solo local (sin pantalla de login).
+
+### Sincronización en nube
+
+1. Ejecuta el script `supabase/schema.sql` en **Supabase → SQL Editor** (crea tablas + políticas RLS).
+2. Inicia sesión en la app: si ya hay datos en la nube, se descargan; si no, se suben los datos locales.
+3. Cada cambio (perfil, día, egreso, preferencias) se envía automáticamente a Supabase.
+4. En **Ajustes → Sincronizar ahora** puedes forzar una sincronización bidireccional (sube local y luego descarga la nube).
+
+**Tablas sincronizadas:** `profiles`, `work_days`, `manual_holidays`, `manual_deductions`, `app_preferences`.
 
 ## CI
 

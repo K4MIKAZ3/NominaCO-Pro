@@ -15,6 +15,7 @@ import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
 import com.nominacopro.domain.model.WorkDayEntry
+import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.export.PdfExporter
 import com.nominacopro.notifications.ReminderScheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -87,6 +88,10 @@ class MainViewModel(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
     )
 
+    val syncState: StateFlow<SyncUiState> = repository.cloudSync.state.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), SyncUiState.Idle,
+    )
+
     fun prevMonth() { _yearMonth.value = _yearMonth.value.minusMonths(1) }
     fun nextMonth() { _yearMonth.value = _yearMonth.value.plusMonths(1) }
     fun goToday() { _yearMonth.value = YearMonth.now() }
@@ -147,6 +152,12 @@ class MainViewModel(
 
     fun updatePreferences(transform: (AppPreferences) -> AppPreferences) {
         savePreferences(transform(preferences.value))
+    }
+
+    fun syncNow(userId: String, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            onResult(repository.cloudSync.syncNow(userId))
+        }
     }
 
     fun exportPayrollPdf(onReady: (File) -> Unit) {

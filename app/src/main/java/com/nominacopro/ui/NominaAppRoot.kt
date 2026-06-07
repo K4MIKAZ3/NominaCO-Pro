@@ -17,6 +17,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nominacopro.NominaApp
 import com.nominacopro.data.auth.AuthUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
+import com.nominacopro.notifications.ReminderScheduler
 import com.nominacopro.ui.auth.AuthViewModel
 import com.nominacopro.ui.navigation.NominaTab
 import com.nominacopro.ui.screens.CalendarScreen
@@ -43,6 +45,7 @@ import com.nominacopro.ui.screens.RegisterScreen
 import com.nominacopro.ui.screens.SettingsScreen
 import com.nominacopro.ui.theme.NominaTheme
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
@@ -73,10 +76,24 @@ fun NominaAppRoot(app: NominaApp) {
             }
             authState is AuthUiState.Authenticated -> {
                 val user = authState as AuthUiState.Authenticated
+                LaunchedEffect(user.userId) {
+                    app.repository.cloudSync.setActiveUser(user.userId)
+                    app.repository.cloudSync.onUserAuthenticated(user.userId)
+                    val prefs = app.repository.preferencesStore.observe().first()
+                    if (prefs.reminderEnabled) {
+                        ReminderScheduler.schedule(app, prefs.reminderHour, prefs.reminderMinute)
+                    } else {
+                        ReminderScheduler.cancel(app)
+                    }
+                }
                 MainNominaScaffold(
                     app = app,
                     accountEmail = user.email,
-                    onSignOut = authVm::signOut,
+                    accountUserId = user.userId,
+                    onSignOut = {
+                        app.repository.cloudSync.setActiveUser(null)
+                        authVm.signOut()
+                    },
                 )
             }
             else -> {
@@ -138,6 +155,7 @@ fun NominaAppRoot(app: NominaApp) {
 private fun MainNominaScaffold(
     app: NominaApp,
     accountEmail: String?,
+    accountUserId: String? = null,
     onSignOut: (() -> Unit)?,
 ) {
     val vm: MainViewModel = viewModel(factory = MainViewModel.Factory(app.repository, app))
@@ -155,6 +173,7 @@ private fun MainNominaScaffold(
     val manualDeductions by vm.manualDeductions.collectAsState()
     val preferences by vm.preferences.collectAsState()
     val dashboard by vm.dashboard.collectAsState()
+    val syncState by vm.syncState.collectAsState()
 
     var tab by remember { mutableStateOf(NominaTab.Calendar) }
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
@@ -237,6 +256,18 @@ private fun MainNominaScaffold(
                 preferences = preferences,
                 manualHolidays = manual,
                 accountEmail = accountEmail,
+                syncState = syncState,
+                onSyncNow = accountUserId?.let { userId ->
+                    {
+                        vm.syncNow(userId) { error ->
+                            scope.launch {
+                                snackbar.showSnackbar(
+                                    error ?: "Sincronización completada",
+                                )
+                            }
+                        }
+                    }
+                },
                 onSavePreferences = vm::savePreferences,
                 onRemoveHoliday = vm::removeManualHoliday,
                 onRequestNotificationPermission = ::requestNotificationPermission,

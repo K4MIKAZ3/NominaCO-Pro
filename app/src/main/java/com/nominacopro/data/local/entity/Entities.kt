@@ -31,6 +31,7 @@ data class ManualHolidayEntity(
 @Entity(tableName = "manual_deductions")
 data class ManualDeductionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val cloudId: String? = null,
     val yearMonth: String,
     val label: String,
     val amount: Long,

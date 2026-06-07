@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.WorkDayEntry
+import com.nominacopro.ui.Formatters
+import com.nominacopro.ui.TimeInput
+import com.nominacopro.ui.TimeInputRow
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -42,24 +45,17 @@ fun DayEditorDialog(
     val initialStart = existingEntry?.start ?: defaultStart
     val initialEnd = existingEntry?.end ?: defaultEnd
 
-    var startH by remember(date, existingEntry, defaultStart) {
-        mutableStateOf(initialStart.hour.toString().padStart(2, '0'))
+    var startFields by remember(date, existingEntry, defaultStart, use24Hour) {
+        mutableStateOf(TimeInput.fieldsFrom(initialStart, use24Hour))
     }
-    var startM by remember(date, existingEntry, defaultStart) {
-        mutableStateOf(initialStart.minute.toString().padStart(2, '0'))
-    }
-    var endH by remember(date, existingEntry, defaultEnd) {
-        mutableStateOf(initialEnd.hour.toString().padStart(2, '0'))
-    }
-    var endM by remember(date, existingEntry, defaultEnd) {
-        mutableStateOf(initialEnd.minute.toString().padStart(2, '0'))
+    var endFields by remember(date, existingEntry, defaultEnd, use24Hour) {
+        mutableStateOf(TimeInput.fieldsFrom(initialEnd, use24Hour))
     }
     var notes by remember(date, existingEntry) { mutableStateOf(existingEntry?.notes ?: "") }
     var manual by remember(date, isManualHoliday) { mutableStateOf(isManualHoliday) }
 
     val isSunday = ColombiaLaborLaw2026.isSunday(date)
     val isRestDay = isOfficialHoliday || isSunday || manual
-    val hourHint = if (use24Hour) "24h" else "12h"
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -73,7 +69,7 @@ fun DayEditorDialog(
                 }
                 if (existingEntry == null) {
                     Text(
-                        "Horario default: ${com.nominacopro.ui.Formatters.formatTime(defaultStart, use24Hour)} – ${com.nominacopro.ui.Formatters.formatTime(defaultEnd, use24Hour)}",
+                        "Horario default: ${Formatters.formatTime(defaultStart, use24Hour)} – ${Formatters.formatTime(defaultEnd, use24Hour)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -84,34 +80,22 @@ fun DayEditorDialog(
                         Text("Marcar como festivo manual")
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = startH,
-                        onValueChange = { startH = it.filter(Char::isDigit).take(2) },
-                        label = { Text("Entrada ($hourHint)") },
-                        modifier = Modifier.weight(1f),
-                    )
-                    OutlinedTextField(
-                        value = startM,
-                        onValueChange = { startM = it.filter(Char::isDigit).take(2) },
-                        label = { Text("m") },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = endH,
-                        onValueChange = { endH = it.filter(Char::isDigit).take(2) },
-                        label = { Text("Salida ($hourHint)") },
-                        modifier = Modifier.weight(1f),
-                    )
-                    OutlinedTextField(
-                        value = endM,
-                        onValueChange = { endM = it.filter(Char::isDigit).take(2) },
-                        label = { Text("m") },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                TimeInputRow(
+                    label = if (use24Hour) "Entrada (24 h)" else "Entrada",
+                    use24Hour = use24Hour,
+                    state = startFields,
+                    onHourChange = { startFields = startFields.copy(hour = it) },
+                    onMinuteChange = { startFields = startFields.copy(minute = it) },
+                    onAmPmChange = { startFields = startFields.copy(amPm = it) },
+                )
+                TimeInputRow(
+                    label = if (use24Hour) "Salida (24 h)" else "Salida",
+                    use24Hour = use24Hour,
+                    state = endFields,
+                    onHourChange = { endFields = endFields.copy(hour = it) },
+                    onMinuteChange = { endFields = endFields.copy(minute = it) },
+                    onAmPmChange = { endFields = endFields.copy(amPm = it) },
+                )
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
@@ -122,6 +106,13 @@ fun DayEditorDialog(
                     "Se descuenta 1 h de almuerzo (12:00–13:00) si aplica.",
                     style = MaterialTheme.typography.bodySmall,
                 )
+                if (!use24Hour) {
+                    Text(
+                        "En formato 12 h elige AM o PM en entrada y salida (ej. 8 AM – 5 PM).",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+                    )
+                }
                 if (isRestDay) {
                     Text(
                         "Recargos dominical/festivo según Ley 2466/2025.",
@@ -133,14 +124,8 @@ fun DayEditorDialog(
         },
         confirmButton = {
             Button(onClick = {
-                val start = LocalTime.of(
-                    startH.toIntOrNull()?.coerceIn(0, 23) ?: defaultStart.hour,
-                    startM.toIntOrNull()?.coerceIn(0, 59) ?: defaultStart.minute,
-                )
-                val end = LocalTime.of(
-                    endH.toIntOrNull()?.coerceIn(0, 23) ?: defaultEnd.hour,
-                    endM.toIntOrNull()?.coerceIn(0, 59) ?: defaultEnd.minute,
-                )
+                val start = TimeInput.toLocalTime(startFields, use24Hour, defaultStart)
+                val end = TimeInput.toLocalTime(endFields, use24Hour, defaultEnd)
                 val manualSet = if (manual) setOf(date) else emptySet()
                 val type = if (ColombiaLaborLaw2026.isRestDay(date, manualSet)) {
                     DayType.FESTIVO_DOMINICAL

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
@@ -37,13 +36,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.nominacopro.R
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.ui.Formatters
+import com.nominacopro.ui.TimeFieldState
+import com.nominacopro.ui.TimeInput
+import com.nominacopro.ui.TimeInputRow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
@@ -65,12 +66,19 @@ fun SettingsScreen(
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    var startH by rememberSaveable(preferences) { mutableStateOf(preferences.defaultStartHour.toString().padStart(2, '0')) }
-    var startM by rememberSaveable(preferences) { mutableStateOf(preferences.defaultStartMinute.toString().padStart(2, '0')) }
-    var endH by rememberSaveable(preferences) { mutableStateOf(preferences.defaultEndHour.toString().padStart(2, '0')) }
-    var endM by rememberSaveable(preferences) { mutableStateOf(preferences.defaultEndMinute.toString().padStart(2, '0')) }
-    var reminderH by rememberSaveable(preferences) { mutableStateOf(preferences.reminderHour.toString().padStart(2, '0')) }
-    var reminderM by rememberSaveable(preferences) { mutableStateOf(preferences.reminderMinute.toString().padStart(2, '0')) }
+    val defaultStartTime = LocalTime.of(preferences.defaultStartHour, preferences.defaultStartMinute)
+    val defaultEndTime = LocalTime.of(preferences.defaultEndHour, preferences.defaultEndMinute)
+    val defaultReminderTime = LocalTime.of(preferences.reminderHour, preferences.reminderMinute)
+
+    var scheduleStartFields by remember(preferences, preferences.use24HourFormat) {
+        mutableStateOf(TimeInput.fieldsFrom(defaultStartTime, preferences.use24HourFormat))
+    }
+    var scheduleEndFields by remember(preferences, preferences.use24HourFormat) {
+        mutableStateOf(TimeInput.fieldsFrom(defaultEndTime, preferences.use24HourFormat))
+    }
+    var reminderFields by remember(preferences, preferences.use24HourFormat) {
+        mutableStateOf(TimeInput.fieldsFrom(defaultReminderTime, preferences.use24HourFormat))
+    }
     var editingSchedule by rememberSaveable { mutableStateOf(false) }
     var editingReminder by rememberSaveable { mutableStateOf(false) }
     var showSignOutDialog by rememberSaveable { mutableStateOf(false) }
@@ -80,18 +88,23 @@ fun SettingsScreen(
         reminderEnabled: Boolean = preferences.reminderEnabled,
         darkMode: Boolean = preferences.darkModeEnabled,
         biometric: Boolean = preferences.biometricEnabled,
-    ) = AppPreferences(
-        defaultStartHour = startH.toIntOrNull()?.coerceIn(0, 23) ?: 8,
-        defaultStartMinute = startM.toIntOrNull()?.coerceIn(0, 59) ?: 0,
-        defaultEndHour = endH.toIntOrNull()?.coerceIn(0, 23) ?: 16,
-        defaultEndMinute = endM.toIntOrNull()?.coerceIn(0, 59) ?: 30,
-        use24HourFormat = use24,
-        reminderEnabled = reminderEnabled,
-        reminderHour = reminderH.toIntOrNull()?.coerceIn(0, 23) ?: 18,
-        reminderMinute = reminderM.toIntOrNull()?.coerceIn(0, 59) ?: 0,
-        darkModeEnabled = darkMode,
-        biometricEnabled = biometric,
-    )
+    ): AppPreferences {
+        val start = TimeInput.toLocalTime(scheduleStartFields, use24, defaultStartTime)
+        val end = TimeInput.toLocalTime(scheduleEndFields, use24, defaultEndTime)
+        val reminder = TimeInput.toLocalTime(reminderFields, use24, defaultReminderTime)
+        return AppPreferences(
+            defaultStartHour = start.hour,
+            defaultStartMinute = start.minute,
+            defaultEndHour = end.hour,
+            defaultEndMinute = end.minute,
+            use24HourFormat = use24,
+            reminderEnabled = reminderEnabled,
+            reminderHour = reminder.hour,
+            reminderMinute = reminder.minute,
+            darkModeEnabled = darkMode,
+            biometricEnabled = biometric,
+        )
+    }
 
     fun scheduleSummary() = "${Formatters.formatTime(
         LocalTime.of(preferences.defaultStartHour, preferences.defaultStartMinute),
@@ -209,7 +222,15 @@ fun SettingsScreen(
                             }
                             Switch(
                                 checked = preferences.use24HourFormat,
-                                onCheckedChange = { onSavePreferences(buildPrefs(use24 = it)) },
+                                onCheckedChange = { use24 ->
+                                    val start = LocalTime.of(preferences.defaultStartHour, preferences.defaultStartMinute)
+                                    val end = LocalTime.of(preferences.defaultEndHour, preferences.defaultEndMinute)
+                                    val reminder = LocalTime.of(preferences.reminderHour, preferences.reminderMinute)
+                                    scheduleStartFields = TimeInput.fieldsFrom(start, use24)
+                                    scheduleEndFields = TimeInput.fieldsFrom(end, use24)
+                                    reminderFields = TimeInput.fieldsFrom(reminder, use24)
+                                    onSavePreferences(buildPrefs(use24 = use24))
+                                },
                             )
                         }
                     }
@@ -223,21 +244,27 @@ fun SettingsScreen(
                         if (!editingSchedule) {
                             Text(scheduleSummary(), color = MaterialTheme.colorScheme.primary)
                             OutlinedButton(onClick = {
-                                startH = preferences.defaultStartHour.toString().padStart(2, '0')
-                                startM = preferences.defaultStartMinute.toString().padStart(2, '0')
-                                endH = preferences.defaultEndHour.toString().padStart(2, '0')
-                                endM = preferences.defaultEndMinute.toString().padStart(2, '0')
+                                scheduleStartFields = TimeInput.fieldsFrom(defaultStartTime, preferences.use24HourFormat)
+                                scheduleEndFields = TimeInput.fieldsFrom(defaultEndTime, preferences.use24HourFormat)
                                 editingSchedule = true
                             }) { Text("Editar") }
                         } else {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedTextField(value = startH, onValueChange = { startH = it.filter(Char::isDigit).take(2) }, label = { Text("Entrada h") }, modifier = Modifier.weight(1f))
-                                OutlinedTextField(value = startM, onValueChange = { startM = it.filter(Char::isDigit).take(2) }, label = { Text("m") }, modifier = Modifier.weight(1f))
-                            }
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedTextField(value = endH, onValueChange = { endH = it.filter(Char::isDigit).take(2) }, label = { Text("Salida h") }, modifier = Modifier.weight(1f))
-                                OutlinedTextField(value = endM, onValueChange = { endM = it.filter(Char::isDigit).take(2) }, label = { Text("m") }, modifier = Modifier.weight(1f))
-                            }
+                            TimeInputRow(
+                                label = if (preferences.use24HourFormat) "Entrada (24 h)" else "Entrada",
+                                use24Hour = preferences.use24HourFormat,
+                                state = scheduleStartFields,
+                                onHourChange = { scheduleStartFields = scheduleStartFields.copy(hour = it) },
+                                onMinuteChange = { scheduleStartFields = scheduleStartFields.copy(minute = it) },
+                                onAmPmChange = { scheduleStartFields = scheduleStartFields.copy(amPm = it) },
+                            )
+                            TimeInputRow(
+                                label = if (preferences.use24HourFormat) "Salida (24 h)" else "Salida",
+                                use24Hour = preferences.use24HourFormat,
+                                state = scheduleEndFields,
+                                onHourChange = { scheduleEndFields = scheduleEndFields.copy(hour = it) },
+                                onMinuteChange = { scheduleEndFields = scheduleEndFields.copy(minute = it) },
+                                onAmPmChange = { scheduleEndFields = scheduleEndFields.copy(amPm = it) },
+                            )
                             Button(onClick = {
                                 onSavePreferences(buildPrefs())
                                 editingSchedule = false
@@ -269,16 +296,19 @@ fun SettingsScreen(
                             Text("Hora: ${reminderSummary()}", color = MaterialTheme.colorScheme.primary)
                             if (preferences.reminderEnabled) {
                                 OutlinedButton(onClick = {
-                                    reminderH = preferences.reminderHour.toString().padStart(2, '0')
-                                    reminderM = preferences.reminderMinute.toString().padStart(2, '0')
+                                    reminderFields = TimeInput.fieldsFrom(defaultReminderTime, preferences.use24HourFormat)
                                     editingReminder = true
                                 }) { Text("Editar") }
                             }
                         } else {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                OutlinedTextField(value = reminderH, onValueChange = { reminderH = it.filter(Char::isDigit).take(2) }, label = { Text("Hora") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
-                                OutlinedTextField(value = reminderM, onValueChange = { reminderM = it.filter(Char::isDigit).take(2) }, label = { Text("Min") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
-                            }
+                            TimeInputRow(
+                                label = if (preferences.use24HourFormat) "Hora recordatorio (24 h)" else "Hora recordatorio",
+                                use24Hour = preferences.use24HourFormat,
+                                state = reminderFields,
+                                onHourChange = { reminderFields = reminderFields.copy(hour = it) },
+                                onMinuteChange = { reminderFields = reminderFields.copy(minute = it) },
+                                onAmPmChange = { reminderFields = reminderFields.copy(amPm = it) },
+                            )
                             Button(onClick = {
                                 onSavePreferences(buildPrefs(reminderEnabled = true))
                                 editingReminder = false

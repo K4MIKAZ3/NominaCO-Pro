@@ -8,6 +8,22 @@ import java.time.LocalTime
 class HourCalculatorTest {
 
     @Test
+    fun weekday_eightAmToFivePm_isEightHoursAfterLunch() {
+        val breakdown = HourCalculator.calculate(
+            WorkDayEntry(
+                date = java.time.LocalDate.of(2026, 6, 2),
+                start = LocalTime.of(8, 0),
+                end = LocalTime.of(17, 0),
+            ),
+            dailyHours = 8,
+            isRestDay = false,
+        )
+
+        assertEquals(8.0, breakdown.normalDiurna, 0.01)
+        assertEquals(0.0, breakdown.extraDiurna, 0.01)
+    }
+
+    @Test
     fun weekday_shiftWithOneExtraHour_countsExtraDiurna() {
         val breakdown = HourCalculator.calculate(
             WorkDayEntry(

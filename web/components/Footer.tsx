@@ -11,7 +11,7 @@ export function Footer() {
         <div className="footer-links">
           <Link href="/terminos">Términos y privacidad</Link>
           <Link href="/login">Iniciar sesión</Link>
-          <a href={`mailto:${site.contactEmail}`}>Contacto</a>
+          <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
         </div>
       </div>
     </footer>

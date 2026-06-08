@@ -96,10 +96,11 @@ fun DayEditorDialog(
         ) {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val buttonBarHeight = 56.dp
+                val scrollMaxHeight = this.maxHeight - buttonBarHeight
                 Column {
                     Column(
                         modifier = Modifier
-                            .heightIn(max = maxHeight - buttonBarHeight)
+                            .heightIn(max = scrollMaxHeight)
                             .verticalScroll(scrollState)
                             .padding(horizontal = 20.dp, vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),

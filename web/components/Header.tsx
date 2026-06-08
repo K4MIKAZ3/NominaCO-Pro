@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ApkDownloadButton } from "@/components/ApkDownloadButton";
 import { site } from "@/lib/site";
 
 export function Header() {
@@ -26,9 +27,7 @@ export function Header() {
           <Link href="/terminos" className="hide-mobile">
             Términos
           </Link>
-          <a href={site.apkDownloadUrl} className="btn btn-primary">
-            Descargar APK
-          </a>
+          <ApkDownloadButton>Descargar APK</ApkDownloadButton>
         </nav>
       </div>
     </header>

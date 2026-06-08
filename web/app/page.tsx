@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ApkDownloadButton } from "@/components/ApkDownloadButton";
 import { features, legalHighlights, site } from "@/lib/site";
 
 export default function HomePage() {
@@ -16,9 +17,7 @@ export default function HomePage() {
               tu Android, con respaldo opcional en la nube.
             </p>
             <div className="hero-actions">
-              <a href={site.apkDownloadUrl} className="btn btn-primary">
-                Descargar APK para Android
-              </a>
+              <ApkDownloadButton>Descargar APK para Android</ApkDownloadButton>
               <Link href="/login" className="btn btn-ghost">
                 Acceder a mi cuenta
               </Link>
@@ -91,9 +90,7 @@ export default function HomePage() {
             Descarga la app, configura tu perfil laboral y registra tu primera
             jornada en minutos.
           </p>
-          <a href={site.apkDownloadUrl} className="btn btn-primary">
-            Descargar Nominapp
-          </a>
+          <ApkDownloadButton>Descargar Nominapp</ApkDownloadButton>
         </div>
       </section>
     </main>

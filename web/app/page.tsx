@@ -31,7 +31,7 @@ export default function HomePage() {
           <div className="hero-image-wrap">
             <Image
               src="/images/hero-phone.png"
-              alt="Vista de liquidación mensual en NominaApp"
+              alt="Vista de liquidación mensual en Nominapp"
               width={480}
               height={480}
               className="hero-image"
@@ -89,7 +89,7 @@ export default function HomePage() {
             jornada en minutos.
           </p>
           <a href={site.apkDownloadUrl} className="btn btn-primary">
-            Descargar NominaApp
+            Descargar Nominapp
           </a>
         </div>
       </section>

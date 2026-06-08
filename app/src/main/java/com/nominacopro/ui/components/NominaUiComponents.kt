@@ -113,7 +113,7 @@ fun NominaTopBar(
             NominaLogoMark(size = 34)
             Column {
                 Text(
-                    "NominaApp",
+                    "Nominapp",
                     fontWeight = FontWeight.Bold,
                     fontSize = 17.sp,
                     color = MaterialTheme.colorScheme.onBackground,

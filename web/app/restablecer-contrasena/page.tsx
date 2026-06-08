@@ -3,7 +3,7 @@ import { ResetPasswordForm } from "@/components/ResetPasswordForm";
 
 export const metadata: Metadata = {
   title: "Restablecer contraseña",
-  description: "Define una nueva contraseña para tu cuenta NominaApp.",
+  description: "Define una nueva contraseña para tu cuenta Nominapp.",
 };
 
 export default function ResetPasswordPage() {

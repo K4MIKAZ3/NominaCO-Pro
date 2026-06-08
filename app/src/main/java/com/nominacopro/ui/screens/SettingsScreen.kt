@@ -388,8 +388,9 @@ fun SettingsScreen(
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(stringResource(R.string.credits_app) + " v1.6.1", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.credits_developer))
+                        Text(stringResource(R.string.credits_contact), color = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.credits_legal), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                        Text("© 2026 Angel Berrocal · Colombia", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        Text("© 2026 Nominapp · Colombia", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }
             }

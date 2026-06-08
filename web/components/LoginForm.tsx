@@ -79,7 +79,7 @@ export function LoginForm() {
   if (!isSupabaseConfigured()) {
     return (
       <div className="auth-card">
-        <h1>Cuenta NominaApp</h1>
+        <h1>Cuenta Nominapp</h1>
         <p className="subtitle">
           El inicio de sesión web aún no está configurado en este servidor.
         </p>
@@ -173,7 +173,7 @@ export function LoginForm() {
 
   return (
     <div className="auth-card">
-      <h1>Cuenta NominaApp</h1>
+      <h1>Cuenta Nominapp</h1>
       <p className="subtitle">
         Misma cuenta que en la app Android. Respalda y sincroniza tu información.
       </p>

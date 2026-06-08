@@ -59,12 +59,6 @@ fun DonationDialog(
                     fontWeight = FontWeight.SemiBold,
                     color = NominaDesign.Green,
                 )
-                Text(
-                    stringResource(R.string.donation_key_label),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = NominaDesign.TextMuted,
-                    textAlign = TextAlign.Center,
-                )
             }
         },
         confirmButton = {

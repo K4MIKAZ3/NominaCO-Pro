@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <p>
-          © {site.year} {site.developer} · {site.name} · {site.country}
+          © {site.year} {site.name} · {site.country}
         </p>
         <div className="footer-links">
           <Link href="/terminos">Términos y privacidad</Link>

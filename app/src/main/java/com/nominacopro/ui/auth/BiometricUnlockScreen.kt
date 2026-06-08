@@ -50,7 +50,7 @@ fun BiometricUnlockScreen(
             },
         )
         val info = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("NominaApp")
+            .setTitle("Nominapp")
             .setSubtitle("Desbloqueo local con huella o Face ID")
             .setNegativeButtonText("Cancelar")
             .build()
@@ -76,7 +76,7 @@ fun BiometricUnlockScreen(
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(bottom = 16.dp),
         )
-        Text("NominaApp", style = MaterialTheme.typography.headlineMedium)
+        Text("Nominapp", style = MaterialTheme.typography.headlineMedium)
         Text(
             "Usa tu huella o Face ID para continuar",
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
@@ -118,7 +118,7 @@ fun promptLocalBiometric(context: android.content.Context, onSuccess: () -> Unit
     )
     prompt.authenticate(
         BiometricPrompt.PromptInfo.Builder()
-            .setTitle("NominaApp")
+            .setTitle("Nominapp")
             .setSubtitle("Confirma tu huella o Face ID")
             .setNegativeButtonText("Cancelar")
             .build(),

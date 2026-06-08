@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NominaApp</string>
+    <string name="app_name">Nominapp</string>
     <string name="notification_channel_name">Recordatorio jornada</string>
     <string name="notification_channel_desc">Aviso diario para registrar tu día laboral</string>
     <string name="notification_title">¿Registraste tu jornada?</string>
-    <string name="notification_body">Abre NominaApp y marca las horas de hoy.</string>
+    <string name="notification_body">Abre Nominapp y marca las horas de hoy.</string>
     <string name="credits_title">Créditos</string>
-    <string name="credits_app">NominaApp</string>
-    <string name="credits_developer">Desarrollado por Angel Berrocal</string>
+    <string name="credits_app">Nominapp</string>
+    <string name="credits_developer">nominapp.xyz</string>
+    <string name="credits_contact">contacto@nominapp.xyz</string>
     <string name="credits_legal">Motor legal Colombia 2026 · Uso personal</string>
-    <string name="donation_title">Apoya NominaApp</string>
-    <string name="donation_summary">¡Gracias por usar NominaApp! Si te ha sido útil, puedes apoyarnos con $5.000 vía Nequi o Bre-B. Así la mantenemos libre al 100%% de anuncios y seguimos mejorándola para ti.</string>
+    <string name="donation_title">Apoya Nominapp</string>
+    <string name="donation_summary">¡Gracias por usar Nominapp! Si te ha sido útil, puedes apoyarnos con $5.000 vía Nequi o Bre-B. Así la mantenemos libre al 100%% de anuncios y seguimos mejorándola.</string>
     <string name="donation_button">Donar $5.000 · Nequi / Bre-B</string>
-    <string name="donation_dialog_title">¡Gracias por apoyar NominaApp!</string>
-    <string name="donation_dialog_message">Escanea el QR con Nequi o Bre-B. Tu aporte nos ayuda a mantener la app sin anuncios y seguir desarrollándola. ¡De corazón, gracias!</string>
-    <string name="donation_amount_label">Valor: $5.000 COP · Nominaapp · Angel Berrocal</string>
-    <string name="donation_key_label">Llave: 0092549710</string>
+    <string name="donation_dialog_title">¡Gracias por apoyar Nominapp!</string>
+    <string name="donation_dialog_message">Escanea el QR con Nequi o Bre-B. Tu aporte nos ayuda a mantener la app sin anuncios y seguir desarrollándola. ¡Gracias!</string>
+    <string name="donation_amount_label">Valor: $5.000 COP · Nominapp</string>
     <string name="donation_qr_content_description">Código QR para donación Nequi Bre-B</string>
     <string name="donation_dialog_close">Cerrar</string>
     <string name="auth_sign_out">Cerrar sesión</string>

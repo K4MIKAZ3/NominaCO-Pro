@@ -1,13 +1,12 @@
 export const site = {
-  name: "NominaApp",
+  name: "Nominapp",
   tagline: "Liquidación de nómina personal en Colombia",
   description:
     "App Android para registrar jornadas, calcular devengados y descuentos según la normativa laboral colombiana 2026. Uso personal.",
   url: "https://nominapp.xyz",
-  developer: "Angel Berrocal",
   country: "Colombia",
   year: 2026,
-  contactEmail: "mrlegnaoficial@gmail.com",
+  contactEmail: "contacto@nominapp.xyz",
   auth: {
     loginPath: "/login",
     resetPasswordPath: "/restablecer-contrasena",

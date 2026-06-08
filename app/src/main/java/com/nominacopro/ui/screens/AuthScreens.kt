@@ -232,7 +232,7 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         com.nominacopro.ui.components.NominaLogoMark(size = 56)
-        Text("NominaApp", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 12.dp))
+        Text("Nominapp", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 12.dp))
         Text(
             "Inicia sesión para respaldar tu cuenta",
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),

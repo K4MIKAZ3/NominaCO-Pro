@@ -65,7 +65,7 @@ object PdfExporter {
             y += LINE
         }
 
-        draw("NominaApp — Liquidación personal", titlePaint)
+        draw("Nominapp — Liquidación personal", titlePaint)
         draw("Uso personal · No constituye nómina oficial", smallPaint)
         y += 8f
         draw("Empleado: ${profile.name}")
@@ -118,7 +118,7 @@ object PdfExporter {
 
         y += 8f
         draw("Base legal: Ley 2466/2025 · SMMLV ${Formatters.money(ColombiaLaborLaw2026.SMMLV)}", smallPaint)
-        draw("© 2026 Angel Berrocal · NominaApp · Uso personal", smallPaint)
+        draw("© 2026 Nominapp · contacto@nominapp.xyz · Uso personal", smallPaint)
 
         doc.finishPage(page)
         FileOutputStream(file).use { doc.writeTo(it) }
@@ -160,7 +160,7 @@ object PdfExporter {
             y += LINE
         }
 
-        draw("NominaApp — Días laborados", titlePaint)
+        draw("Nominapp — Días laborados", titlePaint)
         draw("Uso personal · ${profile.name}", smallPaint)
         draw("Período: ${Formatters.monthName(payroll.month)} ${payroll.year}")
         y += 8f
@@ -179,7 +179,7 @@ object PdfExporter {
         }
 
         y += 8f
-        draw("Documento generado por NominaApp · Desarrollado por Angel Berrocal", smallPaint)
+        draw("Documento generado por Nominapp · contacto@nominapp.xyz", smallPaint)
 
         doc.finishPage(page)
         FileOutputStream(file).use { doc.writeTo(it) }

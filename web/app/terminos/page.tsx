@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Términos y condiciones",
   description:
-    "Términos de uso y política de privacidad de NominaApp, aplicación de nómina personal para Colombia.",
+    "Términos de uso y política de privacidad de Nominapp, aplicación de nómina personal para Colombia.",
 };
 
 export default function TerminosPage() {
@@ -20,7 +20,7 @@ export default function TerminosPage() {
           Los presentes Términos y Condiciones (en adelante, los &quot;Términos&quot;)
           regulan el acceso y uso de la aplicación móvil <strong>{site.name}</strong>,
           del sitio web <strong>{site.url}</strong> y de los servicios asociados de
-          respaldo en la nube, ofrecidos por <strong>{site.developer}</strong> con
+          respaldo en la nube, ofrecidos por <strong>{site.name}</strong> con
           domicilio en <strong>{site.country}</strong> (en adelante, el
           &quot;Titular&quot; o &quot;nosotros&quot;).
         </p>
@@ -157,7 +157,7 @@ export default function TerminosPage() {
 
         <h2>7.1. Responsable del tratamiento</h2>
         <p>
-          <strong>{site.developer}</strong>
+          <strong>{site.name}</strong>
           <br />
           Correo de contacto:{" "}
           <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
@@ -295,7 +295,7 @@ export default function TerminosPage() {
         <p>
           Para consultas sobre estos Términos, privacidad o soporte:
           <br />
-          <strong>{site.developer}</strong>
+          <strong>{site.name}</strong>
           <br />
           <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
           <br />

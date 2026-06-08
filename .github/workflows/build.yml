@@ -87,7 +87,15 @@ jobs:
         env:
           VERSION_NAME: ${{ env.APK_VERSION }}
           VERSION_CODE: ${{ env.APK_VERSION_CODE }}
-        run: node scripts/update-releases-manifest.mjs
+        run: |
+          if [ -f release-notes.txt ]; then
+            {
+              echo "RELEASE_NOTES<<EOF"
+              cat release-notes.txt
+              echo "EOF"
+            } >> "$GITHUB_ENV"
+          fi
+          node scripts/update-releases-manifest.mjs
 
       - name: Commit release manifests
         run: |

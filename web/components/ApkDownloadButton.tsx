@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { parseReleasesManifest, type AppRelease } from "@/lib/releases";
 import { site } from "@/lib/site";
 
@@ -27,6 +28,11 @@ export function ApkDownloadButton({
   const [selectedVersion, setSelectedVersion] = useState(FALLBACK_RELEASES[0].versionName);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const selectedRelease = useMemo(
     () =>
@@ -95,105 +101,109 @@ export function ApkDownloadButton({
     setOpen(false);
   }
 
+  const dialog =
+    open &&
+    (
+      <div
+        className="contact-overlay"
+        role="presentation"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setOpen(false);
+        }}
+      >
+        <div
+          className="contact-dialog download-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="download-dialog-title"
+        >
+          <button
+            type="button"
+            className="contact-dialog-close"
+            aria-label="Cerrar"
+            onClick={() => setOpen(false)}
+          >
+            ×
+          </button>
+
+          <h2 id="download-dialog-title">Descargar Nominapp</h2>
+          <p className="subtitle">
+            Revisa la versión y los cambios antes de descargar el APK para Android 8+.
+          </p>
+
+          {loading ? (
+            <p className="download-dialog-status">Cargando versiones…</p>
+          ) : (
+            <>
+              {loadError && <p className="form-message error">{loadError}</p>}
+
+              {releases.length > 1 && (
+                <div className="download-version-list" role="tablist" aria-label="Versiones disponibles">
+                  {releases.map((release, index) => {
+                    const isActive = release.versionName === selectedVersion;
+                    return (
+                      <button
+                        key={release.versionName}
+                        type="button"
+                        role="tab"
+                        aria-selected={isActive}
+                        className={`download-version-option${isActive ? " active" : ""}`}
+                        onClick={() => setSelectedVersion(release.versionName)}
+                      >
+                        <span className="download-version-name">v{release.versionName}</span>
+                        {index === 0 && (
+                          <span className="download-version-badge">Recomendada</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {selectedRelease && (
+                <div className="download-release-card">
+                  <p className="download-release-title">
+                    Versión {selectedRelease.versionName}
+                    {releases[0]?.versionName === selectedRelease.versionName && (
+                      <span className="download-version-badge">Recomendada</span>
+                    )}
+                  </p>
+                  {selectedRelease.publishedAt && (
+                    <p className="download-release-meta">
+                      Publicada el {selectedRelease.publishedAt}
+                    </p>
+                  )}
+                  <h3 className="download-notes-title">Cambios</h3>
+                  <p className="download-notes">{selectedRelease.releaseNotes}</p>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="form-actions">
+            <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={confirmDownload}
+              disabled={loading || !selectedRelease}
+            >
+              Confirmar descarga
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
   return (
     <>
       <button type="button" className={className} onClick={() => setOpen(true)}>
         {children}
       </button>
 
-      {open && (
-        <div
-          className="contact-overlay"
-          role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setOpen(false);
-          }}
-        >
-          <div
-            className="contact-dialog download-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="download-dialog-title"
-          >
-            <button
-              type="button"
-              className="contact-dialog-close"
-              aria-label="Cerrar"
-              onClick={() => setOpen(false)}
-            >
-              ×
-            </button>
-
-            <h2 id="download-dialog-title">Descargar Nominapp</h2>
-            <p className="subtitle">
-              Revisa la versión y los cambios antes de descargar el APK para Android 8+.
-            </p>
-
-            {loading ? (
-              <p className="download-dialog-status">Cargando versiones…</p>
-            ) : (
-              <>
-                {loadError && <p className="form-message error">{loadError}</p>}
-
-                {releases.length > 1 && (
-                  <div className="download-version-list" role="tablist" aria-label="Versiones disponibles">
-                    {releases.map((release, index) => {
-                      const isActive = release.versionName === selectedVersion;
-                      return (
-                        <button
-                          key={release.versionName}
-                          type="button"
-                          role="tab"
-                          aria-selected={isActive}
-                          className={`download-version-option${isActive ? " active" : ""}`}
-                          onClick={() => setSelectedVersion(release.versionName)}
-                        >
-                          <span className="download-version-name">v{release.versionName}</span>
-                          {index === 0 && (
-                            <span className="download-version-badge">Recomendada</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {selectedRelease && (
-                  <div className="download-release-card">
-                    <p className="download-release-title">
-                      Versión {selectedRelease.versionName}
-                      {releases[0]?.versionName === selectedRelease.versionName && (
-                        <span className="download-version-badge">Recomendada</span>
-                      )}
-                    </p>
-                    {selectedRelease.publishedAt && (
-                      <p className="download-release-meta">
-                        Publicada el {selectedRelease.publishedAt}
-                      </p>
-                    )}
-                    <h3 className="download-notes-title">Cambios</h3>
-                    <p className="download-notes">{selectedRelease.releaseNotes}</p>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="form-actions">
-              <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={confirmDownload}
-                disabled={loading || !selectedRelease}
-              >
-                Confirmar descarga
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {mounted && dialog ? createPortal(dialog, document.body) : null}
     </>
   );
 }

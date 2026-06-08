@@ -3,7 +3,7 @@ export const site = {
   tagline: "Liquidación de nómina personal en Colombia",
   description:
     "App Android para registrar jornadas, calcular devengados y descuentos según la normativa laboral colombiana 2026. Uso personal.",
-  url: "https://nominapp.xyz",
+  url: "https://www.nominapp.xyz",
   country: "Colombia",
   year: 2026,
   contactEmail: "contacto@nominapp.xyz",

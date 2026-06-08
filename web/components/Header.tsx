@@ -12,6 +12,7 @@ export function Header() {
             alt={`${site.name} logo`}
             width={36}
             height={36}
+            sizes="36px"
             className="logo-mark"
             priority
           />

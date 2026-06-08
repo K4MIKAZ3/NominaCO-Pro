@@ -34,6 +34,7 @@ export default function HomePage() {
               alt="Vista de liquidación mensual en Nominapp"
               width={480}
               height={480}
+              sizes="(max-width: 768px) 100vw, 480px"
               className="hero-image"
               priority
             />
@@ -71,6 +72,8 @@ export default function HomePage() {
                     alt={feature.title}
                     width={400}
                     height={300}
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    loading="lazy"
                   />
                 )}
                 <h3>{feature.title}</h3>

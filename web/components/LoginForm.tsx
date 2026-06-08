@@ -4,7 +4,6 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { MonthSummaryPanel } from "@/components/MonthSummaryPanel";
-import { fetchDashboard, type DashboardData } from "@/lib/dashboard";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import { resetPasswordRedirectUrl, site } from "@/lib/site";
 import type { MonthSummary } from "@/lib/payroll/models";
@@ -31,7 +30,8 @@ export function LoginForm() {
     setDashboardLoading(true);
     setDashboardError(null);
     try {
-      const data: DashboardData = await fetchDashboard(userId);
+      const { fetchDashboard } = await import("@/lib/dashboard");
+      const data = await fetchDashboard(userId);
       setProfileName(data.profileName);
       setSummaries(data.summaries);
     } catch (err) {

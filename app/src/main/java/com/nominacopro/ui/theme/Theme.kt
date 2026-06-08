@@ -29,7 +29,8 @@ private val DarkColors = darkColorScheme(
     surfaceVariant = NominaDesign.SurfaceElevated,
     onBackground = NominaDesign.TextPrimary,
     onSurface = NominaDesign.TextPrimary,
-    outline = Color(0xFF2A3142),
+    onSurfaceVariant = NominaDesign.TextSecondary,
+    outline = Color(0xFF3D4659),
 )
 
 private val LightColors = lightColorScheme(

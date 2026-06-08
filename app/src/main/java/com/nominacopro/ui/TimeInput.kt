@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.nominacopro.ui.theme.NominaDesign
 import java.time.LocalTime
 
 enum class AmPm { AM, PM }
@@ -69,7 +71,7 @@ fun TimeInputRow(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(label)
+        Text(label, color = NominaDesign.TextSecondary)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = state.hour,
@@ -85,16 +87,24 @@ fun TimeInputRow(
             )
         }
         if (!use24Hour) {
+            val chipColors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = NominaDesign.Green.copy(alpha = 0.22f),
+                selectedLabelColor = NominaDesign.Green,
+                containerColor = NominaDesign.SurfaceElevated,
+                labelColor = NominaDesign.TextSecondary,
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = state.amPm == AmPm.AM,
                     onClick = { onAmPmChange(AmPm.AM) },
                     label = { Text("AM") },
+                    colors = chipColors,
                 )
                 FilterChip(
                     selected = state.amPm == AmPm.PM,
                     onClick = { onAmPmChange(AmPm.PM) },
                     label = { Text("PM") },
+                    colors = chipColors,
                 )
             }
         }

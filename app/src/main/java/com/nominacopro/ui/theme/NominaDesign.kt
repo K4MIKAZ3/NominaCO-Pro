@@ -9,6 +9,8 @@ object NominaDesign {
     val Surface = Color(0xFF151820)
     val SurfaceElevated = Color(0xFF1C2030)
     val TextPrimary = Color(0xFFE8EAF0)
+    /** Legible en fondos oscuros (días del calendario, etiquetas de formulario). */
+    val TextSecondary = Color(0xFFC8CDD8)
     val TextMuted = Color(0xFF9CA3AF)
     val Green = Color(0xFF4ADE80)
     val GreenDark = Color(0xFF15803D)

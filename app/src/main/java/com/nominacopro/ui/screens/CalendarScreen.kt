@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nominacopro.data.CalendarMark
@@ -60,7 +62,6 @@ fun CalendarScreen(
 ) {
     val days = buildCalendarDays(yearMonth)
     val rows = ceil((days.size) / 7.0).toInt()
-    val gridHeight = (rows * 48 + (rows - 1) * 8).dp
     val workedCount = marks.values.count { it.worked }
     val pendingCount = countPendingWeekdays(yearMonth, marks)
     val monthLabel = Formatters.monthNameFull(yearMonth.monthValue).replaceFirstChar { it.titlecase() }
@@ -68,6 +69,7 @@ fun CalendarScreen(
     LazyColumn(
         modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(bottom = 24.dp),
     ) {
         item {
             NominaTopBar(
@@ -123,27 +125,34 @@ fun CalendarScreen(
                 color = NominaDesign.SurfaceElevated,
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(7),
-                        modifier = Modifier.height(gridHeight),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        userScrollEnabled = false,
-                    ) {
-                        items(listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")) { label ->
-                            Text(
-                                label,
-                                modifier = Modifier.padding(4.dp),
-                                color = NominaDesign.TextMuted,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium,
-                            )
-                        }
-                        items(days) { cell ->
-                            if (cell == null) {
-                                Box(Modifier.aspectRatio(1f))
-                            } else {
-                                MockupDayCell(cell, marks[cell], onDayClick)
+                    BoxWithConstraints(Modifier.fillMaxWidth()) {
+                        val gap = 4.dp
+                        val rowGap = 8.dp
+                        val cellSize = ((maxWidth - gap * 6) / 7).coerceIn(30.dp, 44.dp)
+                        val gridHeight = cellSize * rows + rowGap * (rows - 1).coerceAtLeast(0)
+
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(7),
+                            modifier = Modifier.height(gridHeight),
+                            verticalArrangement = Arrangement.spacedBy(rowGap),
+                            horizontalArrangement = Arrangement.spacedBy(gap),
+                            userScrollEnabled = false,
+                        ) {
+                            items(listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")) { label ->
+                                Text(
+                                    label,
+                                    modifier = Modifier.padding(4.dp),
+                                    color = NominaDesign.TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                            items(days) { cell ->
+                                if (cell == null) {
+                                    Box(Modifier.size(cellSize))
+                                } else {
+                                    MockupDayCell(cell, marks[cell], cellSize, onDayClick)
+                                }
                             }
                         }
                     }
@@ -152,7 +161,7 @@ fun CalendarScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         LegendItem(NominaDesign.Green, "Día trabajado")
-                        LegendItem(NominaDesign.TextMuted, "Día no trabajado")
+                        LegendItem(NominaDesign.TextSecondary, "Día no trabajado")
                     }
                 }
             }
@@ -236,64 +245,58 @@ fun CalendarScreen(
 }
 
 @Composable
-private fun MockupDayCell(date: LocalDate, mark: CalendarMark?, onClick: (LocalDate) -> Unit) {
+private fun MockupDayCell(
+    date: LocalDate,
+    mark: CalendarMark?,
+    cellSize: Dp,
+    onClick: (LocalDate) -> Unit,
+) {
     val isToday = date == LocalDate.now()
     val worked = mark?.worked == true
+    val innerSize = (cellSize * 0.82f).coerceIn(28.dp, 40.dp)
 
-    Column(
+    Box(
         modifier = Modifier
-            .aspectRatio(1f)
+            .size(cellSize)
             .clickable { onClick(date) },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            if (worked) {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(NominaDesign.Green),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "${date.dayOfMonth}",
-                        color = Color(0xFF052E16),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                    )
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .then(
-                            if (isToday) {
-                                Modifier.border(2.dp, NominaDesign.Green, CircleShape)
-                            } else {
-                                Modifier
-                            },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "${date.dayOfMonth}",
-                        color = if (isToday) NominaDesign.Green else NominaDesign.TextMuted,
-                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = 14.sp,
-                    )
-                }
-            }
-        }
         if (worked) {
             Box(
                 modifier = Modifier
-                    .padding(top = 4.dp)
-                    .size(5.dp)
+                    .size(innerSize)
                     .clip(CircleShape)
                     .background(NominaDesign.Green),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "${date.dayOfMonth}",
+                    color = Color(0xFF052E16),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                )
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(innerSize)
+                    .clip(CircleShape)
+                    .then(
+                        if (isToday) {
+                            Modifier.border(2.dp, NominaDesign.Green, CircleShape)
+                        } else {
+                            Modifier
+                        },
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "${date.dayOfMonth}",
+                    color = if (isToday) NominaDesign.Green else NominaDesign.TextSecondary,
+                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 14.sp,
+                )
+            }
         }
     }
 }
@@ -307,7 +310,7 @@ private fun LegendItem(color: Color, label: String) {
                 .clip(CircleShape)
                 .background(color),
         )
-        Text(label, color = NominaDesign.TextMuted, fontSize = 12.sp)
+        Text(label, color = NominaDesign.TextSecondary, fontSize = 12.sp)
     }
 }
 

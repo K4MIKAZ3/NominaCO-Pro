@@ -1,8 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { PasswordField } from "@/components/PasswordField";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import {
+  mapAuthPasswordError,
+  passwordsMatch,
+  validatePassword,
+} from "@/lib/password";
 import { site } from "@/lib/site";
 
 type Phase = "loading" | "invalid" | "ready" | "success";
@@ -15,6 +21,27 @@ export function ResetPasswordForm() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null,
   );
+  const [touched, setTouched] = useState({ password: false, confirm: false });
+
+  const passwordError = useMemo(() => {
+    if (!touched.password && password.length === 0) return null;
+    return validatePassword(password);
+  }, [password, touched.password]);
+
+  const confirmError = useMemo(() => {
+    if (!touched.confirm && confirm.length === 0) return null;
+    if (!passwordsMatch(password, confirm)) {
+      return "Las contraseñas no coinciden.";
+    }
+    return null;
+  }, [password, confirm, touched.confirm]);
+
+  const canSubmit =
+    !loading &&
+    !passwordError &&
+    !confirmError &&
+    password.length > 0 &&
+    confirm.length > 0;
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -85,12 +112,14 @@ export function ResetPasswordForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setTouched({ password: true, confirm: true });
 
-    if (password.length < 6) {
-      setMessage({ type: "error", text: "La contraseña debe tener al menos 6 caracteres." });
+    const validationError = validatePassword(password);
+    if (validationError) {
+      setMessage({ type: "error", text: validationError });
       return;
     }
-    if (password !== confirm) {
+    if (!passwordsMatch(password, confirm)) {
       setMessage({ type: "error", text: "Las contraseñas no coinciden." });
       return;
     }
@@ -107,9 +136,10 @@ export function ResetPasswordForm() {
       await supabase.auth.signOut();
       setPhase("success");
     } catch (err) {
+      const raw = err instanceof Error ? err.message : "";
       setMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "No se pudo actualizar la contraseña.",
+        text: mapAuthPasswordError(raw),
       });
     } finally {
       setLoading(false);
@@ -178,38 +208,34 @@ export function ResetPasswordForm() {
     <div className="auth-card">
       <h1>Nueva contraseña</h1>
       <p className="subtitle">
-        Elige una contraseña segura para tu cuenta de {site.name}.
+        Mínimo 6 caracteres con al menos un símbolo especial (ej. ! @ #).
       </p>
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="password">Nueva contraseña</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        <PasswordField
+          id="password"
+          label="Nueva contraseña"
+          value={password}
+          onChange={(value) => {
+            setPassword(value);
+            setTouched((current) => ({ ...current, password: true }));
+          }}
+          hint={passwordError}
+        />
 
-        <div className="form-group">
-          <label htmlFor="confirm">Confirmar contraseña</label>
-          <input
-            id="confirm"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-        </div>
+        <PasswordField
+          id="confirm"
+          label="Confirmar contraseña"
+          value={confirm}
+          onChange={(value) => {
+            setConfirm(value);
+            setTouched((current) => ({ ...current, confirm: true }));
+          }}
+          hint={confirmError}
+        />
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
             {loading ? "Guardando…" : "Guardar nueva contraseña"}
           </button>
         </div>

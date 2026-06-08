@@ -539,6 +539,47 @@ img {
   border-color: var(--primary);
 }
 
+.password-field {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.password-field input {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.password-field-toggle {
+  flex-shrink: 0;
+  padding: 0 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.password-field-toggle:hover {
+  color: var(--text);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+
+.password-field-invalid input {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+.field-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+}
+
+.field-hint-error {
+  color: #f87171;
+}
+
 .form-group textarea {
   width: 100%;
   padding: 0.7rem 0.85rem;

@@ -11,10 +11,10 @@ export const site = {
     loginPath: "/login",
     resetPasswordPath: "/restablecer-contrasena",
   },
-  /** Reemplaza con tu enlace directo de MediaFire */
+  /** Último APK publicado por CI en GitHub Releases (main) */
   apkDownloadUrl:
     process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL ??
-    "https://www.mediafire.com/file/TU_ENLACE/nominapp.apk/file",
+    "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/latest/download/Nominapp.apk",
 } as const;
 
 export function absoluteUrl(path: string): string {

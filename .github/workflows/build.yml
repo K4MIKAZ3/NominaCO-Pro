@@ -8,6 +8,9 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -72,6 +75,7 @@ jobs:
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME/build-tools/"* | sort -V | tail -n1)
           "$BUILD_TOOLS/apksigner" verify --verbose "$APK"
           cp "$APK" "NominaCO-Pro-v${VERSION}-signed.apk"
+          cp "$APK" "Nominapp.apk"
           echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Upload installable APK
@@ -79,3 +83,16 @@ jobs:
         with:
           name: NominaCO-Pro-installable
           path: NominaCO-Pro-v${{ env.APK_VERSION }}-signed.apk
+
+      - name: Publish APK to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.APK_VERSION }}
+          name: Nominapp v${{ env.APK_VERSION }} (Android)
+          body: |
+            APK firmado para instalación directa en Android 8+.
+            Descarga `Nominapp.apk` o el archivo con versión en el nombre.
+          files: |
+            Nominapp.apk
+            NominaCO-Pro-v${{ env.APK_VERSION }}-signed.apk
+          make_latest: true

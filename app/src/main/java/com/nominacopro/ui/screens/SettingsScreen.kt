@@ -3,6 +3,7 @@ package com.nominacopro.ui.screens
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -155,10 +155,10 @@ fun SettingsScreen(
         "Desactivado"
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbar) }, modifier = modifier) { padding ->
+    Box(modifier.fillMaxSize()) {
         LazyColumn(
-            Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 0.dp, end = 0.dp, bottom = 16.dp),
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item { NominaTopBar(title = "Ajustes") }
@@ -541,6 +541,10 @@ fun SettingsScreen(
                 }
             }
         }
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 
     if (showDonationDialog) {

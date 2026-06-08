@@ -150,8 +150,11 @@ fun NominaAppRoot(app: NominaApp) {
                             authMessage = null
                         },
                         onContinueLocal = { localBypass = true },
-                        onForgotPassword = { email, onResult ->
-                            authVm.resetPassword(email, onResult)
+                        onVerifyEmailForReset = { email, onResult ->
+                            authVm.verifyEmailForReset(email, onResult)
+                        },
+                        onCompletePasswordReset = { email, otp, newPassword, onResult ->
+                            authVm.completePasswordReset(email, otp, newPassword, onResult)
                         },
                     )
                 }

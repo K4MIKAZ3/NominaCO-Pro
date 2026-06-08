@@ -44,11 +44,32 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         viewModelScope.launch { repository.signOut() }
     }
 
-    fun resetPassword(email: String, onResult: (Boolean, String?) -> Unit) {
+    fun verifyEmailForReset(email: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
-            val error = repository.resetPassword(email)
+            val verifyError = repository.verifyEmailRegistered(email)
+            if (verifyError != null) {
+                onResult(false, verifyError)
+                return@launch
+            }
+            val sendError = repository.sendPasswordResetEmail(email)
+            if (sendError == null) {
+                onResult(true, null)
+            } else {
+                onResult(false, sendError)
+            }
+        }
+    }
+
+    fun completePasswordReset(
+        email: String,
+        otp: String,
+        newPassword: String,
+        onResult: (Boolean, String?) -> Unit,
+    ) {
+        viewModelScope.launch {
+            val error = repository.resetPasswordWithOtp(email, otp, newPassword)
             if (error == null) {
-                onResult(true, "Revisa tu correo para restablecer la contraseña.")
+                onResult(true, "Contraseña actualizada. Inicia sesión con tu nueva contraseña.")
             } else {
                 onResult(false, error)
             }

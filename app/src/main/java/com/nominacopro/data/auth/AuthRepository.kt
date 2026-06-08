@@ -1,5 +1,6 @@
 package com.nominacopro.data.auth
 
+import io.github.jan.supabase.gotrue.OtpType
 import io.github.jan.supabase.gotrue.SessionStatus
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.builtin.Email
@@ -76,14 +77,49 @@ class AuthRepository {
         }
     }
 
-    suspend fun resetPassword(email: String): String? = try {
+    suspend fun verifyEmailRegistered(email: String): String? {
+        val trimmed = email.trim()
+        if (!isValidEmail(trimmed)) {
+            return "Ingresa un correo válido"
+        }
+        return try {
+            requireClient().auth.signInWith(Email) {
+                this.email = trimmed
+                this.password = "__invalid_probe_password__"
+            }
+            null
+        } catch (e: Exception) {
+            when (emailExistsFromSignInError(e)) {
+                true -> null
+                false -> "No hay cuenta registrada con ese correo"
+                null -> errorMessageOnly(e) ?: "Error al verificar el correo"
+            }
+        }
+    }
+
+    suspend fun sendPasswordResetEmail(email: String): String? = try {
         requireClient().auth.resetPasswordForEmail(
             email = email.trim(),
             redirectUrl = "https://nominapp.xyz/restablecer-contrasena",
         )
         null
     } catch (e: Exception) {
-        parseError(e)
+        errorMessageOnly(e)
+    }
+
+    suspend fun resetPasswordWithOtp(email: String, otp: String, newPassword: String): String? = try {
+        requireClient().auth.verifyEmailOtp(
+            type = OtpType.Email.RECOVERY,
+            email = email.trim(),
+            token = otp.trim(),
+        )
+        requireClient().auth.updateUser {
+            password = newPassword
+        }
+        signOut()
+        null
+    } catch (e: Exception) {
+        errorMessageOnly(e)
     }
 
     private fun requireClient() =
@@ -95,8 +131,30 @@ class AuthRepository {
     )
 
     private fun parseError(e: Exception): String {
-        val msg = e.message?.substringBefore("\nURL:")?.trim() ?: "Error de autenticación"
+        val msg = errorMessageOnly(e) ?: "Error de autenticación"
         _state.value = AuthUiState.Error(msg)
         return msg
+    }
+
+    private fun errorMessageOnly(e: Exception): String? =
+        e.message?.substringBefore("\nURL:")?.trim()
+
+    private fun isValidEmail(email: String): Boolean =
+        EMAIL_REGEX.matches(email)
+
+    private fun emailExistsFromSignInError(e: Exception): Boolean? {
+        val msg = errorMessageOnly(e)?.lowercase() ?: return null
+        return when {
+            msg.contains("invalid login credentials") ||
+                msg.contains("invalid credentials") ||
+                msg.contains("email not confirmed") -> true
+            msg.contains("user not found") ||
+                msg.contains("no user") -> false
+            else -> null
+        }
+    }
+
+    private companion object {
+        private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
     }
 }

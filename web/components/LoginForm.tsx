@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
-import { site } from "@/lib/site";
+import { resetPasswordRedirectUrl, site } from "@/lib/site";
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -69,7 +69,7 @@ export function LoginForm() {
         });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${site.url}/login`,
+          redirectTo: resetPasswordRedirectUrl(),
         });
         if (error) throw error;
         setMessage({

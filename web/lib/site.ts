@@ -8,11 +8,23 @@ export const site = {
   country: "Colombia",
   year: 2026,
   contactEmail: "mrlegnaoficial@gmail.com",
+  auth: {
+    loginPath: "/login",
+    resetPasswordPath: "/restablecer-contrasena",
+  },
   /** Reemplaza con tu enlace directo de MediaFire */
   apkDownloadUrl:
     process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL ??
     "https://www.mediafire.com/file/TU_ENLACE/nominapp.apk/file",
 } as const;
+
+export function absoluteUrl(path: string): string {
+  return `${site.url.replace(/\/$/, "")}${path}`;
+}
+
+export function resetPasswordRedirectUrl(): string {
+  return absoluteUrl(site.auth.resetPasswordPath);
+}
 
 export const features = [
   {

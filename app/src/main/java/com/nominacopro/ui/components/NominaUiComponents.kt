@@ -10,7 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -33,19 +34,60 @@ import com.nominacopro.ui.theme.NominaDesign
 
 @Composable
 fun NominaLogoMark(size: Int = 32) {
+    val markSize = size.dp
     Box(
-        modifier = Modifier
-            .size(size.dp)
-            .clip(NominaDesign.CardShape)
-            .background(NominaDesign.Green),
+        modifier = Modifier.size(markSize),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            "N",
-            color = Color(0xFF052E16),
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = (size * 0.55f).sp,
-        )
+        Box(
+            modifier = Modifier
+                .size(markSize)
+                .clip(NominaDesign.CardShape)
+                .background(NominaDesign.Green),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                "N",
+                color = Color(0xFF052E16),
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = (size * 0.55f).sp,
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = (-markSize * 0.18f), y = markSize * 0.12f)
+                    .size((size * 0.16f).dp)
+                    .clip(CircleShape)
+                    .background(NominaDesign.Cyan),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-markSize * 0.06f), y = (-markSize * 0.06f))
+                    .size((size * 0.28f).dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFB45309))
+                    .zIndex(0f),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-markSize * 0.18f), y = (-markSize * 0.12f))
+                    .size((size * 0.24f).dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF59E0B))
+                    .zIndex(1f),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = (-markSize * 0.02f), y = (-markSize * 0.2f))
+                    .size((size * 0.2f).dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFFBBF24))
+                    .zIndex(2f),
+            )
+        }
     }
 }
 

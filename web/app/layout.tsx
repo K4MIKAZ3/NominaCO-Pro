@@ -18,6 +18,11 @@ export const metadata: Metadata = {
     siteName: site.name,
     locale: "es_CO",
     type: "website",
+    images: [{ url: "/icon.png", width: 1024, height: 1024, alt: site.name }],
+  },
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
 };
 

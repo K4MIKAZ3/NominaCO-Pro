@@ -91,12 +91,7 @@ img {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dim));
-  display: grid;
-  place-items: center;
-  color: #052e16;
-  font-weight: 800;
-  font-size: 1.1rem;
+  object-fit: cover;
 }
 
 .nav {

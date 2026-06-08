@@ -77,7 +77,10 @@ class AuthRepository {
     }
 
     suspend fun resetPassword(email: String): String? = try {
-        requireClient().auth.resetPasswordForEmail(email.trim())
+        requireClient().auth.resetPasswordForEmail(
+            email = email.trim(),
+            redirectUrl = "https://nominapp.xyz/restablecer-contrasena",
+        )
         null
     } catch (e: Exception) {
         parseError(e)

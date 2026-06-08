@@ -321,30 +321,34 @@ img {
 
 .footer-links {
   display: flex;
+  align-items: center;
   gap: 1.25rem;
   flex-wrap: wrap;
 }
 
-.footer-links a {
+.footer-links a,
+.footer-contact-trigger {
   color: var(--text-muted);
+  text-decoration: none;
+  line-height: 1.6;
 }
 
-.footer-links a:hover {
+.footer-links a:hover,
+.footer-contact-trigger:hover {
   color: var(--text);
+  text-decoration: underline;
 }
 
 .footer-contact-trigger {
   background: none;
   border: none;
   padding: 0;
+  margin: 0;
   font: inherit;
-  color: var(--text-muted);
   cursor: pointer;
-}
-
-.footer-contact-trigger:hover {
-  color: var(--text);
-  text-decoration: underline;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: baseline;
 }
 
 .contact-overlay {

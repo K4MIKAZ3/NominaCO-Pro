@@ -1,9 +1,13 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import type { Session } from "@supabase/supabase-js";
+import { MonthSummaryPanel } from "@/components/MonthSummaryPanel";
+import { fetchDashboard, type DashboardData } from "@/lib/dashboard";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import { resetPasswordRedirectUrl, site } from "@/lib/site";
+import type { MonthSummary } from "@/lib/payroll/models";
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -15,6 +19,61 @@ export function LoginForm() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null,
   );
+  const [session, setSession] = useState<Session | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [summaries, setSummaries] = useState<MonthSummary[]>([]);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const loadDashboard = useCallback(async (userId: string) => {
+    setDashboardLoading(true);
+    setDashboardError(null);
+    try {
+      const data: DashboardData = await fetchDashboard(userId);
+      setProfileName(data.profileName);
+      setSummaries(data.summaries);
+    } catch (err) {
+      const text = err instanceof Error ? err.message : "No se pudo cargar el resumen.";
+      setDashboardError(text);
+      setProfileName(null);
+      setSummaries([]);
+    } finally {
+      setDashboardLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) {
+      setSessionChecked(true);
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data: { session: current } }) => {
+      setSession(current);
+      setSessionChecked(true);
+      if (current?.user) {
+        loadDashboard(current.user.id);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      if (nextSession?.user) {
+        loadDashboard(nextSession.user.id);
+      } else {
+        setProfileName(null);
+        setSummaries([]);
+        setDashboardError(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [loadDashboard]);
 
   if (!isSupabaseConfigured()) {
     return (
@@ -52,10 +111,6 @@ export function LoginForm() {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        setMessage({
-          type: "success",
-          text: "Sesión iniciada. Abre la app NominaApp en tu Android con el mismo correo para sincronizar tus datos.",
-        });
       } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
@@ -83,6 +138,31 @@ export function LoginForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSignOut() {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    setSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      setMessage(null);
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
+  if (sessionChecked && session) {
+    return (
+      <MonthSummaryPanel
+        profileName={profileName}
+        summaries={summaries}
+        loading={dashboardLoading}
+        error={dashboardError}
+        onSignOut={handleSignOut}
+        signingOut={signingOut}
+      />
+    );
   }
 
   return (

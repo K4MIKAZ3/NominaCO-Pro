@@ -476,6 +476,101 @@ img {
   text-align: center;
 }
 
+.dashboard-panel {
+  max-width: 640px;
+  margin-inline: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+
+.dashboard-panel h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.dashboard-status {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
+}
+
+.dashboard-empty {
+  padding: 1.5rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.dashboard-empty p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.summary-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.summary-month {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  color: var(--primary);
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  font-size: 0.9rem;
+}
+
+.summary-label {
+  color: var(--text-muted);
+}
+
+.summary-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-value--net {
+  color: var(--primary);
+  font-size: 1.05rem;
+}
+
+.summary-value--deduction {
+  color: #f87171;
+}
+
 @media (max-width: 768px) {
   .hero-grid {
     grid-template-columns: 1fr;

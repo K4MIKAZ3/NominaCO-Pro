@@ -24,12 +24,12 @@ fun prop(name: String) = localProperties.getProperty(name, "")
 
 android {
     namespace = "com.nominacopro"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.nominacopro"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 12
         versionName = "1.7.1"
 

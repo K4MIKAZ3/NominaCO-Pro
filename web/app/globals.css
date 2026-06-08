@@ -333,6 +333,98 @@ img {
   color: var(--text);
 }
 
+.footer-contact-trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.footer-contact-trigger:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.contact-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.contact-dialog {
+  position: relative;
+  width: min(100%, 480px);
+  max-height: min(92vh, 720px);
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+}
+
+.contact-dialog h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+}
+
+.contact-dialog .subtitle {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.contact-dialog-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.contact-dialog-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.contact-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.contact-dialog .form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.contact-success {
+  text-align: center;
+  padding-top: 0.5rem;
+}
+
+.contact-success .btn {
+  margin-top: 1rem;
+}
+
 /* Legal / login pages */
 .page-main {
   padding: 3rem 0 4rem;
@@ -437,9 +529,23 @@ img {
   font-size: 1rem;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group textarea:focus {
   outline: 2px solid rgba(74, 222, 128, 0.4);
   border-color: var(--primary);
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
 }
 
 .form-actions {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ContactDialog } from "@/components/ContactDialog";
 import { site } from "@/lib/site";
 
 export function Footer() {
@@ -11,7 +12,7 @@ export function Footer() {
         <div className="footer-links">
           <Link href="/terminos">Términos y privacidad</Link>
           <Link href="/login">Iniciar sesión</Link>
-          <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
+          <ContactDialog />
         </div>
       </div>
     </footer>

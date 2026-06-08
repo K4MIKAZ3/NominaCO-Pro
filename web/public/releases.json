@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "versionCode": 13,
+      "versionName": "1.7.2",
+      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.2/Nominapp.apk",
+      "releaseNotes": "Actualización de Nominapp v1.7.2.",
+      "publishedAt": "2026-06-08"
+    },
+    {
       "versionCode": 12,
       "versionName": "1.7.1",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.1/Nominapp.apk",

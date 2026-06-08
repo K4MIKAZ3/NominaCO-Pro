@@ -1,13 +1,56 @@
-const SPECIAL_CHAR_REGEX = /[^A-Za-z0-9]/;
+export type PasswordCheck = {
+  minLength: boolean;
+  lowercase: boolean;
+  uppercase: boolean;
+  digit: boolean;
+  special: boolean;
+};
+
+export function checkPassword(password: string): PasswordCheck {
+  return {
+    minLength: password.length >= 6,
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    digit: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+}
+
+export function isPasswordValid(password: string): boolean {
+  const check = checkPassword(password);
+  return (
+    check.minLength &&
+    check.lowercase &&
+    check.uppercase &&
+    check.digit &&
+    check.special
+  );
+}
+
+export const PASSWORD_REQUIREMENTS_HINT =
+  "Mínimo 6 caracteres con mayúscula, minúscula, número y símbolo especial (ej. Nominapp1!).";
 
 export function validatePassword(password: string): string | null {
-  if (password.length < 6) {
+  if (isPasswordValid(password)) return null;
+
+  const check = checkPassword(password);
+  if (!check.minLength) {
     return "La contraseña debe tener al menos 6 caracteres.";
   }
-  if (!SPECIAL_CHAR_REGEX.test(password)) {
-    return "Incluye al menos un carácter especial (por ejemplo: ! @ # $ % &).";
+  if (!check.lowercase) {
+    return "Incluye al menos una letra minúscula.";
   }
-  return null;
+  if (!check.uppercase) {
+    return "Incluye al menos una letra mayúscula.";
+  }
+  if (!check.digit) {
+    return "Incluye al menos un número.";
+  }
+  if (!check.special) {
+    return "Incluye al menos un carácter especial (ej. ! @ #).";
+  }
+
+  return PASSWORD_REQUIREMENTS_HINT;
 }
 
 export function passwordsMatch(password: string, confirm: string): boolean {
@@ -22,17 +65,13 @@ export function mapAuthPasswordError(raw: string): string {
     lower.includes("password should contain") ||
     lower.includes("abcdefghijklmnopqrstuvwxyz")
   ) {
-    return (
-      "La contraseña no cumple la política del servidor. Usa mínimo 6 caracteres " +
-      "con al menos un carácter especial (ej. Nominapp1!). " +
-      "Si el mensaje persiste, revisa Authentication → Providers → Email en Supabase."
-    );
+    return PASSWORD_REQUIREMENTS_HINT;
   }
   if (lower.includes("same as the old password")) {
     return "La nueva contraseña debe ser distinta a la anterior.";
   }
   if (lower.includes("weak") || lower.includes("too short")) {
-    return "La contraseña es demasiado débil. Usa mínimo 6 caracteres con un símbolo especial.";
+    return PASSWORD_REQUIREMENTS_HINT;
   }
 
   return msg || "No se pudo actualizar la contraseña.";

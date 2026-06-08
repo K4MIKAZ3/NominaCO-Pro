@@ -45,6 +45,7 @@ import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.ui.screens.PayrollEntryDialog
 import com.nominacopro.ui.screens.PayrollScreen
 import com.nominacopro.ui.screens.ProfileScreen
+import com.nominacopro.domain.auth.PasswordRules
 import com.nominacopro.ui.screens.RegisterScreen
 import com.nominacopro.ui.screens.SettingsScreen
 import com.nominacopro.ui.theme.NominaTheme
@@ -120,6 +121,11 @@ fun NominaAppRoot(app: NominaApp) {
                         message = authMessage,
                         isError = authIsError,
                         onRegister = { email, password, confirm ->
+                            PasswordRules.validate(password)?.let { validationError ->
+                                authMessage = validationError
+                                authIsError = true
+                                return@RegisterScreen
+                            }
                             if (password != confirm) {
                                 authMessage = "Las contraseñas no coinciden"
                                 authIsError = true

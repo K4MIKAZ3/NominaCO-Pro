@@ -27,6 +27,8 @@
     <string name="auth_terms_open">términos y condiciones</string>
     <string name="auth_terms_required">Debes aceptar los términos y condiciones para crear tu cuenta.</string>
     <string name="auth_terms_url">https://nominapp.xyz/terminos</string>
+    <string name="auth_password_requirements_hint">Mínimo 6 caracteres con mayúscula, minúscula, número y símbolo especial (ej. Nominapp1!).</string>
+    <string name="auth_password_mismatch">Las contraseñas no coinciden.</string>
     <string name="auth_delete_account">Eliminar cuenta</string>
     <string name="auth_delete_account_summary">Borra tu cuenta y todos los datos asociados en la nube. Esta acción es permanente.</string>
     <string name="auth_delete_account_reason_title">¿Por qué eliminas tu cuenta?</string>

@@ -33,6 +33,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.nominacopro.R
+import com.nominacopro.domain.auth.PasswordRules
+import com.nominacopro.ui.components.PasswordTextField
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
@@ -63,6 +65,7 @@ fun LoginScreen(
     var forgotMessage by remember { mutableStateOf<String?>(null) }
     var forgotIsError by remember { mutableStateOf(false) }
     var forgotBusy by remember { mutableStateOf(false) }
+    val passwordMismatchMessage = stringResource(R.string.auth_password_mismatch)
 
     fun resetForgotDialog() {
         showForgotDialog = false
@@ -100,9 +103,15 @@ fun LoginScreen(
                         }
                         ForgotPasswordStep.NEW_PASSWORD -> {
                             Text(
-                                "Revisa tu correo: copia el código de 6 dígitos del mensaje de recuperación. Luego elige tu nueva contraseña (mínimo 6 caracteres).",
+                                "Revisa tu correo: copia el código de 6 dígitos del mensaje de recuperación. Luego elige tu nueva contraseña.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                stringResource(R.string.auth_password_requirements_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             )
                             Spacer(Modifier.height(12.dp))
                             OutlinedTextField(
@@ -116,24 +125,18 @@ fun LoginScreen(
                                 singleLine = true,
                             )
                             Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(
+                            PasswordTextField(
                                 value = forgotNewPassword,
                                 onValueChange = { forgotNewPassword = it },
-                                label = { Text("Nueva contraseña") },
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                label = "Nueva contraseña",
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
                             )
                             Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(
+                            PasswordTextField(
                                 value = forgotConfirmPassword,
                                 onValueChange = { forgotConfirmPassword = it },
-                                label = { Text("Confirmar contraseña") },
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                label = "Confirmar contraseña",
                                 modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
                             )
                         }
                     }
@@ -177,34 +180,39 @@ fun LoginScreen(
                                         forgotMessage = "Ingresa el código de 6 dígitos del correo"
                                         forgotIsError = true
                                     }
-                                    forgotNewPassword.length < 6 -> {
-                                        forgotMessage = "La contraseña debe tener al menos 6 caracteres"
-                                        forgotIsError = true
-                                    }
-                                    forgotNewPassword != forgotConfirmPassword -> {
-                                        forgotMessage = "Las contraseñas no coinciden"
-                                        forgotIsError = true
-                                    }
                                     else -> {
-                                        forgotBusy = true
-                                        forgotMessage = null
-                                        onCompletePasswordReset(
-                                            forgotEmail,
-                                            forgotOtp,
-                                            forgotNewPassword,
-                                        ) { ok, msg ->
-                                            forgotBusy = false
-                                            forgotMessage = msg
-                                            forgotIsError = !ok
-                                            if (ok) resetForgotDialog()
+                                        val validationError = PasswordRules.validate(forgotNewPassword)
+                                        when {
+                                            validationError != null -> {
+                                                forgotMessage = validationError
+                                                forgotIsError = true
+                                            }
+                                            forgotNewPassword != forgotConfirmPassword -> {
+                                                forgotMessage = passwordMismatchMessage
+                                                forgotIsError = true
+                                            }
+                                            else -> {
+                                                forgotBusy = true
+                                                forgotMessage = null
+                                                onCompletePasswordReset(
+                                                    forgotEmail,
+                                                    forgotOtp,
+                                                    forgotNewPassword,
+                                                ) { ok, msg ->
+                                                    forgotBusy = false
+                                                    forgotMessage = msg
+                                                    forgotIsError = !ok
+                                                    if (ok) resetForgotDialog()
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             },
                             enabled = !forgotBusy &&
                                 forgotOtp.length == 6 &&
-                                forgotNewPassword.length >= 6 &&
-                                forgotConfirmPassword.isNotBlank(),
+                                PasswordRules.isValid(forgotNewPassword) &&
+                                forgotNewPassword == forgotConfirmPassword,
                         ) { Text("Restablecer contraseña") }
                     }
                 }
@@ -338,7 +346,13 @@ fun RegisterScreen(
         Text(
             "Regístrate con tu correo",
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
+            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+        )
+        Text(
+            stringResource(R.string.auth_password_requirements_hint),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(bottom = 24.dp),
         )
 
         OutlinedTextField(
@@ -350,24 +364,18 @@ fun RegisterScreen(
             singleLine = true,
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        PasswordTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Contraseña (mín. 6)") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            label = "Contraseña",
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        PasswordTextField(
             value = confirm,
             onValueChange = { confirm = it },
-            label = { Text("Confirmar contraseña") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation(),
+            label = "Confirmar contraseña",
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
         )
 
         Row(
@@ -421,7 +429,7 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = acceptedTerms &&
                     email.isNotBlank() &&
-                    password.length >= 6 &&
+                    PasswordRules.isValid(password) &&
                     password == confirm,
             ) { Text("Registrarme") }
 

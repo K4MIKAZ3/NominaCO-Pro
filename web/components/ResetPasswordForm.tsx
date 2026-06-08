@@ -6,6 +6,7 @@ import { PasswordField } from "@/components/PasswordField";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import {
   mapAuthPasswordError,
+  PASSWORD_REQUIREMENTS_HINT,
   passwordsMatch,
   validatePassword,
 } from "@/lib/password";
@@ -207,9 +208,7 @@ export function ResetPasswordForm() {
   return (
     <div className="auth-card">
       <h1>Nueva contraseña</h1>
-      <p className="subtitle">
-        Mínimo 6 caracteres con al menos un símbolo especial (ej. ! @ #).
-      </p>
+      <p className="subtitle">{PASSWORD_REQUIREMENTS_HINT}</p>
 
       <form onSubmit={handleSubmit}>
         <PasswordField

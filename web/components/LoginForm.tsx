@@ -1,10 +1,18 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { MonthSummaryPanel } from "@/components/MonthSummaryPanel";
+import { PasswordField } from "@/components/PasswordField";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import {
+  isPasswordValid,
+  mapAuthPasswordError,
+  PASSWORD_REQUIREMENTS_HINT,
+  passwordsMatch,
+  validatePassword,
+} from "@/lib/password";
 import { resetPasswordRedirectUrl, site } from "@/lib/site";
 import type { MonthSummary } from "@/lib/payroll/models";
 
@@ -14,6 +22,8 @@ export function LoginForm() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [touched, setTouched] = useState({ password: false, confirm: false });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null,
@@ -25,6 +35,29 @@ export function LoginForm() {
   const [profileName, setProfileName] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<MonthSummary[]>([]);
   const [signingOut, setSigningOut] = useState(false);
+
+  const passwordError = useMemo(() => {
+    if (mode !== "signup") return null;
+    if (!touched.password && password.length === 0) return null;
+    return validatePassword(password);
+  }, [mode, password, touched.password]);
+
+  const confirmError = useMemo(() => {
+    if (mode !== "signup") return null;
+    if (!touched.confirm && confirmPassword.length === 0) return null;
+    if (!passwordsMatch(password, confirmPassword)) {
+      return "Las contraseñas no coinciden.";
+    }
+    return null;
+  }, [mode, password, confirmPassword, touched.confirm]);
+
+  const canSubmitSignup =
+    isPasswordValid(password) && passwordsMatch(password, confirmPassword);
+
+  useEffect(() => {
+    setConfirmPassword("");
+    setTouched({ password: false, confirm: false });
+  }, [mode]);
 
   const loadDashboard = useCallback(async (userId: string) => {
     setDashboardLoading(true);
@@ -118,6 +151,18 @@ export function LoginForm() {
           window.setTimeout(() => loadDashboard(data.session.user.id), 0);
         }
       } else if (mode === "signup") {
+        setTouched({ password: true, confirm: true });
+        const validationError = validatePassword(password);
+        if (validationError) {
+          setMessage({ type: "error", text: validationError });
+          setLoading(false);
+          return;
+        }
+        if (!passwordsMatch(password, confirmPassword)) {
+          setMessage({ type: "error", text: "Las contraseñas no coinciden." });
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -139,7 +184,8 @@ export function LoginForm() {
         });
       }
     } catch (err) {
-      const text = err instanceof Error ? err.message : "Ocurrió un error.";
+      const raw = err instanceof Error ? err.message : "Ocurrió un error.";
+      const text = mode === "signup" ? mapAuthPasswordError(raw) : raw;
       setMessage({ type: "error", text });
     } finally {
       setLoading(false);
@@ -215,13 +261,19 @@ export function LoginForm() {
           />
         </div>
 
-        {mode !== "reset" && (
+        {mode === "signup" && (
+          <p className="auth-note" style={{ marginBottom: "1rem" }}>
+            {PASSWORD_REQUIREMENTS_HINT}
+          </p>
+        )}
+
+        {mode === "login" && (
           <div className="form-group">
             <label htmlFor="password">Contraseña</label>
             <input
               id="password"
               type="password"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              autoComplete="current-password"
               required
               minLength={6}
               value={password}
@@ -230,8 +282,37 @@ export function LoginForm() {
           </div>
         )}
 
+        {mode === "signup" && (
+          <>
+            <PasswordField
+              id="password"
+              label="Contraseña"
+              value={password}
+              onChange={(value) => {
+                setPassword(value);
+                setTouched((current) => ({ ...current, password: true }));
+              }}
+              hint={passwordError}
+            />
+            <PasswordField
+              id="confirm-password"
+              label="Confirmar contraseña"
+              value={confirmPassword}
+              onChange={(value) => {
+                setConfirmPassword(value);
+                setTouched((current) => ({ ...current, confirm: true }));
+              }}
+              hint={confirmError}
+            />
+          </>
+        )}
+
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading || (mode === "signup" && !canSubmitSignup)}
+          >
             {loading
               ? "Procesando…"
               : mode === "login"

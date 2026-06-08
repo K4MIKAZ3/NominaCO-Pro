@@ -163,6 +163,11 @@ class AuthRepository {
                 "El código expiró. Solicita uno nuevo desde recuperar contraseña."
             lower.contains("otp") || lower.contains("token") && lower.contains("invalid") ->
                 "Código incorrecto. Revisa el correo e inténtalo de nuevo."
+            lower.contains("password should contain") ||
+                lower.contains("abcdefghijklmnopqrstuvwxyz") ||
+                lower.contains("weak") ||
+                lower.contains("too short") ->
+                "Mínimo 6 caracteres con mayúscula, minúscula, número y símbolo especial (ej. Nominapp1!)."
             else -> msg
         }
     }

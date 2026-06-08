@@ -6,6 +6,9 @@ name: Setup release signing (once)
 on:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   generate-keystore:
     runs-on: ubuntu-latest

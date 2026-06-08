@@ -6,8 +6,8 @@ Este repositorio prepara la publicación en Google Play **sin alterar** el flujo
 
 | Rama | Propósito | CI |
 |------|-----------|-----|
-| `main` | APK firmado para sideload / distribución directa | `build.yml` → `assembleRelease` → artefacto `.apk` |
-| `play-store` | Requisitos Play Console (SDK 35, AAB, políticas) | `play-store.yml` → `bundleRelease` → artefacto `.aab` |
+| `main` | APK firmado para sideload (SDK 34, términos, QR Bre-B) | `build.yml` → `assembleRelease` → `NominaCO-Pro-v*-signed.apk` |
+| `play-store` | Requisitos Play Console (SDK 35, AAB) | `play-store.yml` → `bundleRelease` → `NominaCO-Pro-v*-play.aab` |
 
 Los cambios de Play Store se desarrollan y prueban en `play-store`. `main` sigue igual hasta que decidas fusionar de forma explícita.
 

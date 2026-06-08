@@ -34,10 +34,11 @@ Estos cambios solo afectan **nuevas builds**; los APK ya instalados siguen funci
 
 ## Checklist antes de publicar
 
-- [ ] `targetSdk` ≥ 35 (requisito Play vigente).
+- [x] `targetSdk` ≥ 35 (requisito Play vigente).
 - [ ] AAB firmado con el keystore de producción (`bundleRelease`).
-- [ ] URL de política de privacidad pública.
-- [ ] Eliminación de cuenta accesible desde la app (si aplica).
+- [x] URL de política de privacidad pública (`https://nominapp.xyz/terminos`).
+- [x] Eliminación de cuenta accesible desde la app (si aplica).
+- [x] Enlace a términos/privacidad en la app (registro + ajustes).
 - [ ] Ficha Play: icono 512×512, capturas, descripción, categoría.
 - [ ] Probar actualización encima de un APK sideload actual (mismo `applicationId` + keystore).
 - [ ] Subir AAB a **Internal testing** antes de producción.

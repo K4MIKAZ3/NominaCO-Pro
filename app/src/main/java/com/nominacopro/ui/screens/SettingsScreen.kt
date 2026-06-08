@@ -1,5 +1,7 @@
 package com.nominacopro.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
@@ -37,9 +39,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.nominacopro.BuildConfig
 import com.nominacopro.R
 import com.nominacopro.ui.components.NominaTopBar
 import com.nominacopro.data.sync.SyncUiState
@@ -77,6 +81,8 @@ fun SettingsScreen(
 ) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val termsUrl = stringResource(R.string.auth_terms_url)
 
     val defaultStartTime = LocalTime.of(preferences.defaultStartHour, preferences.defaultStartMinute)
     val defaultEndTime = LocalTime.of(preferences.defaultEndHour, preferences.defaultEndMinute)
@@ -426,10 +432,22 @@ fun SettingsScreen(
             item {
                 Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(stringResource(R.string.credits_app) + " v1.6.1", fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            stringResource(R.string.credits_app) + " v${BuildConfig.VERSION_NAME}",
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                         Text(stringResource(R.string.credits_developer))
                         Text(stringResource(R.string.credits_contact), color = MaterialTheme.colorScheme.primary)
                         Text(stringResource(R.string.credits_legal), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        TextButton(
+                            onClick = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(termsUrl)))
+                            },
+                            contentPadding = PaddingValues(0.dp),
+                        ) {
+                            Text(stringResource(R.string.auth_terms_open))
+                        }
                         Text("© 2026 Nominapp · Colombia", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }

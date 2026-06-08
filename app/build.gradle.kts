@@ -24,14 +24,14 @@ fun prop(name: String) = localProperties.getProperty(name, "")
 
 android {
     namespace = "com.nominacopro"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.nominacopro"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 10
-        versionName = "1.6.1"
+        targetSdk = 35
+        versionCode = 11
+        versionName = "1.7.0"
 
         buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${prop("SUPABASE_ANON_KEY")}\"")

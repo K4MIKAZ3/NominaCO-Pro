@@ -3,6 +3,8 @@ name: Build NominaCO-Pro APK
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - 'web/public/version.json'
   workflow_dispatch:
 
 env:
@@ -77,6 +79,27 @@ jobs:
           cp "$APK" "NominaCO-Pro-v${VERSION}-signed.apk"
           cp "$APK" "Nominapp.apk"
           echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | head -1 | grep -oE '[0-9]+')
+          echo "APK_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+
+      - name: Update web version manifest
+        run: |
+          cat > web/public/version.json <<EOF
+          {
+            "versionCode": ${{ env.APK_VERSION_CODE }},
+            "versionName": "${{ env.APK_VERSION }}",
+            "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/latest/download/Nominapp.apk",
+            "releaseNotes": "Actualización de Nominapp v${{ env.APK_VERSION }}."
+          }
+          EOF
+
+      - name: Commit version manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/public/version.json
+          git diff --staged --quiet || git commit -m "chore: update version manifest to v${{ env.APK_VERSION }} [skip ci]"
+          git push || true
 
       - name: Upload installable APK
         uses: actions/upload-artifact@v4

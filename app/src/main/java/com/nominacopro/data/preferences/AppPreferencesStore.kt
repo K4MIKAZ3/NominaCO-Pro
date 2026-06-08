@@ -26,6 +26,8 @@ class AppPreferencesStore(private val context: Context) {
         val REMINDER_M = intPreferencesKey("reminder_minute")
         val DARK_MODE = booleanPreferencesKey("dark_mode_enabled")
         val BIOMETRIC = booleanPreferencesKey("biometric_enabled")
+        val CLOUD_BACKUP = booleanPreferencesKey("cloud_backup_enabled")
+        val OFFLINE_MODE = booleanPreferencesKey("offline_mode_enabled")
     }
 
     fun observe(): Flow<AppPreferences> = context.dataStore.data.map { prefs ->
@@ -45,6 +47,8 @@ class AppPreferencesStore(private val context: Context) {
             prefs[Keys.REMINDER_M] = updated.reminderMinute
             prefs[Keys.DARK_MODE] = updated.darkModeEnabled
             prefs[Keys.BIOMETRIC] = updated.biometricEnabled
+            prefs[Keys.CLOUD_BACKUP] = updated.cloudBackupEnabled
+            prefs[Keys.OFFLINE_MODE] = updated.offlineModeEnabled
         }
     }
 
@@ -59,5 +63,7 @@ class AppPreferencesStore(private val context: Context) {
         reminderMinute = this[Keys.REMINDER_M] ?: 0,
         darkModeEnabled = this[Keys.DARK_MODE] ?: true,
         biometricEnabled = this[Keys.BIOMETRIC] ?: false,
+        cloudBackupEnabled = this[Keys.CLOUD_BACKUP] ?: false,
+        offlineModeEnabled = this[Keys.OFFLINE_MODE] ?: false,
     )
 }

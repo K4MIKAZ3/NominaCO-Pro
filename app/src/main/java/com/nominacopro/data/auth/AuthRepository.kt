@@ -16,12 +16,15 @@ sealed interface AuthUiState {
     data object NotConfigured : AuthUiState
     data object Unauthenticated : AuthUiState
     data class Authenticated(val email: String, val userId: String) : AuthUiState
+    data class OfflineCached(val email: String, val userId: String) : AuthUiState
     data class Error(val message: String) : AuthUiState
 }
 
 class AuthRepository {
 
     private val supabase = SupabaseProvider.client
+
+    private var lastKnownUser: AuthUiState.Authenticated? = null
 
     private val _state = MutableStateFlow<AuthUiState>(
         when {
@@ -40,14 +43,26 @@ class AuthRepository {
             _state.value = when (status) {
                 is SessionStatus.Authenticated -> {
                     val user = status.session.user
-                    if (user != null) user.toAuthenticated() else AuthUiState.Unauthenticated
+                    if (user != null) {
+                        user.toAuthenticated().also { lastKnownUser = it }
+                    } else {
+                        AuthUiState.Unauthenticated
+                    }
                 }
-                is SessionStatus.NotAuthenticated -> AuthUiState.Unauthenticated
+                is SessionStatus.NotAuthenticated -> {
+                    lastKnownUser = null
+                    AuthUiState.Unauthenticated
+                }
                 SessionStatus.LoadingFromStorage -> AuthUiState.Loading
-                SessionStatus.NetworkError -> AuthUiState.Unauthenticated
+                SessionStatus.NetworkError -> {
+                    lastKnownUser?.let { AuthUiState.OfflineCached(it.email, it.userId) }
+                        ?: AuthUiState.Unauthenticated
+                }
             }
         }
     }
+
+    fun cachedAccount(): AuthUiState.Authenticated? = lastKnownUser
 
     suspend fun signIn(email: String, password: String): String? = try {
         requireClient().auth.signInWith(Email) {
@@ -75,6 +90,7 @@ class AuthRepository {
                 supabase.auth.signOut()
             }
         } finally {
+            lastKnownUser = null
             _state.value = AuthUiState.Unauthenticated
         }
     }

@@ -171,4 +171,6 @@ data class AppPreferences(
     val reminderMinute: Int = 0,
     val darkModeEnabled: Boolean = true,
     val biometricEnabled: Boolean = false,
+    val cloudBackupEnabled: Boolean = false,
+    val offlineModeEnabled: Boolean = false,
 )

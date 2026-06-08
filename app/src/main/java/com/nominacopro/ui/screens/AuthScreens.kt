@@ -2,6 +2,7 @@ package com.nominacopro.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,10 +48,10 @@ private enum class ForgotPasswordStep {
 fun LoginScreen(
     isLoading: Boolean,
     errorMessage: String?,
-    showLocalFallback: Boolean,
+    showOfflineButton: Boolean = false,
     onLogin: (email: String, password: String) -> Unit,
     onGoToRegister: () -> Unit,
-    onContinueLocal: () -> Unit,
+    onContinueOffline: () -> Unit,
     onVerifyEmailForReset: (email: String, onResult: (Boolean, String?) -> Unit) -> Unit,
     onCompletePasswordReset: (email: String, otp: String, newPassword: String, onResult: (Boolean, String?) -> Unit) -> Unit,
 ) {
@@ -242,81 +243,93 @@ fun LoginScreen(
         )
     }
 
-    Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        com.nominacopro.ui.components.NominaLogoMark(size = 56)
-        Text("Nominapp", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 12.dp))
-        Text(
-            "Inicia sesión para respaldar tu cuenta",
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
-        )
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Correo") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
-
-        TextButton(
-            onClick = {
-                forgotEmail = email
-                forgotStep = ForgotPasswordStep.EMAIL
-                forgotOtp = ""
-                forgotNewPassword = ""
-                forgotConfirmPassword = ""
-                forgotMessage = null
-                forgotIsError = false
-                showForgotDialog = true
-            },
-            modifier = Modifier.align(Alignment.End),
-        ) { Text("Olvidé mi contraseña") }
-
-        errorMessage?.let {
-            Text(
-                it,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 12.dp),
-            )
+    Box(Modifier.fillMaxSize()) {
+        if (showOfflineButton) {
+            OutlinedButton(
+                onClick = onContinueOffline,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+            ) {
+                Text(stringResource(R.string.auth_offline_mode))
+            }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            com.nominacopro.ui.components.NominaLogoMark(size = 56)
+            Text(
+                "Nominapp",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+            Text(
+                stringResource(R.string.auth_login_subtitle),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
+            )
 
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else {
-            Button(
-                onClick = { onLogin(email, password) },
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Correo") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
-                enabled = email.isNotBlank() && password.length >= 6,
-            ) { Text("Iniciar sesión") }
+                singleLine = true,
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
 
-            TextButton(onClick = onGoToRegister, modifier = Modifier.padding(top = 8.dp)) {
-                Text("Crear cuenta")
+            TextButton(
+                onClick = {
+                    forgotEmail = email
+                    forgotStep = ForgotPasswordStep.EMAIL
+                    forgotOtp = ""
+                    forgotNewPassword = ""
+                    forgotConfirmPassword = ""
+                    forgotMessage = null
+                    forgotIsError = false
+                    showForgotDialog = true
+                },
+                modifier = Modifier.align(Alignment.End),
+            ) { Text("Olvidé mi contraseña") }
+
+            errorMessage?.let {
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
             }
 
-            if (showLocalFallback) {
-                OutlinedButton(
-                    onClick = onContinueLocal,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                ) { Text("Continuar sin cuenta (solo local)") }
+            Spacer(Modifier.height(24.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else {
+                Button(
+                    onClick = { onLogin(email, password) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = email.isNotBlank() && password.length >= 6,
+                ) { Text("Iniciar sesión") }
+
+                TextButton(onClick = onGoToRegister, modifier = Modifier.padding(top = 8.dp)) {
+                    Text("Crear cuenta")
+                }
             }
         }
     }
@@ -327,8 +340,10 @@ fun RegisterScreen(
     isLoading: Boolean,
     message: String?,
     isError: Boolean,
+    showOfflineButton: Boolean = false,
     onRegister: (email: String, password: String, confirm: String) -> Unit,
     onBackToLogin: () -> Unit,
+    onContinueOffline: () -> Unit = {},
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -337,11 +352,25 @@ fun RegisterScreen(
     val context = LocalContext.current
     val termsUrl = stringResource(R.string.auth_terms_url)
 
-    Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Box(Modifier.fillMaxSize()) {
+        if (showOfflineButton) {
+            OutlinedButton(
+                onClick = onContinueOffline,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+            ) {
+                Text(stringResource(R.string.auth_offline_mode))
+            }
+        }
+
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
         Text("Crear cuenta", style = MaterialTheme.typography.headlineMedium)
         Text(
             "Regístrate con tu correo",
@@ -436,6 +465,7 @@ fun RegisterScreen(
             TextButton(onClick = onBackToLogin, modifier = Modifier.padding(top = 8.dp)) {
                 Text("Ya tengo cuenta")
             }
+        }
         }
     }
 }

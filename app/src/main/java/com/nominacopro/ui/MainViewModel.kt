@@ -24,6 +24,7 @@ import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.export.PdfExporter
 import com.nominacopro.notifications.ReminderScheduler
+import com.nominacopro.util.NetworkMonitor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -274,7 +275,15 @@ class MainViewModel(
 
     fun syncNow(userId: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.cloudSync.syncNow(userId))
+            if (!NetworkMonitor.isOnline(getApplication())) {
+                onResult("Sin conexión a internet. Conéctate para sincronizar tu respaldo.")
+                return@launch
+            }
+            val error = repository.cloudSync.syncNow(userId)
+            if (error == null) {
+                repository.preferencesStore.update { it.copy(cloudBackupEnabled = true) }
+            }
+            onResult(error)
         }
     }
 

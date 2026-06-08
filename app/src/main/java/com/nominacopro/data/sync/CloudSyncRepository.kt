@@ -32,6 +32,11 @@ sealed interface SyncUiState {
     data class Error(val message: String) : SyncUiState
 }
 
+enum class BackupActivationStrategy {
+    PushLocal,
+    PullRemote,
+}
+
 class CloudSyncRepository(
     private val db: NominaDatabase,
     private val profileDao: ProfileDao,
@@ -45,6 +50,8 @@ class CloudSyncRepository(
     private val postgrest get() = SupabaseProvider.client?.postgrest
 
     private var activeUserId: String? = null
+    var autoSyncEnabled: Boolean = false
+        private set
 
     private val _state = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
     val state: StateFlow<SyncUiState> = _state.asStateFlow()
@@ -53,9 +60,20 @@ class CloudSyncRepository(
 
     fun setActiveUser(userId: String?) {
         activeUserId = userId
+        if (userId == null) {
+            autoSyncEnabled = false
+        }
     }
 
-    suspend fun onUserAuthenticated(userId: String) {
+    fun setAutoSyncEnabled(enabled: Boolean) {
+        autoSyncEnabled = enabled && activeUserId != null
+    }
+
+    fun canAutoSync(): Boolean = autoSyncEnabled && activeUserId != null
+
+    suspend fun remoteBackupExists(userId: String): Boolean = hasRemoteData(userId)
+
+    suspend fun activateBackup(userId: String, strategy: BackupActivationStrategy) {
         if (!isAvailable) return
         val previousUser = activeUserId
         activeUserId = userId
@@ -64,16 +82,28 @@ class CloudSyncRepository(
         }
         _state.value = SyncUiState.Syncing
         try {
-            if (hasRemoteData(userId)) {
-                pullAll(userId)
-                _state.value = SyncUiState.Success("Datos descargados de la nube")
-            } else {
-                pushAll(userId)
-                _state.value = SyncUiState.Success("Datos subidos a la nube")
+            when (strategy) {
+                BackupActivationStrategy.PushLocal -> {
+                    pushAll(userId)
+                    _state.value = SyncUiState.Success("Datos subidos a la nube")
+                }
+                BackupActivationStrategy.PullRemote -> {
+                    pullAll(userId)
+                    _state.value = SyncUiState.Success("Datos descargados de la nube")
+                }
             }
+            autoSyncEnabled = true
         } catch (e: Exception) {
             _state.value = SyncUiState.Error(parseSyncError(e))
+            throw e
         }
+    }
+
+    suspend fun onUserAuthenticated(userId: String) {
+        activateBackup(
+            userId,
+            if (hasRemoteData(userId)) BackupActivationStrategy.PullRemote else BackupActivationStrategy.PushLocal,
+        )
     }
 
     suspend fun syncNow(userId: String): String? {
@@ -83,6 +113,7 @@ class CloudSyncRepository(
         return try {
             pushAll(userId)
             pullAll(userId)
+            autoSyncEnabled = true
             _state.value = SyncUiState.Success("Sincronización completada")
             null
         } catch (e: Exception) {
@@ -261,6 +292,7 @@ class CloudSyncRepository(
 
     suspend fun clearLocalUserData() {
         activeUserId = null
+        autoSyncEnabled = false
         clearLocalData()
         _state.value = SyncUiState.Idle
     }

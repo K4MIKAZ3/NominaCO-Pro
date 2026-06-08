@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
   const to = process.env.CONTACT_TO_EMAIL ?? site.contactEmail;
   const from =
-    process.env.RESEND_FROM_EMAIL ?? `NominaApp <onboarding@resend.dev>`;
+    process.env.RESEND_FROM_EMAIL ?? `NominaApp <contacto@nominapp.xyz>`;
   const emailSubject =
     subject.length > 0 ? `[NominaApp] ${subject}` : `[NominaApp] Contacto de ${name}`;
 

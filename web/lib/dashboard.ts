@@ -98,10 +98,11 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
     supabase.from("manual_deductions").select("*").eq("user_id", userId),
   ]);
 
-  if (profileRes.error) throw profileRes.error;
-  if (workDaysRes.error) throw workDaysRes.error;
-  if (holidaysRes.error) throw holidaysRes.error;
-  if (deductionsRes.error) throw deductionsRes.error;
+  const queryError =
+    profileRes.error ?? workDaysRes.error ?? holidaysRes.error ?? deductionsRes.error;
+  if (queryError) {
+    throw new Error(queryError.message);
+  }
 
   if (!profileRes.data) {
     return { profileName: null, summaries: [] };

@@ -55,7 +55,8 @@ export function LoginForm() {
       setSession(current);
       setSessionChecked(true);
       if (current?.user) {
-        loadDashboard(current.user.id);
+        // Evita deadlock de Supabase: no llamar a la API dentro del callback de auth.
+        window.setTimeout(() => loadDashboard(current.user.id), 0);
       }
     });
 
@@ -64,7 +65,7 @@ export function LoginForm() {
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       if (nextSession?.user) {
-        loadDashboard(nextSession.user.id);
+        window.setTimeout(() => loadDashboard(nextSession.user.id), 0);
       } else {
         setProfileName(null);
         setSummaries([]);
@@ -109,8 +110,13 @@ export function LoginForm() {
 
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.session) {
+          setSession(data.session);
+          setSessionChecked(true);
+          window.setTimeout(() => loadDashboard(data.session.user.id), 0);
+        }
       } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,

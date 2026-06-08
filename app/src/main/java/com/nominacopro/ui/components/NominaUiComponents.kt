@@ -44,12 +44,13 @@ fun NominaLogoMark(size: Int = 32) {
             modifier = Modifier
                 .size(markSize)
                 .clip(NominaDesign.CardShape)
-                .background(NominaDesign.Green),
+                .background(NominaDesign.SurfaceElevated)
+                .border(1.dp, NominaDesign.Green.copy(alpha = 0.35f), NominaDesign.CardShape),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 "N",
-                color = Color(0xFF052E16),
+                color = NominaDesign.Green,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = (size * 0.55f).sp,
             )

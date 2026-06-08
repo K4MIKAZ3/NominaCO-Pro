@@ -76,7 +76,7 @@ fun LoginScreen(
                     when (forgotStep) {
                         ForgotPasswordStep.EMAIL -> {
                             Text(
-                                "Ingresa el correo de tu cuenta. Verificaremos que esté registrado.",
+                                "Ingresa el correo de tu cuenta. Te enviaremos un código de recuperación.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             )

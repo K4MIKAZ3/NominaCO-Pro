@@ -82,19 +82,7 @@ class AuthRepository {
         if (!isValidEmail(trimmed)) {
             return "Ingresa un correo válido"
         }
-        return try {
-            requireClient().auth.signInWith(Email) {
-                this.email = trimmed
-                this.password = "__invalid_probe_password__"
-            }
-            null
-        } catch (e: Exception) {
-            when (emailExistsFromSignInError(e)) {
-                true -> null
-                false -> "No hay cuenta registrada con ese correo"
-                null -> errorMessageOnly(e) ?: "Error al verificar el correo"
-            }
-        }
+        return null
     }
 
     suspend fun sendPasswordResetEmail(email: String): String? = try {
@@ -104,7 +92,7 @@ class AuthRepository {
         )
         null
     } catch (e: Exception) {
-        errorMessageOnly(e)
+        friendlyAuthError(errorMessageOnly(e))
     }
 
     suspend fun resetPasswordWithOtp(email: String, otp: String, newPassword: String): String? = try {
@@ -119,7 +107,7 @@ class AuthRepository {
         signOut()
         null
     } catch (e: Exception) {
-        errorMessageOnly(e)
+        friendlyAuthError(errorMessageOnly(e))
     }
 
     private fun requireClient() =
@@ -131,7 +119,7 @@ class AuthRepository {
     )
 
     private fun parseError(e: Exception): String {
-        val msg = errorMessageOnly(e) ?: "Error de autenticación"
+        val msg = friendlyAuthError(errorMessageOnly(e))
         _state.value = AuthUiState.Error(msg)
         return msg
     }
@@ -139,20 +127,31 @@ class AuthRepository {
     private fun errorMessageOnly(e: Exception): String? =
         e.message?.substringBefore("\nURL:")?.trim()
 
-    private fun isValidEmail(email: String): Boolean =
-        EMAIL_REGEX.matches(email)
-
-    private fun emailExistsFromSignInError(e: Exception): Boolean? {
-        val msg = errorMessageOnly(e)?.lowercase() ?: return null
+    private fun friendlyAuthError(raw: String?): String {
+        val msg = raw?.trim().orEmpty()
+        if (msg.isEmpty()) return "Error de autenticación"
+        val lower = msg.lowercase()
         return when {
-            msg.contains("invalid login credentials") ||
-                msg.contains("invalid credentials") ||
-                msg.contains("email not confirmed") -> true
-            msg.contains("user not found") ||
-                msg.contains("no user") -> false
-            else -> null
+            lower.contains("rate limit") ->
+                "Demasiados correos enviados. Espera unos minutos e inténtalo de nuevo."
+            lower.contains("invalid login credentials") || lower.contains("invalid credentials") ->
+                "Correo o contraseña incorrectos."
+            lower.contains("user already registered") || lower.contains("already been registered") ->
+                "Ya existe una cuenta con ese correo."
+            lower.contains("email not confirmed") ->
+                "Confirma tu correo antes de iniciar sesión."
+            lower.contains("user not found") || lower.contains("no user") ->
+                "No hay cuenta registrada con ese correo."
+            lower.contains("otp") && lower.contains("expired") ->
+                "El código expiró. Solicita uno nuevo desde recuperar contraseña."
+            lower.contains("otp") || lower.contains("token") && lower.contains("invalid") ->
+                "Código incorrecto. Revisa el correo e inténtalo de nuevo."
+            else -> msg
         }
     }
+
+    private fun isValidEmail(email: String): Boolean =
+        EMAIL_REGEX.matches(email)
 
     private companion object {
         private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")

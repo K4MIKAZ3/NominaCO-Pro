@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -353,15 +354,7 @@ fun NominaAppRoot(app: NominaApp) {
         }
 
         if (inMainApp && authOverlay == AuthOverlay.Login) {
-            Box(Modifier.fillMaxSize()) {
-                TextButton(
-                    onClick = { authOverlay = AuthOverlay.None },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(16.dp),
-                ) {
-                    Text("Cerrar")
-                }
+            InAppAuthOverlay(onClose = { authOverlay = AuthOverlay.None }) {
                 LoginScreen(
                 isLoading = authBusy,
                 errorMessage = authMessage,
@@ -395,15 +388,7 @@ fun NominaAppRoot(app: NominaApp) {
         }
 
         if (inMainApp && authOverlay == AuthOverlay.Register) {
-            Box(Modifier.fillMaxSize()) {
-                TextButton(
-                    onClick = { authOverlay = AuthOverlay.Login },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(16.dp),
-                ) {
-                    Text("Cerrar")
-                }
+            InAppAuthOverlay(onClose = { authOverlay = AuthOverlay.Login }) {
                 RegisterScreen(
                 isLoading = authBusy,
                 message = authMessage,
@@ -465,6 +450,26 @@ fun NominaAppRoot(app: NominaApp) {
                     ApkInstaller.openInstallPermissionSettings(context)
                 },
             )
+        }
+    }
+}
+
+@Composable
+private fun InAppAuthOverlay(
+    onClose: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize()) {
+            TextButton(
+                onClick = onClose,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp),
+            ) {
+                Text("Cerrar")
+            }
+            content()
         }
     }
 }

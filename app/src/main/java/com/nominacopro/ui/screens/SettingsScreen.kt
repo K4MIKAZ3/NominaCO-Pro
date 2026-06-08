@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -51,6 +53,13 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 
+private enum class DeleteAccountStep {
+    REASON,
+    CONFIRM_1,
+    CONFIRM_2,
+    CONFIRM_3,
+}
+
 @Composable
 fun SettingsScreen(
     preferences: AppPreferences,
@@ -63,6 +72,7 @@ fun SettingsScreen(
     onRequestNotificationPermission: () -> Unit,
     onRequestBiometricEnable: ((onSuccess: () -> Unit) -> Unit)? = null,
     onSignOut: (() -> Unit)? = null,
+    onDeleteAccount: ((reason: String, onResult: (Boolean, String?) -> Unit) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val snackbar = remember { SnackbarHostState() }
@@ -85,6 +95,13 @@ fun SettingsScreen(
     var editingReminder by rememberSaveable { mutableStateOf(false) }
     var showSignOutDialog by rememberSaveable { mutableStateOf(false) }
     var showDonationDialog by rememberSaveable { mutableStateOf(false) }
+    var showDeleteAccountDialog by rememberSaveable { mutableStateOf(false) }
+    var deleteAccountStep by rememberSaveable { mutableStateOf(DeleteAccountStep.REASON) }
+    var deleteAccountReason by rememberSaveable { mutableStateOf("") }
+    var deleteAccountBusy by remember { mutableStateOf(false) }
+    var deleteAccountError by remember { mutableStateOf<String?>(null) }
+    val deleteAccountSuccessMessage = stringResource(R.string.auth_delete_account_success)
+    val deleteAccountErrorFallback = stringResource(R.string.auth_delete_account_error)
 
     fun buildPrefs(
         use24: Boolean = preferences.use24HourFormat,
@@ -183,6 +200,29 @@ fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Text(stringResource(R.string.auth_sign_out))
+                            }
+                            onDeleteAccount?.let { deleteAccount ->
+                                Text(
+                                    stringResource(R.string.auth_delete_account_summary),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.padding(top = 8.dp),
+                                )
+                                OutlinedButton(
+                                    onClick = {
+                                        deleteAccountStep = DeleteAccountStep.REASON
+                                        deleteAccountReason = ""
+                                        deleteAccountError = null
+                                        showDeleteAccountDialog = true
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = !deleteAccountBusy,
+                                ) {
+                                    Text(
+                                        stringResource(R.string.auth_delete_account),
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
+                                }
                             }
                         }
                     }
@@ -399,6 +439,147 @@ fun SettingsScreen(
 
     if (showDonationDialog) {
         DonationDialog(onDismiss = { showDonationDialog = false })
+    }
+
+    if (showDeleteAccountDialog) {
+        fun resetDeleteDialog() {
+            showDeleteAccountDialog = false
+            deleteAccountStep = DeleteAccountStep.REASON
+            deleteAccountReason = ""
+            deleteAccountError = null
+            deleteAccountBusy = false
+        }
+
+        AlertDialog(
+            onDismissRequest = { if (!deleteAccountBusy) resetDeleteDialog() },
+            title = {
+                Text(
+                    when (deleteAccountStep) {
+                        DeleteAccountStep.REASON -> stringResource(R.string.auth_delete_account_reason_title)
+                        DeleteAccountStep.CONFIRM_1 -> stringResource(R.string.auth_delete_account_confirm_1_title)
+                        DeleteAccountStep.CONFIRM_2 -> stringResource(R.string.auth_delete_account_confirm_2_title)
+                        DeleteAccountStep.CONFIRM_3 -> stringResource(R.string.auth_delete_account_confirm_3_title)
+                    },
+                )
+            },
+            text = {
+                Column {
+                    when (deleteAccountStep) {
+                        DeleteAccountStep.REASON -> {
+                            Text(
+                                stringResource(R.string.auth_delete_account_summary),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = deleteAccountReason,
+                                onValueChange = { deleteAccountReason = it },
+                                label = { Text(stringResource(R.string.auth_delete_account_reason_hint)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 2,
+                                enabled = !deleteAccountBusy,
+                            )
+                        }
+                        DeleteAccountStep.CONFIRM_1 -> {
+                            Text(stringResource(R.string.auth_delete_account_confirm_1_message))
+                        }
+                        DeleteAccountStep.CONFIRM_2 -> {
+                            Text(stringResource(R.string.auth_delete_account_confirm_2_message))
+                        }
+                        DeleteAccountStep.CONFIRM_3 -> {
+                            Text(stringResource(R.string.auth_delete_account_confirm_3_message))
+                        }
+                    }
+                    if (deleteAccountBusy) {
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            CircularProgressIndicator(strokeWidth = 2.dp)
+                            Text(stringResource(R.string.auth_delete_account_busy))
+                        }
+                    }
+                    deleteAccountError?.let { error ->
+                        Text(
+                            error,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 8.dp),
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                when (deleteAccountStep) {
+                    DeleteAccountStep.REASON -> {
+                        TextButton(
+                            onClick = { deleteAccountStep = DeleteAccountStep.CONFIRM_1 },
+                            enabled = !deleteAccountBusy,
+                        ) { Text("Continuar") }
+                    }
+                    DeleteAccountStep.CONFIRM_1 -> {
+                        TextButton(
+                            onClick = { deleteAccountStep = DeleteAccountStep.CONFIRM_2 },
+                            enabled = !deleteAccountBusy,
+                        ) { Text(stringResource(R.string.auth_delete_account_confirm_yes)) }
+                    }
+                    DeleteAccountStep.CONFIRM_2 -> {
+                        TextButton(
+                            onClick = { deleteAccountStep = DeleteAccountStep.CONFIRM_3 },
+                            enabled = !deleteAccountBusy,
+                        ) { Text(stringResource(R.string.auth_delete_account_confirm_yes)) }
+                    }
+                    DeleteAccountStep.CONFIRM_3 -> {
+                        TextButton(
+                            onClick = {
+                                deleteAccountBusy = true
+                                deleteAccountError = null
+                                onDeleteAccount?.invoke(deleteAccountReason) { ok, msg ->
+                                    deleteAccountBusy = false
+                                    if (ok) {
+                                        resetDeleteDialog()
+                                        scope.launch {
+                                            snackbar.showSnackbar(msg ?: deleteAccountSuccessMessage)
+                                        }
+                                    } else {
+                                        deleteAccountError = msg ?: deleteAccountErrorFallback
+                                    }
+                                }
+                            },
+                            enabled = !deleteAccountBusy,
+                        ) {
+                            Text(
+                                stringResource(R.string.auth_delete_account_confirm_final),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        when (deleteAccountStep) {
+                            DeleteAccountStep.REASON -> resetDeleteDialog()
+                            DeleteAccountStep.CONFIRM_1 -> deleteAccountStep = DeleteAccountStep.REASON
+                            DeleteAccountStep.CONFIRM_2 -> deleteAccountStep = DeleteAccountStep.CONFIRM_1
+                            DeleteAccountStep.CONFIRM_3 -> deleteAccountStep = DeleteAccountStep.CONFIRM_2
+                        }
+                    },
+                    enabled = !deleteAccountBusy,
+                ) {
+                    Text(
+                        if (deleteAccountStep == DeleteAccountStep.REASON) {
+                            stringResource(R.string.auth_sign_out_confirm_no)
+                        } else {
+                            "Atrás"
+                        },
+                    )
+                }
+            },
+        )
     }
 
     if (showSignOutDialog) {

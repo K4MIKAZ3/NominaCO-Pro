@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108" role="img" aria-label="NominaApp icon">
+  <rect width="108" height="108" fill="#0D0F14"/>
+  <path fill="#1C2030" d="M24,24h60c6.6,0 12,5.4 12,12v36c0,6.6 -5.4,12 -12,12H24c-6.6,0 -12,-5.4 -12,-12V36c0,-6.6 5.4,-12 12,-12z"/>
+  <path fill="#4ADE80" d="M44,38h8v32h-8zM56,38h16c6.6,0 12,5.4 12,12v8c0,6.6 -5.4,12 -12,12H56V38zM64,54h8v4h-8z"/>
+  <circle cx="62" cy="32" r="3.5" fill="#22D3EE"/>
+  <circle cx="57" cy="73" r="7.5" fill="#B45309"/>
+  <circle cx="57" cy="73" r="6" fill="#FBBF24"/>
+  <circle cx="67" cy="77" r="6.5" fill="#92400E"/>
+  <circle cx="67" cy="77" r="5" fill="#F59E0B"/>
+  <circle cx="74" cy="68" r="5.5" fill="#78350F"/>
+  <circle cx="74" cy="68" r="4.5" fill="#FDE68A"/>
+  <circle cx="72" cy="65" r="1.5" fill="#FFFFFF" opacity="0.45"/>
+</svg>

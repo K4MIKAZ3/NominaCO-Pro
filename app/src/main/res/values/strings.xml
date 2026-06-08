@@ -23,5 +23,24 @@
     <string name="auth_sign_out_confirm_message">Saldrás de tu cuenta en este dispositivo. Tus datos locales se conservan.</string>
     <string name="auth_sign_out_confirm_yes">Sí, cerrar sesión</string>
     <string name="auth_sign_out_confirm_no">Cancelar</string>
+    <string name="auth_terms_accept_label">Acepto los términos y condiciones</string>
+    <string name="auth_terms_open">términos y condiciones</string>
+    <string name="auth_terms_required">Debes aceptar los términos y condiciones para crear tu cuenta.</string>
+    <string name="auth_terms_url">https://nominapp.xyz/terminos</string>
+    <string name="auth_delete_account">Eliminar cuenta</string>
+    <string name="auth_delete_account_summary">Borra tu cuenta y todos los datos asociados en la nube. Esta acción es permanente.</string>
+    <string name="auth_delete_account_reason_title">¿Por qué eliminas tu cuenta?</string>
+    <string name="auth_delete_account_reason_hint">Cuéntanos brevemente (opcional)</string>
+    <string name="auth_delete_account_confirm_1_title">¿Eliminar tu cuenta?</string>
+    <string name="auth_delete_account_confirm_1_message">Perderás el acceso a tu cuenta sincronizada en Nominapp.</string>
+    <string name="auth_delete_account_confirm_2_title">Segunda confirmación</string>
+    <string name="auth_delete_account_confirm_2_message">Se borrarán tus datos en la nube: perfil, jornadas, nómina y preferencias sincronizadas.</string>
+    <string name="auth_delete_account_confirm_3_title">Última confirmación</string>
+    <string name="auth_delete_account_confirm_3_message">Esta acción no se puede deshacer. ¿Eliminar tu cuenta de forma permanente?</string>
+    <string name="auth_delete_account_confirm_yes">Sí, estoy seguro</string>
+    <string name="auth_delete_account_confirm_final">Sí, eliminar mi cuenta</string>
+    <string name="auth_delete_account_busy">Eliminando cuenta…</string>
+    <string name="auth_delete_account_success">Cuenta eliminada correctamente.</string>
+    <string name="auth_delete_account_error">No se pudo eliminar la cuenta. Inténtalo de nuevo.</string>
     <string name="sync_now">Sincronizar ahora</string>
 </resources>

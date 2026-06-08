@@ -5,6 +5,8 @@ import io.github.jan.supabase.gotrue.SessionStatus
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.gotrue.user.UserInfo
+import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.rpc
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -74,6 +76,21 @@ class AuthRepository {
             }
         } finally {
             _state.value = AuthUiState.Unauthenticated
+        }
+    }
+
+    suspend fun deleteAccount(): String? = try {
+        requireClient().postgrest.rpc("delete_own_account")
+        signOut()
+        null
+    } catch (e: Exception) {
+        friendlyAuthError(errorMessageOnly(e)).let { msg ->
+            when {
+                msg.contains("delete_own_account", ignoreCase = true) ||
+                    msg.contains("function", ignoreCase = true) && msg.contains("does not exist", ignoreCase = true) ->
+                    "Eliminación de cuenta no configurada en el servidor. Contacta a soporte."
+                else -> msg.ifBlank { "No se pudo eliminar la cuenta" }
+            }
         }
     }
 

@@ -60,6 +60,7 @@ fun NominaAppRoot(app: NominaApp) {
         .collectAsState(initial = AppPreferences())
     val authVm: AuthViewModel = viewModel(factory = AuthViewModel.Factory(app.authRepository))
     val authState by authVm.authState.collectAsState()
+    val rootScope = rememberCoroutineScope()
     var showRegister by rememberSaveable { mutableStateOf(false) }
     var localBypass by rememberSaveable { mutableStateOf(false) }
     var authBusy by remember { mutableStateOf(false) }
@@ -99,6 +100,16 @@ fun NominaAppRoot(app: NominaApp) {
                     onSignOut = {
                         app.repository.cloudSync.setActiveUser(null)
                         authVm.signOut()
+                    },
+                    onDeleteAccount = { _, onResult ->
+                        authVm.deleteAccount { ok, msg ->
+                            if (ok) {
+                                rootScope.launch {
+                                    app.repository.cloudSync.clearLocalUserData()
+                                }
+                            }
+                            onResult(ok, msg)
+                        }
                     },
                 )
             }
@@ -169,6 +180,7 @@ private fun MainNominaScaffold(
     accountEmail: String?,
     accountUserId: String? = null,
     onSignOut: (() -> Unit)?,
+    onDeleteAccount: ((reason: String, onResult: (Boolean, String?) -> Unit) -> Unit)? = null,
 ) {
     val vm: MainViewModel = viewModel(factory = MainViewModel.Factory(app.repository, app))
     val context = LocalContext.current
@@ -308,6 +320,7 @@ private fun MainNominaScaffold(
                     promptLocalBiometric(context, onSuccess)
                 },
                 onSignOut = onSignOut,
+                onDeleteAccount = onDeleteAccount,
                 modifier = Modifier.padding(padding),
             )
         }

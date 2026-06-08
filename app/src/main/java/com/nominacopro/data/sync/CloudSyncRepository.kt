@@ -259,6 +259,12 @@ class CloudSyncRepository(
         pg.from(TABLE_APP_PREFERENCES).upsert(prefs.toRemote(userId), onConflict = "user_id")
     }
 
+    suspend fun clearLocalUserData() {
+        activeUserId = null
+        clearLocalData()
+        _state.value = SyncUiState.Idle
+    }
+
     private suspend fun clearLocalData() {
         db.withTransaction {
             profileDao.deleteAll()

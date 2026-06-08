@@ -44,6 +44,17 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         viewModelScope.launch { repository.signOut() }
     }
 
+    fun deleteAccount(onResult: (Boolean, String?) -> Unit) {
+        viewModelScope.launch {
+            val error = repository.deleteAccount()
+            if (error == null) {
+                onResult(true, null)
+            } else {
+                onResult(false, error)
+            }
+        }
+    }
+
     fun verifyEmailForReset(email: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             val verifyError = repository.verifyEmailRegistered(email)

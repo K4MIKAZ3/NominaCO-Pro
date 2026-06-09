@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -158,10 +159,12 @@ fun CalendarScreen(
                     }
                     Row(
                         Modifier.padding(top = 14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         LegendItem(NominaDesign.Green, "Día trabajado")
                         LegendItem(NominaDesign.TextSecondary, "Día no trabajado")
+                        LegendItem(NominaDesign.HolidayRed, "Festivo Colombia")
+                        LegendItem(NominaDesign.HolidayOrange, "Festivo manual")
                     }
                 }
             }
@@ -253,6 +256,13 @@ private fun MockupDayCell(
 ) {
     val isToday = date == LocalDate.now()
     val worked = mark?.worked == true
+    val isOfficialHoliday = mark?.officialHoliday == true
+    val isManualHoliday = mark?.manualHoliday == true
+    val holidayColor = when {
+        isOfficialHoliday -> NominaDesign.HolidayRed
+        isManualHoliday -> NominaDesign.HolidayOrange
+        else -> null
+    }
     val innerSize = (cellSize * 0.82f).coerceIn(28.dp, 40.dp)
 
     Box(
@@ -269,11 +279,11 @@ private fun MockupDayCell(
                     .background(NominaDesign.Green),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "${date.dayOfMonth}",
+                DayNumber(
+                    day = date.dayOfMonth,
                     color = Color(0xFF052E16),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    underlineColor = holidayColor,
                 )
             }
         } else {
@@ -282,23 +292,45 @@ private fun MockupDayCell(
                     .size(innerSize)
                     .clip(CircleShape)
                     .then(
-                        if (isToday) {
-                            Modifier.border(2.dp, NominaDesign.Green, CircleShape)
-                        } else {
-                            Modifier
+                        when {
+                            holidayColor != null -> Modifier
+                                .background(holidayColor.copy(alpha = 0.16f))
+                                .border(1.5.dp, holidayColor, CircleShape)
+                            isToday -> Modifier.border(2.dp, NominaDesign.Green, CircleShape)
+                            else -> Modifier
                         },
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "${date.dayOfMonth}",
-                    color = if (isToday) NominaDesign.Green else NominaDesign.TextSecondary,
-                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 14.sp,
+                DayNumber(
+                    day = date.dayOfMonth,
+                    color = when {
+                        holidayColor != null -> holidayColor
+                        isToday -> NominaDesign.Green
+                        else -> NominaDesign.TextSecondary
+                    },
+                    fontWeight = if (isToday || holidayColor != null) FontWeight.Bold else FontWeight.Medium,
+                    underlineColor = holidayColor,
                 )
             }
         }
     }
+}
+
+@Composable
+private fun DayNumber(
+    day: Int,
+    color: Color,
+    fontWeight: FontWeight,
+    underlineColor: Color?,
+) {
+    Text(
+        "$day",
+        color = color,
+        fontWeight = fontWeight,
+        fontSize = 14.sp,
+        textDecoration = if (underlineColor != null) TextDecoration.Underline else TextDecoration.None,
+    )
 }
 
 @Composable

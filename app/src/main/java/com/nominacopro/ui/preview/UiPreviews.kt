@@ -69,6 +69,8 @@ private fun PreviewCalendar() {
             marks = mapOf(
                 LocalDate.of(2026, 6, 2) to CalendarMark(true, false, false, false),
                 LocalDate.of(2026, 6, 7) to CalendarMark(false, false, false, true),
+                LocalDate.of(2026, 6, 8) to CalendarMark(false, true, false, false),
+                LocalDate.of(2026, 6, 16) to CalendarMark(false, false, true, false),
             ),
             payroll = samplePayroll,
             onPrev = {},

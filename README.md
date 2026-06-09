@@ -67,7 +67,29 @@ Para CI, añade secrets `SUPABASE_URL` y `SUPABASE_ANON_KEY` en GitHub. Sin ello
 
 ## CI
 
-Cada push a `main` genera una APK firmada instalable como artefacto de GitHub Actions.
+Cada push a `main` (salvo cambios solo en `web/public/version.json` o `releases.json`):
+
+1. **Sube automáticamente** `versionCode` y `versionName` en `app/build.gradle.kts`
+2. Compila la APK firmada y publica el release en GitHub
+3. Actualiza `web/public/version.json` y `releases.json`
+4. Hace commit `chore: release vX.Y.Z (versionCode N)`
+5. **Despliega la web en Vercel** si configuraste el secret (ver abajo)
+
+Antes de cada release, edita `release-notes.txt` con los cambios de esa versión (aparecen en el manifiesto de actualización).
+
+### Publicar `version.json` en nominapp.xyz (obligatorio para actualizaciones in-app)
+
+Sin esto, la app seguirá leyendo una versión vieja en `https://nominapp.xyz/version.json`.
+
+**Opción A — Deploy Hook (recomendada):**
+
+1. Vercel → proyecto `nomina-co-pro` → Settings → Git → Deploy Hooks
+2. Crea un hook para la rama `main` / Production
+3. En GitHub → Settings → Secrets → Actions, añade `VERCEL_DEPLOY_HOOK_URL` con la URL del hook
+
+**Opción B — Vercel CLI:**
+
+Añade secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID` (desde `.vercel/project.json` tras `vercel link` en `web/`).
 
 ### Actualizaciones sin desinstalar
 

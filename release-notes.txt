@@ -1,1 +1,1 @@
-Pantalla completa al iniciar sesión o registrarse desde Ajustes. Corrección de recorte en la pantalla Ajustes.
+Festivos oficiales y manuales resaltados en el calendario (rojo y naranja con subrayado).

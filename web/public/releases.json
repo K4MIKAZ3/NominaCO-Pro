@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "versionCode": 17,
+      "versionName": "1.7.6",
+      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.6/Nominapp.apk",
+      "releaseNotes": "Calendario más compacto, leyenda de festivos mejorada y recuento de días no laborados (lun–vie). Descarga de actualización continúa en segundo plano y reintenta instalar al volver de Ajustes.",
+      "publishedAt": "2026-06-09"
+    },
+    {
       "versionCode": 16,
       "versionName": "1.7.5",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.5/Nominapp.apk",
@@ -11,13 +18,6 @@
       "versionCode": 15,
       "versionName": "1.7.4",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.4/Nominapp.apk",
-      "releaseNotes": "Festivos oficiales y manuales resaltados en el calendario (rojo y naranja con subrayado).",
-      "publishedAt": "2026-06-09"
-    },
-    {
-      "versionCode": 14,
-      "versionName": "1.7.3",
-      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.3/Nominapp.apk",
       "releaseNotes": "Festivos oficiales y manuales resaltados en el calendario (rojo y naranja con subrayado).",
       "publishedAt": "2026-06-09"
     }

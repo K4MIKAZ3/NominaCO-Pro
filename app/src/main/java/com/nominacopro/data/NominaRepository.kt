@@ -249,9 +249,7 @@ class NominaRepository(context: Context) {
                     val official = ColombiaLaborLaw2026.isOfficialHoliday(date)
                     val manualH = manual.contains(date)
                     val sunday = ColombiaLaborLaw2026.isSunday(date)
-                    if (worked || official || manualH || sunday) {
-                        put(date, CalendarMark(worked, official, manualH, sunday))
-                    }
+                    put(date, CalendarMark(worked, official, manualH, sunday))
                 }
             }
         }

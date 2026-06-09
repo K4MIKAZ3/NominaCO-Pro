@@ -62,9 +62,8 @@ fun CalendarScreen(
     modifier: Modifier = Modifier,
 ) {
     val days = buildCalendarDays(yearMonth)
-    val rows = ceil((days.size) / 7.0).toInt()
-    val workedCount = marks.values.count { it.worked }
-    val pendingCount = countPendingWeekdays(yearMonth, marks)
+    val workedCount = countWorkedDays(yearMonth, marks)
+    val nonWorkedWeekdays = countNonWorkedWeekdays(yearMonth, marks)
     val monthLabel = Formatters.monthNameFull(yearMonth.monthValue).replaceFirstChar { it.titlecase() }
 
     LazyColumn(
@@ -130,24 +129,36 @@ fun CalendarScreen(
                         val gap = 4.dp
                         val rowGap = 8.dp
                         val cellSize = ((maxWidth - gap * 6) / 7).coerceIn(30.dp, 44.dp)
-                        val gridHeight = cellSize * rows + rowGap * (rows - 1).coerceAtLeast(0)
+                        val dayRows = ceil(days.size / 7.0).toInt().coerceAtLeast(1)
+                        val gridHeight = cellSize * dayRows + rowGap * (dayRows - 1).coerceAtLeast(0)
 
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(gap),
+                        ) {
+                            listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM").forEach { label ->
+                                Box(
+                                    modifier = Modifier.weight(1f),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        label,
+                                        color = NominaDesign.TextSecondary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
+                        }
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(7),
-                            modifier = Modifier.height(gridHeight),
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .height(gridHeight),
                             verticalArrangement = Arrangement.spacedBy(rowGap),
                             horizontalArrangement = Arrangement.spacedBy(gap),
                             userScrollEnabled = false,
                         ) {
-                            items(listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")) { label ->
-                                Text(
-                                    label,
-                                    modifier = Modifier.padding(4.dp),
-                                    color = NominaDesign.TextSecondary,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
                             items(days) { cell ->
                                 if (cell == null) {
                                     Box(Modifier.size(cellSize))
@@ -157,14 +168,18 @@ fun CalendarScreen(
                             }
                         }
                     }
-                    Row(
-                        Modifier.padding(top = 14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    Column(
+                        Modifier.padding(top = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        LegendItem(NominaDesign.Green, "Día trabajado")
-                        LegendItem(NominaDesign.TextSecondary, "Día no trabajado")
-                        LegendItem(NominaDesign.HolidayRed, "Festivo Colombia")
-                        LegendItem(NominaDesign.HolidayOrange, "Festivo manual")
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            LegendItem(NominaDesign.Green, "Día trabajado")
+                            LegendItem(NominaDesign.TextSecondary, "Día no trabajado")
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            LegendItem(NominaDesign.HolidayRed, "Festivo Colombia")
+                            LegendItem(NominaDesign.HolidayOrange, "Festivo manual")
+                        }
                     }
                 }
             }
@@ -205,7 +220,11 @@ fun CalendarScreen(
                                     .size(width = 1.dp, height = 28.dp)
                                     .background(NominaDesign.TextMuted.copy(alpha = 0.25f)),
                             )
-                            SummaryStat(pendingCount.toString(), "días pendientes", MaterialTheme.colorScheme.onSurface)
+                            SummaryStat(
+                                nonWorkedWeekdays.toString(),
+                                "días no laborados",
+                                MaterialTheme.colorScheme.onSurface,
+                            )
                         }
                     }
                 }
@@ -354,19 +373,28 @@ private fun SummaryStat(value: String, label: String, valueColor: Color) {
     }
 }
 
-private fun countPendingWeekdays(ym: YearMonth, marks: Map<LocalDate, CalendarMark>): Int {
-    val today = LocalDate.now()
-    val end = if (ym == YearMonth.from(today)) today else ym.atEndOfMonth()
-    if (ym.isBefore(YearMonth.from(today))) return 0
-    var pending = 0
+private fun countWorkedDays(ym: YearMonth, marks: Map<LocalDate, CalendarMark>): Int {
+    var count = 0
     var d = ym.atDay(1)
+    val end = ym.atEndOfMonth()
+    while (!d.isAfter(end)) {
+        if (marks[d]?.worked == true) count++
+        d = d.plusDays(1)
+    }
+    return count
+}
+
+private fun countNonWorkedWeekdays(ym: YearMonth, marks: Map<LocalDate, CalendarMark>): Int {
+    var count = 0
+    var d = ym.atDay(1)
+    val end = ym.atEndOfMonth()
     while (!d.isAfter(end)) {
         if (d.dayOfWeek != DayOfWeek.SATURDAY && d.dayOfWeek != DayOfWeek.SUNDAY) {
-            if (marks[d]?.worked != true) pending++
+            if (marks[d]?.worked != true) count++
         }
         d = d.plusDays(1)
     }
-    return pending
+    return count
 }
 
 private fun buildCalendarDays(ym: YearMonth): List<LocalDate?> {

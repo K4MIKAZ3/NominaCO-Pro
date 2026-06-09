@@ -17,11 +17,11 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -30,14 +30,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nominacopro.NominaApp
 import com.nominacopro.data.auth.AuthUiState
 import com.nominacopro.data.auth.SupabaseProvider
 import com.nominacopro.data.sync.BackupActivationStrategy
 import com.nominacopro.data.update.ApkInstaller
-import com.nominacopro.data.update.AppUpdateManifest
 import com.nominacopro.domain.auth.PasswordRules
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
@@ -96,8 +98,11 @@ fun NominaAppRoot(app: NominaApp) {
     val preferences by app.repository.observePreferences()
         .collectAsState(initial = AppPreferences())
     val authVm: AuthViewModel = viewModel(factory = AuthViewModel.Factory(app.authRepository))
+    val vm: MainViewModel = viewModel(factory = MainViewModel.Factory(app.repository, app))
+    val appUpdate by vm.appUpdate.collectAsState()
     val authState by authVm.authState.collectAsState()
     val rootScope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     var authOverlay by rememberSaveable { mutableStateOf(AuthOverlay.None) }
     var showStartupRegister by rememberSaveable { mutableStateOf(false) }
@@ -109,13 +114,18 @@ fun NominaAppRoot(app: NominaApp) {
     var backupHasRemote by remember { mutableStateOf(false) }
     var backupBusy by remember { mutableStateOf(false) }
 
-    var pendingUpdate by remember { mutableStateOf<AppUpdateManifest?>(null) }
     var updateChecked by rememberSaveable { mutableStateOf(false) }
-    var updateDownloading by remember { mutableStateOf(false) }
-    var updateProgress by remember { mutableFloatStateOf(0f) }
-    var showInstallPermissionDialog by remember { mutableStateOf(false) }
-    var downloadedApk by remember { mutableStateOf<File?>(null) }
     var manualUpdateCheckBusy by remember { mutableStateOf(false) }
+
+    DisposableEffect(lifecycleOwner, vm) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                vm.resumePendingApkInstall()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     val accountInfo = when (val state = authState) {
         is AuthUiState.Authenticated -> AccountInfo(state.email, state.userId, isOffline = false)
@@ -173,30 +183,6 @@ fun NominaAppRoot(app: NominaApp) {
             if (prefs.cloudBackupEnabled) return@launch
             backupHasRemote = app.repository.cloudSync.remoteBackupExists(userId)
             backupPromptUserId = userId
-        }
-    }
-
-    fun startUpdateDownload(manifest: AppUpdateManifest) {
-        if (updateDownloading) return
-        updateDownloading = true
-        updateProgress = 0f
-        rootScope.launch {
-            try {
-                val apk = app.appUpdateRepository.downloadApk(manifest) { progress ->
-                    updateProgress = progress
-                }
-                downloadedApk = apk
-                if (ApkInstaller.canInstall(context)) {
-                    ApkInstaller.installApk(context, apk)
-                    pendingUpdate = null
-                } else {
-                    showInstallPermissionDialog = true
-                }
-            } catch (_: Exception) {
-                // Ignore failed downloads silently; user can retry from Settings.
-            } finally {
-                updateDownloading = false
-            }
         }
     }
 
@@ -278,11 +264,12 @@ fun NominaAppRoot(app: NominaApp) {
                 LaunchedEffect(updateChecked) {
                     if (updateChecked || !NetworkMonitor.isOnline(context)) return@LaunchedEffect
                     updateChecked = true
-                    pendingUpdate = app.appUpdateRepository.checkForUpdate()
+                    vm.setPendingUpdate(app.appUpdateRepository.checkForUpdate())
                 }
 
                 MainNominaScaffold(
                     app = app,
+                    vm = vm,
                     accountEmail = accountInfo?.email,
                     accountUserId = accountInfo?.userId,
                     isOfflineAccount = accountInfo?.isOffline == true,
@@ -333,7 +320,7 @@ fun NominaAppRoot(app: NominaApp) {
                                     ).show()
                                 } else {
                                     val update = app.appUpdateRepository.checkForUpdate()
-                                    pendingUpdate = update
+                                    vm.setPendingUpdate(update)
                                     Toast.makeText(
                                         context,
                                         if (update != null) {
@@ -432,21 +419,20 @@ fun NominaAppRoot(app: NominaApp) {
             )
         }
 
-        pendingUpdate?.let { manifest ->
+        if (appUpdate.manifest != null && (!appUpdate.awaitingInstallPermission || appUpdate.downloading)) {
             UpdateAvailableDialog(
-                manifest = manifest,
-                downloading = updateDownloading,
-                downloadProgress = updateProgress,
-                onDismiss = { if (!updateDownloading) pendingUpdate = null },
-                onUpdate = { startUpdateDownload(manifest) },
+                manifest = appUpdate.manifest!!,
+                downloading = appUpdate.downloading,
+                downloadProgress = appUpdate.progress,
+                onDismiss = { vm.dismissPendingUpdate() },
+                onUpdate = { vm.startUpdateDownload() },
             )
         }
 
-        if (showInstallPermissionDialog) {
+        if (appUpdate.awaitingInstallPermission) {
             InstallPermissionDialog(
-                onDismiss = { showInstallPermissionDialog = false },
+                onDismiss = { vm.dismissInstallPermissionPrompt() },
                 onOpenSettings = {
-                    showInstallPermissionDialog = false
                     ApkInstaller.openInstallPermissionSettings(context)
                 },
             )
@@ -477,6 +463,7 @@ private fun InAppAuthOverlay(
 @Composable
 private fun MainNominaScaffold(
     app: NominaApp,
+    vm: MainViewModel,
     accountEmail: String?,
     accountUserId: String? = null,
     isOfflineAccount: Boolean = false,
@@ -489,7 +476,6 @@ private fun MainNominaScaffold(
     onDeleteAccount: ((reason: String, onResult: (Boolean, String?) -> Unit) -> Unit)? = null,
     onCheckForUpdate: () -> Unit,
 ) {
-    val vm: MainViewModel = viewModel(factory = MainViewModel.Factory(app.repository, app))
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }

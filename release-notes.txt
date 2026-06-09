@@ -1,1 +1,1 @@
-Festivos oficiales y manuales resaltados en el calendario (rojo y naranja con subrayado).
+Calendario más compacto, leyenda de festivos mejorada y recuento de días no laborados (lun–vie). Descarga de actualización continúa en segundo plano y reintenta instalar al volver de Ajustes.

@@ -24,7 +24,13 @@ fun UpdateAvailableDialog(
     onUpdate: () -> Unit,
 ) {
     AlertDialog(
-        onDismissRequest = { if (!downloading) onDismiss() },
+        onDismissRequest = {
+            if (!downloading) onDismiss()
+        },
+        properties = androidx.compose.ui.window.DialogProperties(
+            dismissOnBackPress = !downloading,
+            dismissOnClickOutside = !downloading,
+        ),
         title = { Text("Actualización disponible") },
         text = {
             Column {
@@ -50,6 +56,12 @@ fun UpdateAvailableDialog(
                     Text(
                         "Descargando… ${(downloadProgress * 100).toInt()}%",
                         style = MaterialTheme.typography.bodySmall,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Puedes ir a Ajustes del sistema; la descarga continúa en segundo plano.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     )
                 }
             }

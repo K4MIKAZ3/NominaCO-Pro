@@ -7,7 +7,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.nominacopro.data.CalendarMark
+import com.nominacopro.NominaApp
 import com.nominacopro.data.NominaRepository
+import com.nominacopro.data.update.ApkInstaller
+import com.nominacopro.data.update.AppUpdateManifest
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
@@ -35,17 +38,31 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 
+data class AppUpdateUiState(
+    val manifest: AppUpdateManifest? = null,
+    val downloading: Boolean = false,
+    val progress: Float = 0f,
+    val downloadedApkPath: String? = null,
+    val awaitingInstallPermission: Boolean = false,
+)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(
     private val repository: NominaRepository,
     application: Application,
 ) : AndroidViewModel(application) {
+
+    private val app = application as NominaApp
+
+    private val _appUpdate = MutableStateFlow(AppUpdateUiState())
+    val appUpdate: StateFlow<AppUpdateUiState> = _appUpdate.asStateFlow()
 
     private val _yearMonth = MutableStateFlow(YearMonth.now())
     val yearMonth: StateFlow<YearMonth> = _yearMonth.asStateFlow()
@@ -315,6 +332,65 @@ class MainViewModel(
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+    }
+
+    fun setPendingUpdate(manifest: AppUpdateManifest?) {
+        if (_appUpdate.value.downloading) return
+        _appUpdate.value = if (manifest == null) {
+            AppUpdateUiState()
+        } else {
+            _appUpdate.value.copy(manifest = manifest)
+        }
+    }
+
+    fun dismissPendingUpdate() {
+        if (_appUpdate.value.downloading) return
+        _appUpdate.value = AppUpdateUiState()
+    }
+
+    fun startUpdateDownload() {
+        val manifest = _appUpdate.value.manifest ?: return
+        if (_appUpdate.value.downloading) return
+        viewModelScope.launch {
+            _appUpdate.update { it.copy(downloading = true, progress = 0f) }
+            try {
+                val apk = app.appUpdateRepository.downloadApk(manifest) { progress ->
+                    _appUpdate.update { it.copy(progress = progress) }
+                }
+                val canInstall = ApkInstaller.canInstall(getApplication())
+                _appUpdate.update {
+                    it.copy(
+                        downloading = false,
+                        progress = 1f,
+                        downloadedApkPath = apk.absolutePath,
+                        awaitingInstallPermission = !canInstall,
+                    )
+                }
+                if (canInstall) {
+                    ApkInstaller.installApk(getApplication(), apk)
+                    _appUpdate.value = AppUpdateUiState()
+                }
+            } catch (_: Exception) {
+                _appUpdate.update { it.copy(downloading = false) }
+            }
+        }
+    }
+
+    fun resumePendingApkInstall() {
+        val path = _appUpdate.value.downloadedApkPath ?: return
+        val file = File(path)
+        if (!file.exists()) {
+            _appUpdate.update { it.copy(downloadedApkPath = null) }
+            return
+        }
+        if (ApkInstaller.canInstall(getApplication())) {
+            ApkInstaller.installApk(getApplication(), file)
+            _appUpdate.value = AppUpdateUiState()
+        }
+    }
+
+    fun dismissInstallPermissionPrompt() {
+        _appUpdate.update { it.copy(awaitingInstallPermission = false) }
     }
 
     class Factory(

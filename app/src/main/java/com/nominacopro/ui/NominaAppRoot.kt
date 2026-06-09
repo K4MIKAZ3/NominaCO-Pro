@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -114,13 +115,13 @@ fun NominaAppRoot(app: NominaApp) {
     var backupHasRemote by remember { mutableStateOf(false) }
     var backupBusy by remember { mutableStateOf(false) }
 
-    var updateChecked by rememberSaveable { mutableStateOf(false) }
     var manualUpdateCheckBusy by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner, vm) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 vm.resumePendingApkInstall()
+                vm.checkForUpdates()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -189,6 +190,8 @@ fun NominaAppRoot(app: NominaApp) {
     NominaTheme(darkTheme = preferences.darkModeEnabled) {
         val inMainApp = authState !is AuthUiState.Loading &&
             canUseMainApp(authState, preferences.offlineModeEnabled)
+
+        SideEffect { vm.setMainAppActive(inMainApp) }
 
         when {
             authState is AuthUiState.Loading -> {
@@ -261,12 +264,6 @@ fun NominaAppRoot(app: NominaApp) {
                 )
             }
             else -> {
-                LaunchedEffect(updateChecked) {
-                    if (updateChecked || !NetworkMonitor.isOnline(context)) return@LaunchedEffect
-                    updateChecked = true
-                    vm.setPendingUpdate(app.appUpdateRepository.checkForUpdate())
-                }
-
                 MainNominaScaffold(
                     app = app,
                     vm = vm,
@@ -310,29 +307,24 @@ fun NominaAppRoot(app: NominaApp) {
                     onCheckForUpdate = {
                         if (manualUpdateCheckBusy) return@MainNominaScaffold
                         manualUpdateCheckBusy = true
-                        rootScope.launch {
-                            try {
-                                if (!NetworkMonitor.isOnline(context)) {
-                                    Toast.makeText(
-                                        context,
-                                        "Sin conexión. Conéctate para buscar actualizaciones.",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                } else {
-                                    val update = app.appUpdateRepository.checkForUpdate()
-                                    vm.setPendingUpdate(update)
-                                    Toast.makeText(
-                                        context,
-                                        if (update != null) {
-                                            "Nueva versión ${update.versionName} disponible."
-                                        } else {
-                                            "Ya tienes la última versión instalada."
-                                        },
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                }
-                            } finally {
-                                manualUpdateCheckBusy = false
+                        vm.checkForUpdates(force = true) { update ->
+                            manualUpdateCheckBusy = false
+                            if (!NetworkMonitor.isOnline(context)) {
+                                Toast.makeText(
+                                    context,
+                                    "Sin conexión. Conéctate para buscar actualizaciones.",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    if (update != null) {
+                                        "Nueva versión ${update.versionName} disponible."
+                                    } else {
+                                        "Ya tienes la última versión instalada."
+                                    },
+                                    Toast.LENGTH_SHORT,
+                                ).show()
                             }
                         }
                     },

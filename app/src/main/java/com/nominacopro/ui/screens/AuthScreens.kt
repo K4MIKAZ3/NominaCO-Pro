@@ -37,7 +37,9 @@ import com.nominacopro.R
 import com.nominacopro.domain.auth.PasswordRules
 import com.nominacopro.ui.components.PasswordTextField
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
+import com.nominacopro.ui.theme.NominaDesign
 
 private enum class ForgotPasswordStep {
     EMAIL,
@@ -266,6 +268,11 @@ fun LoginScreen(
             Text(
                 "Nominapp",
                 style = MaterialTheme.typography.headlineMedium,
+                color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) {
+                    NominaDesign.Green
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
                 modifier = Modifier.padding(top = 12.dp),
             )
             Text(

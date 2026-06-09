@@ -173,4 +173,6 @@ data class AppPreferences(
     val biometricEnabled: Boolean = false,
     val cloudBackupEnabled: Boolean = false,
     val offlineModeEnabled: Boolean = false,
+    val lastUpdateCheckAtMs: Long = 0,
+    val dismissedUpdateVersionCode: Int = 0,
 )

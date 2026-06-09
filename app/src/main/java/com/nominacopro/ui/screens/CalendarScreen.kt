@@ -132,38 +132,40 @@ fun CalendarScreen(
                         val dayRows = ceil(days.size / 7.0).toInt().coerceAtLeast(1)
                         val gridHeight = cellSize * dayRows + rowGap * (dayRows - 1).coerceAtLeast(0)
 
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(gap),
-                        ) {
-                            listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM").forEach { label ->
-                                Box(
-                                    modifier = Modifier.weight(1f),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        label,
-                                        color = NominaDesign.TextSecondary,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
+                        Column(Modifier.fillMaxWidth()) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(gap),
+                            ) {
+                                listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM").forEach { label ->
+                                    Box(
+                                        modifier = Modifier.weight(1f),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            label,
+                                            color = NominaDesign.TextSecondary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
                                 }
                             }
-                        }
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(7),
-                            modifier = Modifier
-                                .padding(top = 8.dp)
-                                .height(gridHeight),
-                            verticalArrangement = Arrangement.spacedBy(rowGap),
-                            horizontalArrangement = Arrangement.spacedBy(gap),
-                            userScrollEnabled = false,
-                        ) {
-                            items(days) { cell ->
-                                if (cell == null) {
-                                    Box(Modifier.size(cellSize))
-                                } else {
-                                    MockupDayCell(cell, marks[cell], cellSize, onDayClick)
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(7),
+                                modifier = Modifier
+                                    .padding(top = 10.dp)
+                                    .height(gridHeight),
+                                verticalArrangement = Arrangement.spacedBy(rowGap),
+                                horizontalArrangement = Arrangement.spacedBy(gap),
+                                userScrollEnabled = false,
+                            ) {
+                                items(days) { cell ->
+                                    if (cell == null) {
+                                        Box(Modifier.size(cellSize))
+                                    } else {
+                                        MockupDayCell(cell, marks[cell], cellSize, onDayClick)
+                                    }
                                 }
                             }
                         }

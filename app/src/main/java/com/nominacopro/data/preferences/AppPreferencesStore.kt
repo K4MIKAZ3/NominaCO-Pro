@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.nominacopro.domain.model.AppPreferences
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,8 @@ class AppPreferencesStore(private val context: Context) {
         val BIOMETRIC = booleanPreferencesKey("biometric_enabled")
         val CLOUD_BACKUP = booleanPreferencesKey("cloud_backup_enabled")
         val OFFLINE_MODE = booleanPreferencesKey("offline_mode_enabled")
+        val LAST_UPDATE_CHECK_MS = longPreferencesKey("last_update_check_at_ms")
+        val DISMISSED_UPDATE_VERSION = intPreferencesKey("dismissed_update_version_code")
     }
 
     fun observe(): Flow<AppPreferences> = context.dataStore.data.map { prefs ->
@@ -49,6 +52,8 @@ class AppPreferencesStore(private val context: Context) {
             prefs[Keys.BIOMETRIC] = updated.biometricEnabled
             prefs[Keys.CLOUD_BACKUP] = updated.cloudBackupEnabled
             prefs[Keys.OFFLINE_MODE] = updated.offlineModeEnabled
+            prefs[Keys.LAST_UPDATE_CHECK_MS] = updated.lastUpdateCheckAtMs
+            prefs[Keys.DISMISSED_UPDATE_VERSION] = updated.dismissedUpdateVersionCode
         }
     }
 
@@ -65,5 +70,7 @@ class AppPreferencesStore(private val context: Context) {
         biometricEnabled = this[Keys.BIOMETRIC] ?: false,
         cloudBackupEnabled = this[Keys.CLOUD_BACKUP] ?: false,
         offlineModeEnabled = this[Keys.OFFLINE_MODE] ?: false,
+        lastUpdateCheckAtMs = this[Keys.LAST_UPDATE_CHECK_MS] ?: 0L,
+        dismissedUpdateVersionCode = this[Keys.DISMISSED_UPDATE_VERSION] ?: 0,
     )
 }

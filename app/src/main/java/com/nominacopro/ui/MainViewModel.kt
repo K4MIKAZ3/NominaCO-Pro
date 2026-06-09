@@ -61,6 +61,8 @@ class MainViewModel(
 
     private val app = application as NominaApp
 
+    private var mainAppActive = false
+
     private val _appUpdate = MutableStateFlow(AppUpdateUiState())
     val appUpdate: StateFlow<AppUpdateUiState> = _appUpdate.asStateFlow()
 
@@ -345,7 +347,51 @@ class MainViewModel(
 
     fun dismissPendingUpdate() {
         if (_appUpdate.value.downloading) return
+        val manifest = _appUpdate.value.manifest
+        if (manifest != null) {
+            viewModelScope.launch {
+                repository.preferencesStore.update {
+                    it.copy(dismissedUpdateVersionCode = manifest.versionCode)
+                }
+            }
+        }
         _appUpdate.value = AppUpdateUiState()
+    }
+
+    fun checkForUpdates(
+        force: Boolean = false,
+        onResult: ((AppUpdateManifest?) -> Unit)? = null,
+    ) {
+        viewModelScope.launch {
+            if (_appUpdate.value.downloading) {
+                onResult?.invoke(null)
+                return@launch
+            }
+            if (!mainAppActive && onResult == null) return@launch
+            if (!NetworkMonitor.isOnline(getApplication())) {
+                onResult?.invoke(null)
+                return@launch
+            }
+
+            val prefs = preferences.value
+            val now = System.currentTimeMillis()
+            if (!force && now - prefs.lastUpdateCheckAtMs < UPDATE_CHECK_INTERVAL_MS) {
+                return@launch
+            }
+
+            val update = app.appUpdateRepository.checkForUpdate()
+            repository.preferencesStore.update { it.copy(lastUpdateCheckAtMs = now) }
+            onResult?.invoke(update)
+
+            if (update == null) return@launch
+            if (force || update.versionCode > prefs.dismissedUpdateVersionCode) {
+                setPendingUpdate(update)
+            }
+        }
+    }
+
+    fun setMainAppActive(active: Boolean) {
+        mainAppActive = active
     }
 
     fun startUpdateDownload() {
@@ -391,6 +437,10 @@ class MainViewModel(
 
     fun dismissInstallPermissionPrompt() {
         _appUpdate.update { it.copy(awaitingInstallPermission = false) }
+    }
+
+    companion object {
+        private const val UPDATE_CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
     }
 
     class Factory(

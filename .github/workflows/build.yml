@@ -64,6 +64,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Bump app version for sideload release
+        if: ${{ !startsWith(github.event.head_commit.message, 'chore: release') }}
         run: |
           node scripts/bump-version.mjs
           VERSION=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')

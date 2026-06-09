@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - 'web/public/version.json'
       - 'web/public/releases.json'
+      - 'app/build.gradle.kts'
   workflow_dispatch:
 
 env:
@@ -114,7 +115,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/build.gradle.kts web/public/version.json web/public/releases.json
-          git diff --staged --quiet || git commit -m "chore: release v${{ env.APK_VERSION }} (versionCode ${{ env.APK_VERSION_CODE }}) [skip ci]"
+          git diff --staged --quiet || git commit -m "chore: release v${{ env.APK_VERSION }} (versionCode ${{ env.APK_VERSION_CODE }})"
           git push || true
 
       - name: Deploy web manifests to Vercel production
@@ -128,12 +129,13 @@ jobs:
           if [ -n "$VERCEL_DEPLOY_HOOK_URL" ]; then
             echo "Desplegando con Deploy Hook de Vercel..."
             curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
+            echo "Deploy hook enviado."
           elif [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
             echo "Desplegando con Vercel CLI..."
             npm ci
             npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
           else
-            echo "::warning::Configura VERCEL_DEPLOY_HOOK_URL o VERCEL_TOKEN + VERCEL_ORG_ID + VERCEL_PROJECT_ID para publicar version.json en nominapp.xyz automaticamente."
+            echo "::warning::Configura VERCEL_DEPLOY_HOOK_URL. El workflow deploy-web.yml intentara desplegar al actualizar version.json."
           fi
 
       - name: Upload installable APK

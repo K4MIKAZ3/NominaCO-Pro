@@ -1,0 +1,28 @@
+name: Deploy web to Vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/public/version.json'
+      - 'web/public/releases.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel production deploy
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "::error::Falta el secret VERCEL_DEPLOY_HOOK_URL en GitHub Actions."
+            exit 1
+          fi
+          echo "Desplegando nominapp.xyz desde main..."
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
+          echo "Deploy hook enviado."

@@ -64,9 +64,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Bump app version for sideload release
-        if: ${{ contains(github.event.head_commit.message, 'chore: release') == false }}
         run: |
-          node scripts/bump-version.mjs
+          if echo "${{ github.event.head_commit.message }}" | grep -q 'chore: release'; then
+            echo "Version ya definida en commit chore: release."
+          else
+            node scripts/bump-version.mjs
+          fi
           VERSION=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
           VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | head -1 | grep -oE '[0-9]+')
           echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
@@ -130,7 +133,7 @@ jobs:
             npm ci
             npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
           else
-            echo "::warning::Configura VERCEL_DEPLOY_HOOK_URL o VERCEL_TOKEN + VERCEL_ORG_ID + VERCEL_PROJECT_ID para publicar version.json en nominapp.xyz automáticamente."
+            echo "::warning::Configura VERCEL_DEPLOY_HOOK_URL o VERCEL_TOKEN + VERCEL_ORG_ID + VERCEL_PROJECT_ID para publicar version.json en nominapp.xyz automaticamente."
           fi
 
       - name: Upload installable APK

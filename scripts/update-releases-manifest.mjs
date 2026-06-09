@@ -3,9 +3,17 @@ import path from "node:path";
 
 const versionName = process.env.VERSION_NAME;
 const versionCode = Number.parseInt(process.env.VERSION_CODE ?? "", 10);
-const releaseNotes =
-  process.env.RELEASE_NOTES?.trim() ||
-  `Actualización de Nominapp v${versionName}.`;
+let releaseNotes = process.env.RELEASE_NOTES?.trim();
+if (!releaseNotes) {
+  try {
+    releaseNotes = fs.readFileSync(path.join(process.cwd(), "release-notes.txt"), "utf8").trim();
+  } catch {
+    releaseNotes = "";
+  }
+}
+if (!releaseNotes) {
+  releaseNotes = `Actualización de Nominapp v${versionName}.`;
+}
 
 if (!versionName || Number.isNaN(versionCode)) {
   console.error("VERSION_NAME and VERSION_CODE are required.");

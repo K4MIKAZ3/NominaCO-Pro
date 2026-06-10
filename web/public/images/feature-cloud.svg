@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" aria-label="Respaldo en la nube con sincronizaci�n" viewBox="0 0 400 300"><rect width="400" height="300" fill="#0d0f14" rx="12"/><rect width="368" height="268" x="16" y="16" fill="#151820" stroke="rgba(255,255,255,0.08)" rx="14"/><text x="32" y="42" fill="#e8eaf0" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="600">Respaldo en la nube</text><text x="32" y="58" fill="#9ca3af" font-family="Segoe UI, system-ui, sans-serif" font-size="9">Perfil, jornadas y egresos sincronizados</text><path fill="#1c2030" stroke="#4ade80" stroke-opacity=".5" stroke-width="1.5" d="M200 88c18 0 33 12 38 28 22 2 38 20 38 41 0 23-19 42-42 42H124c-23 0-42-19-42-42 0-21 16-39 37-41 5-16 20-28 38-28q12 0 21 6c6-4 13-6 22-6z"/><path stroke="#4ade80" stroke-linecap="round" stroke-width="2.5" d="M188 118v28m12-42v42m12-28v28"/><rect width="128" height="88" x="56" y="168" fill="#1c2030" stroke="rgba(255,255,255,0.06)" rx="12"/><rect width="96" height="8" x="72" y="184" fill="#4ade80" fill-opacity=".35" rx="4"/><rect width="72" height="6" x="72" y="200" fill="#9ca3af" fill-opacity=".35" rx="3"/><rect width="84" height="6" x="72" y="214" fill="#9ca3af" fill-opacity=".35" rx="3"/><text x="120" y="244" fill="#9ca3af" font-family="Segoe UI, system-ui, sans-serif" font-size="8" text-anchor="middle">Este dispositivo</text><path stroke="#4ade80" stroke-linecap="round" stroke-width="2" d="M196 212h24"/><path stroke="#4ade80" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m214 204 8 8-8 8"/><rect width="128" height="88" x="216" y="168" fill="#0d0f14" stroke="#4ade80" stroke-opacity=".35" rx="12"/><circle cx="248" cy="196" r="10" fill="#15803d"/><path stroke="#4ade80" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m244 196 3 3 6-7"/><rect width="64" height="6" x="264" y="190" fill="#4ade80" fill-opacity=".45" rx="3"/><rect width="48" height="6" x="264" y="204" fill="#9ca3af" fill-opacity=".35" rx="3"/><text x="280" y="244" fill="#4ade80" font-family="Segoe UI, system-ui, sans-serif" font-size="8" text-anchor="middle">Nube segura</text><rect width="120" height="8" x="32" y="268" fill="#15803d" rx="4"/><text x="168" y="275" fill="#9ca3af" font-family="Segoe UI, system-ui, sans-serif" font-size="9">�ltima sync: hoy � Modo offline disponible</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none" role="img" aria-label="Respaldo en la nube con sincronizacion">
+  <rect width="400" height="300" rx="12" fill="#0d0f14"/>
+  <rect x="16" y="16" width="368" height="268" rx="14" fill="#151820" stroke="rgba(255,255,255,0.08)"/>
+  <text x="32" y="42" fill="#e8eaf0" font-family="system-ui,sans-serif" font-size="12" font-weight="600">Respaldo en la nube</text>
+  <text x="32" y="58" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="9">Perfil, jornadas y egresos sincronizados</text>
+  <path d="M200 88c18 0 33 12 38 28 22 2 38 20 38 41 0 23-19 42-42 42H124c-23 0-42-19-42-42 0-21 16-39 37-41 5-16 20-28 38-28 8 0 15 2 21 6 6-4 13-6 22-6z" fill="#1c2030" stroke="#4ade80" stroke-opacity="0.5" stroke-width="1.5"/>
+  <path d="M188 118v28M200 104v42M212 118v28" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"/>
+  <rect x="56" y="168" width="128" height="88" rx="12" fill="#1c2030" stroke="rgba(255,255,255,0.06)"/>
+  <rect x="72" y="184" width="96" height="8" rx="4" fill="#4ade80" fill-opacity="0.35"/>
+  <rect x="72" y="200" width="72" height="6" rx="3" fill="#9ca3af" fill-opacity="0.35"/>
+  <rect x="72" y="214" width="84" height="6" rx="3" fill="#9ca3af" fill-opacity="0.35"/>
+  <text x="120" y="244" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="8" text-anchor="middle">Este dispositivo</text>
+  <path d="M196 212h24" stroke="#4ade80" stroke-width="2" stroke-linecap="round"/>
+  <path d="M214 204l8 8-8 8" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="216" y="168" width="128" height="88" rx="12" fill="#0d0f14" stroke="#4ade80" stroke-opacity="0.35"/>
+  <circle cx="248" cy="196" r="10" fill="#15803d"/>
+  <path d="M244 196l3 3 6-7" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="264" y="190" width="64" height="6" rx="3" fill="#4ade80" fill-opacity="0.45"/>
+  <rect x="264" y="204" width="48" height="6" rx="3" fill="#9ca3af" fill-opacity="0.35"/>
+  <text x="280" y="244" fill="#4ade80" font-family="system-ui,sans-serif" font-size="8" text-anchor="middle">Nube segura</text>
+  <rect x="32" y="268" width="120" height="8" rx="4" fill="#15803d"/>
+  <text x="168" y="275" fill="#9ca3af" font-family="system-ui,sans-serif" font-size="9">Ultima sync: hoy - Modo offline disponible</text>
+</svg>

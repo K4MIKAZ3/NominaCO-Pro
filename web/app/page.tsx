@@ -29,11 +29,12 @@ export default function HomePage() {
           </div>
           <div className="hero-image-wrap">
             <Image
-              src="/images/hero-phone.png"
+              src="/images/hero-phone.webp"
               alt="Vista de liquidación mensual en Nominapp"
               width={480}
               height={480}
-              sizes="(max-width: 768px) 100vw, 480px"
+              sizes="(max-width: 768px) min(100vw, 360px), 480px"
+              quality={85}
               className="hero-image"
               priority
             />
@@ -71,7 +72,8 @@ export default function HomePage() {
                     alt={feature.title}
                     width={400}
                     height={300}
-                    sizes="(max-width: 768px) 100vw, 400px"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1100px) 50vw, 360px"
+                    quality={85}
                     loading="lazy"
                   />
                 )}

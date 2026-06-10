@@ -30,33 +30,37 @@ export const features = [
     title: "Calendario de jornadas",
     description:
       "Marca días trabajados, domingos y festivos. Registra entrada, salida y notas por jornada.",
-    image: "/images/feature-calendar.png",
+    image: "/images/feature-calendar.webp",
   },
   {
     title: "Liquidación mensual",
     description:
       "Devengados, recargos nocturnos, dominical y festivos, salud, pensión y neto a pagar.",
-    image: "/images/feature-payroll.png",
+    image: "/images/feature-payroll.webp",
   },
   {
     title: "Períodos de cobro",
     description:
       "Semanal, quincenal, ventana de 21 días o mensual. Avances, bonos y saldo pendiente.",
+    image: "/images/feature-periods.svg",
   },
   {
     title: "Prestaciones estimadas",
     description:
       "Prima, cesantías e indicadores de liquidación según jornadas registradas (base CST).",
+    image: "/images/feature-benefits.svg",
   },
   {
     title: "Respaldo en la nube",
     description:
       "Cuenta con correo y contraseña. Sincroniza perfil, jornadas y egresos entre dispositivos.",
+    image: "/images/feature-cloud.svg",
   },
   {
     title: "Exportar PDF",
     description:
       "Genera comprobantes de nómina y reporte de días laborados para tu archivo personal.",
+    image: "/images/feature-pdf.svg",
   },
 ] as const;
 

@@ -4,8 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'web/public/version.json'
-      - 'web/public/releases.json'
+      - 'web/**'
   workflow_dispatch:
 
 permissions:

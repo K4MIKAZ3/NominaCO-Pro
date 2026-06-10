@@ -1,6 +1,6 @@
 {
-  "versionCode": 21,
-  "versionName": "1.7.10",
+  "versionCode": 22,
+  "versionName": "1.7.11",
   "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/latest/download/Nominapp.apk",
   "releaseNotes": "Calendario más compacto, leyenda de festivos mejorada y recuento de días no laborados (lun–vie). Descarga de actualización continúa en segundo plano y reintenta instalar al volver de Ajustes."
 }

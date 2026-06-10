@@ -42,25 +42,25 @@ export const features = [
     title: "Períodos de cobro",
     description:
       "Semanal, quincenal, ventana de 21 días o mensual. Avances, bonos y saldo pendiente.",
-    image: "/images/feature-periods.svg",
+    image: "/images/feature-periods.webp",
   },
   {
     title: "Prestaciones estimadas",
     description:
       "Prima, cesantías e indicadores de liquidación según jornadas registradas (base CST).",
-    image: "/images/feature-benefits.svg",
+    image: "/images/feature-benefits.webp",
   },
   {
     title: "Respaldo en la nube",
     description:
       "Cuenta con correo y contraseña. Sincroniza perfil, jornadas y egresos entre dispositivos.",
-    image: "/images/feature-cloud.svg",
+    image: "/images/feature-cloud.webp",
   },
   {
     title: "Exportar PDF",
     description:
       "Genera comprobantes de nómina y reporte de días laborados para tu archivo personal.",
-    image: "/images/feature-pdf.svg",
+    image: "/images/feature-pdf.webp",
   },
 ] as const;
 

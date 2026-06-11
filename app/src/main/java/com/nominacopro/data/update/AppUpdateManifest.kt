@@ -7,5 +7,6 @@ data class AppUpdateManifest(
     val versionCode: Int,
     val versionName: String,
     val apkUrl: String,
+    val sha256: String = "",
     val releaseNotes: String = "",
 )

@@ -23,10 +23,9 @@ jobs:
           distribution: temurin
 
       - name: Generate release keystore
-        env:
-          STORE_PASS: NominaCOPro2026
-          KEY_PASS: NominaCOPro2026
         run: |
+          STORE_PASS="$(openssl rand -base64 24 | tr -d '/+=' | head -c 24)"
+          KEY_PASS="$(openssl rand -base64 24 | tr -d '/+=' | head -c 24)"
           keytool -genkeypair -v \
             -keystore release.keystore \
             -storepass "$STORE_PASS" \
@@ -35,22 +34,24 @@ jobs:
             -keyalg RSA -keysize 2048 -validity 10000 \
             -dname "CN=NominaCO Pro, OU=Mobile, O=Berrocal, L=Bogota, ST=Cundinamarca, C=CO"
           base64 -w 0 release.keystore > release.keystore.b64
-          cat > INSTRUCCIONES.txt <<'EOF'
+          cat > INSTRUCCIONES.txt <<EOF
           Keystore de firma permanente para NominaCO Pro
           ==============================================
 
           1. Descarga release.keystore de este artefacto.
           2. En PowerShell, desde la carpeta del proyecto:
-               .\scripts\setup-github-secrets.ps1 -KeystorePath ".\release.keystore"
+               .\scripts\setup-github-secrets.ps1 `
+                 -KeystorePath ".\release.keystore" `
+                 -StorePassword "<STORE_PASS abajo>" `
+                 -KeyPassword "<KEY_PASS abajo>"
 
-          Secrets que se crearán en GitHub:
-            RELEASE_KEYSTORE_BASE64
-            RELEASE_STORE_PASSWORD  = NominaCOPro2026
-            RELEASE_KEY_ALIAS       = nominacopro
-            RELEASE_KEY_PASSWORD    = NominaCOPro2026
+          Contraseñas generadas para ESTE keystore (guárdalas en un gestor; no se repiten):
+            STORE_PASSWORD = ${STORE_PASS}
+            KEY_PASSWORD   = ${KEY_PASS}
+            KEY_ALIAS      = nominacopro
 
           IMPORTANTE:
-          - Guarda release.keystore en un lugar seguro (copia de respaldo).
+          - Guarda release.keystore y las contraseñas en un lugar seguro.
           - Todas las APK futuras usarán esta misma firma → se instalan encima sin desinstalar.
           - Si ya tenías una APK de CI antigua instalada, desinstálala UNA vez antes de instalar
             la primera APK firmada con este keystore permanente.

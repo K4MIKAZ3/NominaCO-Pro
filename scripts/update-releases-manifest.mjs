@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -24,10 +25,20 @@ const repo = "K4MIKAZ3/NominaCO-Pro";
 const apkUrl = `https://github.com/${repo}/releases/download/v${versionName}/Nominapp.apk`;
 const publishedAt = new Date().toISOString().slice(0, 10);
 
+const apkPath = path.join(process.cwd(), "Nominapp.apk");
+if (!fs.existsSync(apkPath)) {
+  console.error("Nominapp.apk not found. Build the release APK before updating manifests.");
+  process.exit(1);
+}
+
+const sha256 = crypto.createHash("sha256").update(fs.readFileSync(apkPath)).digest("hex");
+console.log(`APK SHA-256: ${sha256}`);
+
 const newRelease = {
   versionCode,
   versionName,
   apkUrl,
+  sha256,
   releaseNotes,
   publishedAt,
 };
@@ -63,7 +74,8 @@ fs.writeFileSync(
     {
       versionCode: newRelease.versionCode,
       versionName: newRelease.versionName,
-      apkUrl: `https://github.com/${repo}/releases/latest/download/Nominapp.apk`,
+      apkUrl: newRelease.apkUrl,
+      sha256: newRelease.sha256,
       releaseNotes: newRelease.releaseNotes,
     },
     null,

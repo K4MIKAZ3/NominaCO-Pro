@@ -1,9 +1,11 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$KeystorePath,
-    [string]$StorePassword = "NominaCOPro2026",
+    [Parameter(Mandatory = $true)]
+    [string]$StorePassword,
     [string]$KeyAlias = "nominacopro",
-    [string]$KeyPassword = "NominaCOPro2026",
+    [Parameter(Mandatory = $true)]
+    [string]$KeyPassword,
     [string]$Repo = "K4MIKAZ3/NominaCO-Pro"
 )
 

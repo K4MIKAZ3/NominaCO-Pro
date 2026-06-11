@@ -103,7 +103,14 @@ Todas las APK de CI usan **el mismo keystore** (GitHub Secrets). Así puedes ins
 
 1. Actions → **Setup release signing (once)** → Run workflow
 2. Descarga el artefacto `release-keystore-setup`
-3. Ejecuta: `.\scripts\setup-github-secrets.ps1 -KeystorePath ".\release.keystore"`
+3. Ejecuta (usa las contraseñas del artefacto `INSTRUCCIONES.txt`, no valores del repo):
+
+   ```powershell
+   .\scripts\setup-github-secrets.ps1 `
+     -KeystorePath ".\release.keystore" `
+     -StorePassword "TU_STORE_PASSWORD" `
+     -KeyPassword "TU_KEY_PASSWORD"
+   ```
 
 Guarda `release.keystore` en un lugar seguro. Si instalaste una APK de CI **antes** de este keystore fijo, desinstala **una vez** y vuelve a instalar.
 

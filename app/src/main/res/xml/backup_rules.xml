@@ -2,7 +2,6 @@
 <full-backup-content>
     <exclude domain="database" path="." />
     <exclude domain="sharedpref" path="." />
-    <exclude domain="root" path="." />
     <exclude domain="file" path="." />
-    <exclude domain="cache" path="." />
+    <exclude domain="root" path="." />
 </full-backup-content>

@@ -3,6 +3,7 @@ package com.nominacopro.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
@@ -120,7 +122,12 @@ fun CalendarScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .calendarMonthSwipe(
+                        yearMonth = yearMonth,
+                        onPrev = onPrev,
+                        onNext = onNext,
+                    ),
                 shape = NominaDesign.CardShape,
                 color = NominaDesign.SurfaceElevated,
             ) {
@@ -406,4 +413,27 @@ private fun buildCalendarDays(ym: YearMonth): List<LocalDate?> {
     repeat(offset) { result.add(null) }
     for (day in 1..ym.lengthOfMonth()) result.add(ym.atDay(day))
     return result
+}
+
+private fun Modifier.calendarMonthSwipe(
+    yearMonth: YearMonth,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+): Modifier {
+    val swipeThresholdFraction = 0.12f
+    return pointerInput(yearMonth) {
+        var totalDrag = 0f
+        val threshold = size.width * swipeThresholdFraction
+        detectHorizontalDragGestures(
+            onHorizontalDrag = { _, dragAmount -> totalDrag += dragAmount },
+            onDragEnd = {
+                when {
+                    totalDrag > threshold -> onPrev()
+                    totalDrag < -threshold -> onNext()
+                }
+                totalDrag = 0f
+            },
+            onDragCancel = { totalDrag = 0f },
+        )
+    }
 }

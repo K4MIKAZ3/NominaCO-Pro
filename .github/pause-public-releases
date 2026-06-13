@@ -1,0 +1,4 @@
+Public sideload releases are paused.
+While this file exists, CI builds the APK but does NOT update version.json,
+releases.json, Vercel, or GitHub Releases.
+Delete this file (or rename) when ready to publish again.

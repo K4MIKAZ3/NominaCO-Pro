@@ -64,7 +64,24 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Check public release policy
+        run: |
+          if [ -f .github/pause-public-releases ]; then
+            echo "PUBLIC_RELEASE=false" >> "$GITHUB_ENV"
+            echo "Public releases paused (.github/pause-public-releases)."
+          else
+            echo "PUBLIC_RELEASE=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Read app version
+        run: |
+          VERSION=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | head -1 | grep -oE '[0-9]+')
+          echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "APK_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+
       - name: Bump app version for sideload release
+        if: env.PUBLIC_RELEASE == 'true'
         run: |
           if echo "${{ github.event.head_commit.message }}" | grep -q 'chore: release'; then
             echo "Version ya definida en commit chore: release."
@@ -97,6 +114,7 @@ jobs:
           echo "APK_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
 
       - name: Update web release manifests
+        if: env.PUBLIC_RELEASE == 'true'
         env:
           VERSION_NAME: ${{ env.APK_VERSION }}
           VERSION_CODE: ${{ env.APK_VERSION_CODE }}
@@ -111,6 +129,7 @@ jobs:
           node scripts/update-releases-manifest.mjs
 
       - name: Commit release version and manifests
+        if: env.PUBLIC_RELEASE == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -119,6 +138,7 @@ jobs:
           git push || true
 
       - name: Deploy web manifests to Vercel production
+        if: env.PUBLIC_RELEASE == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -141,10 +161,11 @@ jobs:
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: NominaCO-Pro-installable
+          name: NominaCO-Pro-apk-${{ env.PUBLIC_RELEASE }}
           path: NominaCO-Pro-v${{ env.APK_VERSION }}-signed.apk
 
       - name: Publish APK to GitHub Releases
+        if: env.PUBLIC_RELEASE == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.APK_VERSION }}

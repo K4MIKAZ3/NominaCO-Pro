@@ -4,8 +4,8 @@ import { site } from "@/lib/site";
 
 const EMAIL_REGEX = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const RATE_LIMIT_MAX = 8;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const RATE_LIMIT_MAX = 5;
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
 
 function clientKey(request: Request): string {
@@ -34,6 +34,11 @@ interface ContactPayload {
 }
 
 export async function POST(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    return NextResponse.json({ error: "Datos inválidos." }, { status: 415 });
+  }
+
   if (isRateLimited(clientKey(request))) {
     return NextResponse.json(
       { error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." },

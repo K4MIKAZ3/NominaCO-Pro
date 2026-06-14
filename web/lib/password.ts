@@ -57,6 +57,14 @@ export function passwordsMatch(password: string, confirm: string): boolean {
   return password.length > 0 && password === confirm;
 }
 
+export function mapAuthRateLimitError(raw: string): string {
+  const lower = raw.trim().toLowerCase();
+  if (lower.includes("rate limit") || lower.includes("too many requests")) {
+    return "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
+  }
+  return raw.trim() || "Ocurrió un error.";
+}
+
 export function mapAuthPasswordError(raw: string): string {
   const msg = raw.trim();
   const lower = msg.toLowerCase();

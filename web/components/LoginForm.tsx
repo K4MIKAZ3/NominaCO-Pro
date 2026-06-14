@@ -8,6 +8,7 @@ import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import {
   isPasswordValid,
   mapAuthPasswordError,
+  mapAuthRateLimitError,
   PASSWORD_REQUIREMENTS_HINT,
   passwordsMatch,
   validatePassword,
@@ -160,7 +161,8 @@ export function LoginForm() {
       }
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Ocurrió un error.";
-      const text = mode === "signup" ? mapAuthPasswordError(raw) : raw;
+      const text =
+        mode === "signup" ? mapAuthPasswordError(raw) : mapAuthRateLimitError(raw);
       setMessage({ type: "error", text });
     } finally {
       setLoading(false);

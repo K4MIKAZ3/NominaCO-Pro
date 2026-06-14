@@ -64,7 +64,13 @@ export function ApkDownloadButton({
     setLoading(true);
     setLoadError(null);
 
-    fetch("/releases.json", { cache: "no-store" })
+    fetch("/api/releases", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          return fetch("/releases.json", { cache: "no-store" });
+        }
+        return response;
+      })
       .then(async (response) => {
         if (!response.ok) throw new Error("No se pudo cargar la información de la versión.");
         return response.json();

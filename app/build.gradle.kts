@@ -38,7 +38,7 @@ android {
         buildConfigField(
             "String",
             "UPDATE_MANIFEST_URL",
-            "\"https://nominapp.xyz/version.json\"",
+            "\"https://www.nominapp.xyz/api/version\"",
         )
     }
 

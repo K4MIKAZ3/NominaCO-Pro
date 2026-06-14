@@ -24,8 +24,21 @@ class AppUpdateRepository(private val context: Context) {
     }
 
     suspend fun fetchManifest(): AppUpdateManifest? {
+        return manifestUrls()
+            .mapNotNull { url -> parseManifestFromUrl(url) }
+            .maxByOrNull { it.versionCode }
+    }
+
+    private fun manifestUrls(): List<String> = listOf(
+        BuildConfig.UPDATE_MANIFEST_URL,
+        "https://www.nominapp.xyz/api/version",
+        "https://raw.githubusercontent.com/K4MIKAZ3/NominaCO-Pro/main/web/public/version.json",
+        "https://nominapp.xyz/version.json",
+    ).distinct()
+
+    private suspend fun parseManifestFromUrl(url: String): AppUpdateManifest? {
         return try {
-            val body = httpClient.get(BuildConfig.UPDATE_MANIFEST_URL).bodyAsText()
+            val body = httpClient.get(url).bodyAsText()
             val manifest = json.decodeFromString<AppUpdateManifest>(body)
             if (!isAllowedApkUrl(manifest.apkUrl)) null
             else if (manifest.sha256.isBlank()) null

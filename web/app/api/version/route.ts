@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const MANIFEST_URL =
-  "https://raw.githubusercontent.com/K4MIKAZ3/NominaCO-Pro/main/web/public/version.json";
+  "https://raw.githubusercontent.com/K4MIKAZ3/NominaCO-Pro/main/web/manifest/version.json";
 
 export async function GET() {
   try {

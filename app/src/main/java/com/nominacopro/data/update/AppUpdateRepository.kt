@@ -32,7 +32,7 @@ class AppUpdateRepository(private val context: Context) {
     private fun manifestUrls(): List<String> = listOf(
         BuildConfig.UPDATE_MANIFEST_URL,
         "https://www.nominapp.xyz/api/version",
-        "https://raw.githubusercontent.com/K4MIKAZ3/NominaCO-Pro/main/web/public/version.json",
+        "https://raw.githubusercontent.com/K4MIKAZ3/NominaCO-Pro/main/web/manifest/version.json",
         "https://nominapp.xyz/version.json",
     ).distinct()
 

@@ -14,14 +14,48 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Vercel production deploy
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Deploy to Vercel production
+        working-directory: web
         env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
         run: |
-          if [ -z "$VERCEL_DEPLOY_HOOK_URL" ]; then
-            echo "::error::Falta el secret VERCEL_DEPLOY_HOOK_URL en GitHub Actions."
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "Desplegando con Vercel CLI..."
+            npm ci
+            npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+          elif [ -n "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "Desplegando con Deploy Hook de Vercel..."
+            curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
+            echo "Deploy hook enviado."
+          else
+            echo "::error::Configura VERCEL_DEPLOY_HOOK_URL o VERCEL_TOKEN + VERCEL_ORG_ID + VERCEL_PROJECT_ID."
             exit 1
           fi
-          echo "Desplegando nominapp.xyz desde main..."
-          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
-          echo "Deploy hook enviado."
+
+      - name: Verify production version manifest
+        run: |
+          expected="$(jq -r '.versionCode' web/manifest/version.json)"
+          echo "Esperado versionCode=$expected"
+          for attempt in 1 2 3 4 5 6; do
+            sleep 30
+            actual="$(curl -fsS "https://www.nominapp.xyz/version.json" | jq -r '.versionCode')"
+            echo "Intento $attempt: versionCode=$actual"
+            if [ "$actual" = "$expected" ]; then
+              echo "Manifiesto en produccion actualizado."
+              exit 0
+            fi
+          done
+          echo "::warning::nominapp.xyz/version.json sigue desactualizado (got $actual, want $expected). Revisa el proyecto en Vercel."

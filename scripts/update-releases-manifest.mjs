@@ -43,9 +43,9 @@ const newRelease = {
   publishedAt,
 };
 
-const webPublic = path.join(process.cwd(), "web", "public");
-const releasesPath = path.join(webPublic, "releases.json");
-const versionPath = path.join(webPublic, "version.json");
+const manifestDir = path.join(process.cwd(), "web", "manifest");
+const releasesPath = path.join(manifestDir, "releases.json");
+const versionPath = path.join(manifestDir, "version.json");
 
 let existing = [];
 try {
@@ -62,7 +62,7 @@ const releases = [
   ...existing.filter((item) => item.versionName !== versionName),
 ].slice(0, 3);
 
-fs.mkdirSync(webPublic, { recursive: true });
+fs.mkdirSync(manifestDir, { recursive: true });
 fs.writeFileSync(
   releasesPath,
   `${JSON.stringify({ releases }, null, 2)}\n`,

@@ -4,8 +4,8 @@ on:
   push:
     branches: [main, master]
     paths-ignore:
-      - 'web/public/version.json'
-      - 'web/public/releases.json'
+      - 'web/manifest/version.json'
+      - 'web/manifest/releases.json'
       - 'app/build.gradle.kts'
       - 'web/vercel.json'
   workflow_dispatch:
@@ -134,7 +134,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/build.gradle.kts web/public/version.json web/public/releases.json
+          git add app/build.gradle.kts web/manifest/version.json web/manifest/releases.json
           git diff --staged --quiet || git commit -m "chore: release v${{ env.APK_VERSION }} (versionCode ${{ env.APK_VERSION_CODE }})"
           git push || true
 

@@ -1,5 +1,1 @@
-Pestaña Gastos con registro mensual y gastos fijos recurrentes.
-Perfil laboral movido a Ajustes.
-Icono del launcher desde la web y calendario con deslizamiento entre meses.
-Sincronización en nube de gastos personales.
-Panel web con resumen de gastos al iniciar sesión.
+Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.

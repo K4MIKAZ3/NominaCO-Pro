@@ -45,6 +45,12 @@ export const features = [
     image: "/images/feature-periods.webp",
   },
   {
+    title: "Control de gastos",
+    description:
+      "Registra egresos personales, marca gastos fijos cada mes (arriendo, alimentación…) y compara neto vs gastos.",
+    image: "/images/feature-expenses.webp",
+  },
+  {
     title: "Prestaciones estimadas",
     description:
       "Prima, cesantías e indicadores de liquidación según jornadas registradas (base CST).",
@@ -53,7 +59,7 @@ export const features = [
   {
     title: "Respaldo en la nube",
     description:
-      "Cuenta con correo y contraseña. Sincroniza perfil, jornadas y egresos entre dispositivos.",
+      "Cuenta con correo y contraseña. Sincroniza perfil, jornadas, egresos de nómina y gastos personales.",
     image: "/images/feature-cloud.webp",
   },
   {

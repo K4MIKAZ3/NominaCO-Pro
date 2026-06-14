@@ -3,6 +3,7 @@ package com.nominacopro.data
 import android.content.Context
 import androidx.room.Room
 import com.nominacopro.data.local.NominaDatabase
+import com.nominacopro.data.local.entity.ExpenseEntity
 import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
 import com.nominacopro.data.local.entity.ProfileEntity
@@ -17,6 +18,8 @@ import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.ContractType
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.model.ExpenseCategory
+import com.nominacopro.domain.model.ExpenseEntry
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.model.PeriodPayrollSummary
@@ -47,6 +50,7 @@ class NominaRepository(context: Context) {
     private val workDayDao = db.workDayDao()
     private val holidayDao = db.manualHolidayDao()
     private val deductionDao = db.manualDeductionDao()
+    private val expenseDao = db.expenseDao()
     val preferencesStore = AppPreferencesStore(appContext)
 
     val cloudSync = CloudSyncRepository(
@@ -55,6 +59,7 @@ class NominaRepository(context: Context) {
         workDayDao = workDayDao,
         holidayDao = holidayDao,
         deductionDao = deductionDao,
+        expenseDao = expenseDao,
         preferencesStore = preferencesStore,
     )
 
@@ -172,6 +177,38 @@ class NominaRepository(context: Context) {
         val existing = deductionDao.getById(id)
         deductionDao.delete(id)
         maybeCloudSync { cloudSync.deleteManualDeduction(existing?.cloudId) }
+    }
+
+    fun observeExpenses(year: Int, month: Int): Flow<List<ExpenseEntry>> {
+        val ym = YearMonth.of(year, month).toString()
+        return expenseDao.observeForMonth(ym).map { list ->
+            list.map { entity ->
+                entity.toDomain().let { entry ->
+                    if (entry.isFixed) {
+                        entry.copy(
+                            yearMonth = YearMonth.of(year, month),
+                            date = LocalDate.of(year, month, 1),
+                        )
+                    } else {
+                        entry
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun addExpense(entry: ExpenseEntry) {
+        val entity = entry.toEntity().let { row ->
+            if (row.cloudId == null) row.copy(cloudId = java.util.UUID.randomUUID().toString()) else row
+        }
+        expenseDao.upsert(entity)
+        maybeCloudSync { cloudSync.pushExpense(entity.toDomain()) }
+    }
+
+    suspend fun removeExpense(id: Long) {
+        val existing = expenseDao.getById(id)
+        expenseDao.delete(id)
+        maybeCloudSync { cloudSync.deleteExpense(existing?.cloudId) }
     }
 
     fun observeMonthlyPayroll(year: Int, month: Int): Flow<MonthlyPayroll?> =
@@ -307,4 +344,26 @@ private fun ManualDeduction.toEntity() = ManualDeductionEntity(
     label = label,
     amount = amount,
     entryType = entryType.name,
+)
+
+private fun ExpenseEntity.toDomain() = ExpenseEntry(
+    id = id,
+    cloudId = cloudId,
+    yearMonth = YearMonth.parse(yearMonth),
+    date = LocalDate.parse(dateIso, DateTimeFormatter.ISO_LOCAL_DATE),
+    label = label,
+    amount = amount,
+    category = ExpenseCategory.fromStored(category),
+    isFixed = isFixed,
+)
+
+private fun ExpenseEntry.toEntity() = ExpenseEntity(
+    id = id,
+    cloudId = cloudId,
+    yearMonth = yearMonth.toString(),
+    dateIso = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+    label = label,
+    amount = amount,
+    category = category.name,
+    isFixed = isFixed,
 )

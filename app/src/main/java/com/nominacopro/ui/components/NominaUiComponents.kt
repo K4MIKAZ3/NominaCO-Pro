@@ -236,9 +236,7 @@ fun NominaHeroCard(
                     .background(NominaDesign.GreenGlow)
                     .padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text("✓", color = NominaDesign.Green, fontWeight = FontWeight.Bold)
                 Text(badge, color = NominaDesign.Green, fontSize = 13.sp)
             }
         }

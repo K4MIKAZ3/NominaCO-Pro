@@ -1,1 +1,5 @@
-Calendario más compacto, leyenda de festivos mejorada y recuento de días no laborados (lun–vie). Descarga de actualización continúa en segundo plano y reintenta instalar al volver de Ajustes.
+Pestaña Gastos con registro mensual y gastos fijos recurrentes.
+Perfil laboral movido a Ajustes.
+Icono del launcher desde la web y calendario con deslizamiento entre meses.
+Sincronización en nube de gastos personales.
+Panel web con resumen de gastos al iniciar sesión.

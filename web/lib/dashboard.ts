@@ -1,3 +1,4 @@
+import { buildExpenseSummary, currentYearMonth, type ExpenseRow, type ExpenseSummary } from "@/lib/expenses";
 import { getSupabase } from "@/lib/supabase";
 import { computeMonthSummaries } from "@/lib/payroll/payrollEngine";
 import type {
@@ -41,6 +42,7 @@ interface ManualDeductionRow {
 export interface DashboardData {
   profileName: string | null;
   summaries: MonthSummary[];
+  expenseSummary: ExpenseSummary | null;
 }
 
 function parseDayType(value: string): DayType {
@@ -88,24 +90,31 @@ function mapDeduction(row: ManualDeductionRow): ManualDeduction {
 export async function fetchDashboard(userId: string): Promise<DashboardData> {
   const supabase = getSupabase();
   if (!supabase) {
-    return { profileName: null, summaries: [] };
+    return { profileName: null, summaries: [], expenseSummary: null };
   }
 
-  const [profileRes, workDaysRes, holidaysRes, deductionsRes] = await Promise.all([
+  const yearMonth = currentYearMonth();
+
+  const [profileRes, workDaysRes, holidaysRes, deductionsRes, expensesRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("work_days").select("*").eq("user_id", userId),
     supabase.from("manual_holidays").select("*").eq("user_id", userId),
     supabase.from("manual_deductions").select("*").eq("user_id", userId),
+    supabase.from("expense_entries").select("*").eq("user_id", userId),
   ]);
 
   const queryError =
-    profileRes.error ?? workDaysRes.error ?? holidaysRes.error ?? deductionsRes.error;
+    profileRes.error ??
+    workDaysRes.error ??
+    holidaysRes.error ??
+    deductionsRes.error ??
+    expensesRes.error;
   if (queryError) {
     throw new Error(queryError.message);
   }
 
   if (!profileRes.data) {
-    return { profileName: null, summaries: [] };
+    return { profileName: null, summaries: [], expenseSummary: null };
   }
 
   const profile = mapProfile(profileRes.data as ProfileRow);
@@ -116,9 +125,18 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
   const deductions = ((deductionsRes.data ?? []) as ManualDeductionRow[]).map(mapDeduction);
 
   const summaries = computeMonthSummaries(profile, workDays, manualHolidays, deductions, 3);
+  const currentSummary = summaries.find(
+    (s) => `${s.year}-${String(s.month).padStart(2, "0")}` === yearMonth,
+  );
+  const expenseRows = (expensesRes.data ?? []) as ExpenseRow[];
+  const expenseSummary =
+    currentSummary != null
+      ? buildExpenseSummary(expenseRows, yearMonth, currentSummary.netTotal)
+      : null;
 
   return {
     profileName: profile.name || null,
     summaries,
+    expenseSummary,
   };
 }

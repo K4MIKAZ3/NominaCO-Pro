@@ -42,3 +42,15 @@ data class ManualDeductionEntity(
     val amount: Long,
     val entryType: String = "DEDUCTION",
 )
+
+@Entity(tableName = "expense_entries")
+data class ExpenseEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val cloudId: String? = null,
+    val yearMonth: String,
+    val dateIso: String,
+    val label: String,
+    val amount: Long,
+    val category: String = "OTHER",
+    val isFixed: Boolean = false,
+)

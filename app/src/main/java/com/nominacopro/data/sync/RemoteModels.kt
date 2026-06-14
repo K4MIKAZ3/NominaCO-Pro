@@ -45,6 +45,18 @@ data class RemoteManualDeduction(
 )
 
 @Serializable
+data class RemoteExpenseEntry(
+    val id: String,
+    @SerialName("user_id") val userId: String,
+    @SerialName("year_month") val yearMonth: String,
+    @SerialName("date_iso") val dateIso: String,
+    val label: String,
+    val amount: Long,
+    val category: String = "OTHER",
+    @SerialName("is_fixed") val isFixed: Boolean = false,
+)
+
+@Serializable
 data class RemoteAppPreferences(
     @SerialName("user_id") val userId: String,
     @SerialName("default_start_hour") val defaultStartHour: Int = 8,

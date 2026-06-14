@@ -57,6 +57,8 @@ import com.nominacopro.ui.components.UpdateAvailableDialog
 import com.nominacopro.ui.navigation.NominaTab
 import com.nominacopro.ui.screens.CalendarScreen
 import com.nominacopro.ui.screens.DayEditorDialog
+import com.nominacopro.ui.screens.ExpenseEntryDialog
+import com.nominacopro.ui.screens.ExpensesScreen
 import com.nominacopro.ui.screens.LoginScreen
 import com.nominacopro.ui.screens.PayrollEntryDialog
 import com.nominacopro.ui.screens.PayrollScreen
@@ -71,6 +73,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.YearMonth
 
 private enum class AuthOverlay {
     None,
@@ -490,9 +493,14 @@ private fun MainNominaScaffold(
     val preferences by vm.preferences.collectAsState()
     val dashboard by vm.dashboard.collectAsState()
     val syncState by vm.syncState.collectAsState()
+    val expenseYearMonth by vm.expenseYearMonth.collectAsState()
+    val expenses by vm.expenses.collectAsState()
+    val expensePayroll by vm.expensePayroll.collectAsState()
 
     var tab by remember { mutableStateOf(NominaTab.Calendar) }
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
+    var showProfile by rememberSaveable { mutableStateOf(false) }
+    var showExpenseDialog by remember { mutableStateOf(false) }
     var showDeductionDialog by remember { mutableStateOf(false) }
     var showAdvanceDialog by remember { mutableStateOf(false) }
     var showBonusDialog by remember { mutableStateOf(false) }
@@ -517,13 +525,14 @@ private fun MainNominaScaffold(
     }
 
     BiometricGate(enabled = preferences.biometricEnabled) {
-        Scaffold(
-            snackbarHost = { SnackbarHost(snackbar) },
-            bottomBar = {
-                NominaBottomBar(selected = tab, onSelect = { tab = it })
-            },
-        ) { padding ->
-            when (tab) {
+        Box(Modifier.fillMaxSize()) {
+            Scaffold(
+                snackbarHost = { SnackbarHost(snackbar) },
+                bottomBar = {
+                    NominaBottomBar(selected = tab, onSelect = { tab = it })
+                },
+            ) { padding ->
+                when (tab) {
                 NominaTab.Calendar -> CalendarScreen(
                     dashboard = dashboard,
                     yearMonth = yearMonth,
@@ -577,14 +586,23 @@ private fun MainNominaScaffold(
                         )
                     }
                 }
-                NominaTab.Profile -> ProfileScreen(
-                    profile = profile,
-                    onSave = vm::saveProfile,
+                NominaTab.Expenses -> ExpensesScreen(
+                    yearMonth = expenseYearMonth,
+                    expenses = expenses,
+                    payroll = expensePayroll,
+                    profileMissing = profile == null,
+                    onPrev = vm::prevExpenseMonth,
+                    onNext = vm::nextExpenseMonth,
+                    onToday = vm::goExpenseToday,
+                    onAdd = { showExpenseDialog = true },
+                    onRemove = vm::removeExpense,
                     modifier = Modifier.padding(padding),
                 )
                 NominaTab.Settings -> SettingsScreen(
                     preferences = preferences,
                     manualHolidays = manual,
+                    profile = profile,
+                    onOpenProfile = { showProfile = true },
                     accountEmail = accountEmail,
                     isOfflineAccount = isOfflineAccount,
                     authConfigured = authConfigured,
@@ -615,6 +633,17 @@ private fun MainNominaScaffold(
                     onDeleteAccount = onDeleteAccount,
                     modifier = Modifier.padding(padding),
                 )
+            }
+            }
+
+            if (showProfile) {
+                Surface(Modifier.fillMaxSize()) {
+                    ProfileScreen(
+                        profile = profile,
+                        onSave = vm::saveProfile,
+                        onBack = { showProfile = false },
+                    )
+                }
             }
         }
     }
@@ -670,6 +699,27 @@ private fun MainNominaScaffold(
             onSave = { label, amount ->
                 vm.addBonus(label, amount)
                 showBonusDialog = false
+            },
+        )
+    }
+
+    if (showExpenseDialog) {
+        ExpenseEntryDialog(
+            defaultDate = expenseYearMonth.atDay(
+                LocalDate.now().let { now ->
+                    if (YearMonth.from(now) == expenseYearMonth) now.dayOfMonth
+                    else 1
+                },
+            ),
+            onDismiss = { showExpenseDialog = false },
+            onSave = { label, amount, category, date, isFixed ->
+                vm.addExpense(label, amount, category, date, isFixed)
+                showExpenseDialog = false
+                scope.launch {
+                    snackbar.showSnackbar(
+                        if (isFixed) "Gasto fijo registrado" else "Gasto registrado",
+                    )
+                }
             },
         )
     }

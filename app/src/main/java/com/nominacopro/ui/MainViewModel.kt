@@ -14,6 +14,8 @@ import com.nominacopro.data.update.AppUpdateManifest
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.model.ExpenseCategory
+import com.nominacopro.domain.model.ExpenseEntry
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
@@ -69,6 +71,9 @@ class MainViewModel(
     private val _yearMonth = MutableStateFlow(YearMonth.now())
     val yearMonth: StateFlow<YearMonth> = _yearMonth.asStateFlow()
 
+    private val _expenseYearMonth = MutableStateFlow(YearMonth.now())
+    val expenseYearMonth: StateFlow<YearMonth> = _expenseYearMonth.asStateFlow()
+
     val preferences: StateFlow<AppPreferences> = repository.observePreferences().stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), AppPreferences(),
     )
@@ -111,6 +116,18 @@ class MainViewModel(
             repository.observeManualDeductions(ym.year, ym.monthValue)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val expenses: StateFlow<List<ExpenseEntry>> = _expenseYearMonth
+        .flatMapLatest { ym ->
+            repository.observeExpenses(ym.year, ym.monthValue)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val expensePayroll: StateFlow<MonthlyPayroll?> = _expenseYearMonth
+        .flatMapLatest { ym ->
+            repository.observeMonthlyPayroll(ym.year, ym.monthValue)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _selectedPeriodIndex = MutableStateFlow(0)
     val selectedPeriodIndex: StateFlow<Int> = _selectedPeriodIndex.asStateFlow()
@@ -183,6 +200,18 @@ class MainViewModel(
     fun goToday() {
         _yearMonth.value = YearMonth.now()
         resetPeriodIndexForCurrentMonth()
+    }
+
+    fun prevExpenseMonth() {
+        _expenseYearMonth.value = _expenseYearMonth.value.minusMonths(1)
+    }
+
+    fun nextExpenseMonth() {
+        _expenseYearMonth.value = _expenseYearMonth.value.plusMonths(1)
+    }
+
+    fun goExpenseToday() {
+        _expenseYearMonth.value = YearMonth.now()
     }
 
     fun selectPayPeriod(index: Int) {
@@ -275,6 +304,32 @@ class MainViewModel(
 
     fun removeManualDeduction(id: Long) {
         viewModelScope.launch { repository.removeManualDeduction(id) }
+    }
+
+    fun addExpense(
+        label: String,
+        amount: Long,
+        category: ExpenseCategory,
+        date: LocalDate = LocalDate.now(),
+        isFixed: Boolean = false,
+    ) {
+        val ym = YearMonth.from(date)
+        viewModelScope.launch {
+            repository.addExpense(
+                ExpenseEntry(
+                    yearMonth = ym,
+                    date = date,
+                    label = label,
+                    amount = amount,
+                    category = category,
+                    isFixed = isFixed,
+                ),
+            )
+        }
+    }
+
+    fun removeExpense(id: Long) {
+        viewModelScope.launch { repository.removeExpense(id) }
     }
 
     fun savePreferences(prefs: AppPreferences) {

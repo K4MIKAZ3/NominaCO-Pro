@@ -1,18 +1,20 @@
 "use client";
 
 import { formatMoney, formatMonthFull } from "@/lib/format";
+import type { ExpenseSummary } from "@/lib/expenses";
 import type { MonthSummary } from "@/lib/payroll/models";
 
 interface MonthSummaryPanelProps {
   profileName: string | null;
   summaries: MonthSummary[];
+  expenseSummary: ExpenseSummary | null;
   loading: boolean;
   error: string | null;
   onSignOut: () => void;
   signingOut: boolean;
 }
 
-function SummaryRow({ label, value, variant }: { label: string; value: string; variant?: "net" | "deduction" }) {
+function SummaryRow({ label, value, variant }: { label: string; value: string; variant?: "net" | "deduction" | "expense" }) {
   return (
     <div className="summary-row">
       <span className="summary-label">{label}</span>
@@ -24,6 +26,7 @@ function SummaryRow({ label, value, variant }: { label: string; value: string; v
 export function MonthSummaryPanel({
   profileName,
   summaries,
+  expenseSummary,
   loading,
   error,
   onSignOut,
@@ -34,7 +37,7 @@ export function MonthSummaryPanel({
       <div className="dashboard-header">
         <div>
           <h1>Hola{profileName ? `, ${profileName}` : ""}</h1>
-          <p className="subtitle">Resumen de tus últimos 3 meses de nómina</p>
+          <p className="subtitle">Resumen de nómina y gastos sincronizados desde la app</p>
         </div>
         <button
           type="button"
@@ -54,6 +57,34 @@ export function MonthSummaryPanel({
         <div className="dashboard-empty">
           <p>Configura tu perfil en la app para ver el resumen</p>
         </div>
+      )}
+
+      {!loading && !error && expenseSummary && (
+        <article className="summary-card expense-card">
+          <h2 className="summary-month">
+            Gastos · {formatMonthFull(expenseSummary.year, expenseSummary.month)}
+          </h2>
+          <SummaryRow label="Neto estimado" value={formatMoney(expenseSummary.netTotal)} variant="net" />
+          <SummaryRow label="Gastos del mes" value={formatMoney(expenseSummary.totalExpenses)} variant="expense" />
+          <SummaryRow
+            label="Balance"
+            value={formatMoney(expenseSummary.balance)}
+            variant={expenseSummary.balance >= 0 ? "net" : "expense"}
+          />
+          {expenseSummary.items.length > 0 && (
+            <ul className="expense-list">
+              {expenseSummary.items.map((item) => (
+                <li key={`${item.label}-${item.amount}-${item.isFixed}`}>
+                  <span>
+                    {item.label}
+                    {item.isFixed ? " · Fijo" : ""}
+                  </span>
+                  <span>{formatMoney(item.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
       )}
 
       {!loading && !error && summaries.length > 0 && (
@@ -79,7 +110,7 @@ export function MonthSummaryPanel({
       )}
 
       <p className="auth-note">
-        Los datos se sincronizan desde la app Android con la misma cuenta.
+        Los datos se sincronizan desde la app Android con la misma cuenta. Edita gastos y días en la app.
       </p>
     </div>
   );

@@ -3,10 +3,12 @@ package com.nominacopro.data.sync
 import androidx.room.withTransaction
 import com.nominacopro.data.auth.SupabaseProvider
 import com.nominacopro.data.local.NominaDatabase
+import com.nominacopro.data.local.dao.ExpenseDao
 import com.nominacopro.data.local.dao.ManualDeductionDao
 import com.nominacopro.data.local.dao.ManualHolidayDao
 import com.nominacopro.data.local.dao.ProfileDao
 import com.nominacopro.data.local.dao.WorkDayDao
+import com.nominacopro.data.local.entity.ExpenseEntity
 import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
 import com.nominacopro.data.local.entity.ProfileEntity
@@ -14,6 +16,7 @@ import com.nominacopro.data.local.entity.WorkDayEntity
 import com.nominacopro.data.preferences.AppPreferencesStore
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.model.ExpenseEntry
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.WorkDayEntry
 import io.github.jan.supabase.postgrest.postgrest
@@ -43,6 +46,7 @@ class CloudSyncRepository(
     private val workDayDao: WorkDayDao,
     private val holidayDao: ManualHolidayDao,
     private val deductionDao: ManualDeductionDao,
+    private val expenseDao: ExpenseDao,
     private val preferencesStore: AppPreferencesStore,
 ) {
 
@@ -177,6 +181,8 @@ class CloudSyncRepository(
                 yearMonth = deduction.yearMonth.toString(),
                 label = deduction.label,
                 amount = deduction.amount,
+                effectiveDateIso = deduction.effectiveDate.format(iso),
+                entryType = deduction.entryType.name,
             ),
             onConflict = "id",
         )
@@ -187,6 +193,33 @@ class CloudSyncRepository(
         if (cloudId.isNullOrBlank()) return
         val pg = postgrest ?: return
         pg.from(TABLE_MANUAL_DEDUCTIONS).delete {
+            filter { eq("id", cloudId) }
+        }
+    }
+
+    suspend fun pushExpense(entry: ExpenseEntry) {
+        val userId = activeUserId ?: return
+        val pg = postgrest ?: return
+        val cloudId = entry.cloudId ?: UUID.randomUUID().toString()
+        pg.from(TABLE_EXPENSE_ENTRIES).upsert(
+            RemoteExpenseEntry(
+                id = cloudId,
+                userId = userId,
+                yearMonth = entry.yearMonth.toString(),
+                dateIso = entry.date.format(iso),
+                label = entry.label,
+                amount = entry.amount,
+                category = entry.category.name,
+                isFixed = entry.isFixed,
+            ),
+            onConflict = "id",
+        )
+    }
+
+    suspend fun deleteExpense(cloudId: String?) {
+        if (cloudId.isNullOrBlank()) return
+        val pg = postgrest ?: return
+        pg.from(TABLE_EXPENSE_ENTRIES).delete {
             filter { eq("id", cloudId) }
         }
     }
@@ -224,6 +257,9 @@ class CloudSyncRepository(
         val remoteDeductions = pg.from(TABLE_MANUAL_DEDUCTIONS).select {
             filter { eq("user_id", userId) }
         }.decodeList<RemoteManualDeduction>()
+        val remoteExpenses = pg.from(TABLE_EXPENSE_ENTRIES).select {
+            filter { eq("user_id", userId) }
+        }.decodeList<RemoteExpenseEntry>()
         val remotePrefs = pg.from(TABLE_APP_PREFERENCES).select {
             filter { eq("user_id", userId) }
         }.decodeList<RemoteAppPreferences>().firstOrNull()
@@ -242,6 +278,10 @@ class CloudSyncRepository(
             deductionDao.deleteAll()
             if (remoteDeductions.isNotEmpty()) {
                 deductionDao.upsertAll(remoteDeductions.map { it.toEntity() })
+            }
+            expenseDao.deleteAll()
+            if (remoteExpenses.isNotEmpty()) {
+                expenseDao.upsertAll(remoteExpenses.map { it.toEntity() })
             }
         }
         remotePrefs?.let { prefs ->
@@ -286,6 +326,18 @@ class CloudSyncRepository(
                 onConflict = "id",
             )
         }
+        val expenses = expenseDao.observeAll().first()
+        if (expenses.isNotEmpty()) {
+            val withCloudIds = expenses.map { entity ->
+                val cloudId = entity.cloudId ?: UUID.randomUUID().toString()
+                entity.copy(cloudId = cloudId)
+            }
+            expenseDao.upsertAll(withCloudIds)
+            pg.from(TABLE_EXPENSE_ENTRIES).upsert(
+                withCloudIds.map { it.toRemote(userId) },
+                onConflict = "id",
+            )
+        }
         val prefs = preferencesStore.observe().first()
         pg.from(TABLE_APP_PREFERENCES).upsert(prefs.toRemote(userId), onConflict = "user_id")
     }
@@ -303,6 +355,7 @@ class CloudSyncRepository(
             workDayDao.deleteAll()
             holidayDao.deleteAll()
             deductionDao.deleteAll()
+            expenseDao.deleteAll()
         }
     }
 
@@ -314,6 +367,7 @@ class CloudSyncRepository(
         const val TABLE_WORK_DAYS = "work_days"
         const val TABLE_MANUAL_HOLIDAYS = "manual_holidays"
         const val TABLE_MANUAL_DEDUCTIONS = "manual_deductions"
+        const val TABLE_EXPENSE_ENTRIES = "expense_entries"
         const val TABLE_APP_PREFERENCES = "app_preferences"
     }
 }
@@ -410,6 +464,30 @@ private fun RemoteManualDeduction.toEntity() = ManualDeductionEntity(
     label = label,
     amount = amount,
     entryType = entryType,
+)
+
+private fun ExpenseEntity.toRemote(userId: String): RemoteExpenseEntry {
+    val cloudId = cloudId ?: UUID.randomUUID().toString()
+    return RemoteExpenseEntry(
+        id = cloudId,
+        userId = userId,
+        yearMonth = yearMonth,
+        dateIso = dateIso,
+        label = label,
+        amount = amount,
+        category = category,
+        isFixed = isFixed,
+    )
+}
+
+private fun RemoteExpenseEntry.toEntity() = ExpenseEntity(
+    cloudId = id,
+    yearMonth = yearMonth,
+    dateIso = dateIso,
+    label = label,
+    amount = amount,
+    category = category,
+    isFixed = isFixed,
 )
 
 private fun AppPreferences.toRemote(userId: String) = RemoteAppPreferences(

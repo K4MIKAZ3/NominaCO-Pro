@@ -49,6 +49,7 @@ import com.nominacopro.ui.components.NominaTopBar
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
+import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.ui.Formatters
 import com.nominacopro.ui.TimeFieldState
 import com.nominacopro.ui.TimeInput
@@ -68,6 +69,8 @@ private enum class DeleteAccountStep {
 fun SettingsScreen(
     preferences: AppPreferences,
     manualHolidays: Set<LocalDate>,
+    profile: EmployeeProfile? = null,
+    onOpenProfile: () -> Unit = {},
     accountEmail: String? = null,
     isOfflineAccount: Boolean = false,
     authConfigured: Boolean = false,
@@ -168,6 +171,40 @@ fun SettingsScreen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 )
+            }
+
+            item {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Perfil laboral", fontWeight = FontWeight.SemiBold)
+                        if (profile != null) {
+                            Text(
+                                profile.name,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Text(
+                                "${profile.jobTitle.ifBlank { "Sin cargo" }} · ${Formatters.money(profile.monthlySalary)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                            Text(
+                                "${profile.payPeriodType.label} · ${profile.dailyHours} h/día",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                        } else {
+                            Text(
+                                "Configura salario, contrato y jornada para calcular tu nómina.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                        }
+                        OutlinedButton(onClick = onOpenProfile, modifier = Modifier.fillMaxWidth()) {
+                            Text(if (profile != null) "Editar perfil" else "Configurar perfil")
+                        }
+                    }
+                }
             }
 
             if (authConfigured) {

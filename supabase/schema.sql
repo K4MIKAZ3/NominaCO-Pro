@@ -62,12 +62,29 @@ CREATE TABLE IF NOT EXISTS public.app_preferences (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Gastos personales (incluye fijos mensuales)
+CREATE TABLE IF NOT EXISTS public.expense_entries (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    year_month TEXT NOT NULL,
+    date_iso TEXT NOT NULL,
+    label TEXT NOT NULL,
+    amount BIGINT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'OTHER',
+    is_fixed BOOLEAN NOT NULL DEFAULT false,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS expense_entries_user_month
+    ON public.expense_entries (user_id, year_month);
+
 -- Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.work_days ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.manual_holidays ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.manual_deductions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.app_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.expense_entries ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "profiles_own" ON public.profiles
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
@@ -82,4 +99,7 @@ CREATE POLICY "manual_deductions_own" ON public.manual_deductions
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "app_preferences_own" ON public.app_preferences
+    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "expense_entries_own" ON public.expense_entries
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);

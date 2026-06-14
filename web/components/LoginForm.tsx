@@ -14,6 +14,7 @@ import {
   validatePassword,
 } from "@/lib/password";
 import { resetPasswordRedirectUrl, site } from "@/lib/site";
+import type { ExpenseSummary } from "@/lib/expenses";
 import type { MonthSummary } from "@/lib/payroll/models";
 
 type AuthMode = "login" | "signup" | "reset";
@@ -34,6 +35,7 @@ export function LoginForm() {
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<MonthSummary[]>([]);
+  const [expenseSummary, setExpenseSummary] = useState<ExpenseSummary | null>(null);
   const [signingOut, setSigningOut] = useState(false);
 
   const passwordError = useMemo(() => {
@@ -67,11 +69,13 @@ export function LoginForm() {
       const data = await fetchDashboard(userId);
       setProfileName(data.profileName);
       setSummaries(data.summaries);
+      setExpenseSummary(data.expenseSummary);
     } catch (err) {
       const text = err instanceof Error ? err.message : "No se pudo cargar el resumen.";
       setDashboardError(text);
       setProfileName(null);
       setSummaries([]);
+      setExpenseSummary(null);
     } finally {
       setDashboardLoading(false);
     }
@@ -102,6 +106,7 @@ export function LoginForm() {
       } else {
         setProfileName(null);
         setSummaries([]);
+        setExpenseSummary(null);
         setDashboardError(null);
       }
     });
@@ -209,6 +214,7 @@ export function LoginForm() {
       <MonthSummaryPanel
         profileName={profileName}
         summaries={summaries}
+        expenseSummary={expenseSummary}
         loading={dashboardLoading}
         error={dashboardError}
         onSignOut={handleSignOut}

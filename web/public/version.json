@@ -1,7 +1,7 @@
 {
-  "versionCode": 24,
-  "versionName": "1.7.13",
-  "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.13/Nominapp.apk",
-  "sha256": "f55c265ca05cdb4800c7758687283659471b3027668dc1abdbe324d3a06e1590",
-  "releaseNotes": "Calendario más compacto, leyenda de festivos mejorada y recuento de días no laborados (lun–vie). Descarga de actualización continúa en segundo plano y reintenta instalar al volver de Ajustes."
+  "versionCode": 25,
+  "versionName": "1.7.14",
+  "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.14/Nominapp.apk",
+  "sha256": "38a3b7511bf748d7ab06890c2fa5558e3e8631e8aef364ba9a2490fef5089179",
+  "releaseNotes": "Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web."
 }

@@ -253,6 +253,31 @@ export function applyManualEntries(
   };
 }
 
+export function computeMonthSummary(
+  profile: EmployeeProfile,
+  allWorkDays: WorkDayEntry[],
+  manualHolidayDates: Set<LocalDate>,
+  allDeductions: ManualDeduction[],
+  year: number,
+  month: number,
+): MonthSummary {
+  const prefix = `${year}-${String(month).padStart(2, "0")}`;
+  const entries = allWorkDays.filter((e) => e.date.startsWith(prefix));
+  const monthEntries = allDeductions.filter((d) => d.yearMonth === prefix);
+  const payroll = applyManualEntries(
+    liquidateMonth(profile, year, month, entries, manualHolidayDates),
+    monthEntries.filter((d) => d.entryType !== "ADVANCE"),
+  );
+  return {
+    year,
+    month,
+    grossTotal: payroll.grossTotal,
+    legalDeductions: payroll.legalDeductions.reduce((s, d) => s + d.amount, 0),
+    manualDeductions: payroll.manualDeductions.reduce((s, d) => s + d.amount, 0),
+    netTotal: payroll.netTotal,
+  };
+}
+
 export function computeMonthSummaries(
   profile: EmployeeProfile,
   allWorkDays: WorkDayEntry[],
@@ -262,21 +287,7 @@ export function computeMonthSummaries(
 ): MonthSummary[] {
   const months = getLastNYearMonths(monthCount);
 
-  return months.map(({ year, month }) => {
-    const prefix = `${year}-${String(month).padStart(2, "0")}`;
-    const entries = allWorkDays.filter((e) => e.date.startsWith(prefix));
-    const monthEntries = allDeductions.filter((d) => d.yearMonth === prefix);
-    const payroll = applyManualEntries(
-      liquidateMonth(profile, year, month, entries, manualHolidayDates),
-      monthEntries.filter((d) => d.entryType !== "ADVANCE"),
-    );
-    return {
-      year,
-      month,
-      grossTotal: payroll.grossTotal,
-      legalDeductions: payroll.legalDeductions.reduce((s, d) => s + d.amount, 0),
-      manualDeductions: payroll.manualDeductions.reduce((s, d) => s + d.amount, 0),
-      netTotal: payroll.netTotal,
-    };
-  });
+  return months.map(({ year, month }) =>
+    computeMonthSummary(profile, allWorkDays, manualHolidayDates, allDeductions, year, month),
+  );
 }

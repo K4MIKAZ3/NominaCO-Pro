@@ -74,3 +74,29 @@ export function getLastNYearMonths(
   }
   return result;
 }
+
+export function parseYearMonth(key: string): { year: number; month: number } {
+  const [yearStr, monthStr] = key.split("-");
+  return { year: Number.parseInt(yearStr, 10), month: Number.parseInt(monthStr, 10) };
+}
+
+export function shiftYearMonth(key: string, deltaMonths: number): string {
+  const { year, month } = parseYearMonth(key);
+  const d = new Date(year, month - 1 + deltaMonths, 1);
+  return yearMonthPrefix(d.getFullYear(), d.getMonth() + 1);
+}
+
+export function compareYearMonths(a: string, b: string): number {
+  return a.localeCompare(b);
+}
+
+export function enumerateYearMonths(fromKey: string, toKey: string): string[] {
+  if (compareYearMonths(fromKey, toKey) > 0) return [];
+  const result: string[] = [];
+  let current = fromKey;
+  while (compareYearMonths(current, toKey) <= 0) {
+    result.push(current);
+    current = shiftYearMonth(current, 1);
+  }
+  return result;
+}

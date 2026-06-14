@@ -1,6 +1,17 @@
-import { buildExpenseSummary, currentYearMonth, type ExpenseRow, type ExpenseSummary } from "@/lib/expenses";
+import {
+  buildExpenseSummary,
+  currentYearMonth,
+  type ExpenseRow,
+  type ExpenseSummary,
+} from "@/lib/expenses";
 import { getSupabase } from "@/lib/supabase";
-import { computeMonthSummaries } from "@/lib/payroll/payrollEngine";
+import {
+  compareYearMonths,
+  enumerateYearMonths,
+  parseYearMonth,
+  yearMonthPrefix,
+} from "@/lib/payroll/dates";
+import { computeMonthSummary } from "@/lib/payroll/payrollEngine";
 import type {
   DayType,
   EmployeeProfile,
@@ -42,7 +53,9 @@ interface ManualDeductionRow {
 export interface DashboardData {
   profileName: string | null;
   summaries: MonthSummary[];
-  expenseSummary: ExpenseSummary | null;
+  expenseSummaries: ExpenseSummary[];
+  minYearMonth: string;
+  maxYearMonth: string;
 }
 
 function parseDayType(value: string): DayType {
@@ -87,13 +100,42 @@ function mapDeduction(row: ManualDeductionRow): ManualDeduction {
   };
 }
 
+function collectYearMonthRange(
+  workDays: WorkDayEntry[],
+  deductions: ManualDeduction[],
+  expenseRows: ExpenseRow[],
+): { minYearMonth: string; maxYearMonth: string } {
+  const maxYearMonth = currentYearMonth();
+  const keys = new Set<string>([maxYearMonth]);
+
+  for (const entry of workDays) {
+    keys.add(entry.date.slice(0, 7));
+  }
+  for (const deduction of deductions) {
+    keys.add(deduction.yearMonth);
+  }
+  for (const expense of expenseRows) {
+    if (!expense.is_fixed) {
+      keys.add(expense.year_month);
+    }
+  }
+
+  const sorted = Array.from(keys).sort(compareYearMonths);
+  const minYearMonth = sorted[0] ?? maxYearMonth;
+  return { minYearMonth, maxYearMonth };
+}
+
 export async function fetchDashboard(userId: string): Promise<DashboardData> {
   const supabase = getSupabase();
   if (!supabase) {
-    return { profileName: null, summaries: [], expenseSummary: null };
+    return {
+      profileName: null,
+      summaries: [],
+      expenseSummaries: [],
+      minYearMonth: currentYearMonth(),
+      maxYearMonth: currentYearMonth(),
+    };
   }
-
-  const yearMonth = currentYearMonth();
 
   const [profileRes, workDaysRes, holidaysRes, deductionsRes, expensesRes] = await Promise.all([
     supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
@@ -114,7 +156,14 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
   }
 
   if (!profileRes.data) {
-    return { profileName: null, summaries: [], expenseSummary: null };
+    const now = currentYearMonth();
+    return {
+      profileName: null,
+      summaries: [],
+      expenseSummaries: [],
+      minYearMonth: now,
+      maxYearMonth: now,
+    };
   }
 
   const profile = mapProfile(profileRes.data as ProfileRow);
@@ -123,20 +172,29 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
     ((holidaysRes.data ?? []) as ManualHolidayRow[]).map((h) => h.date_iso),
   );
   const deductions = ((deductionsRes.data ?? []) as ManualDeductionRow[]).map(mapDeduction);
-
-  const summaries = computeMonthSummaries(profile, workDays, manualHolidays, deductions, 3);
-  const currentSummary = summaries.find(
-    (s) => `${s.year}-${String(s.month).padStart(2, "0")}` === yearMonth,
-  );
   const expenseRows = (expensesRes.data ?? []) as ExpenseRow[];
-  const expenseSummary =
-    currentSummary != null
-      ? buildExpenseSummary(expenseRows, yearMonth, currentSummary.netTotal)
-      : null;
+
+  const { minYearMonth, maxYearMonth } = collectYearMonthRange(workDays, deductions, expenseRows);
+  const yearMonths = enumerateYearMonths(minYearMonth, maxYearMonth);
+
+  const summaries = yearMonths.map((yearMonth) => {
+    const { year, month } = parseYearMonth(yearMonth);
+    return computeMonthSummary(profile, workDays, manualHolidays, deductions, year, month);
+  });
+
+  const expenseSummaries = summaries.map((summary) =>
+    buildExpenseSummary(
+      expenseRows,
+      yearMonthPrefix(summary.year, summary.month),
+      summary.netTotal,
+    ),
+  );
 
   return {
     profileName: profile.name || null,
     summaries,
-    expenseSummary,
+    expenseSummaries,
+    minYearMonth,
+    maxYearMonth,
   };
 }

@@ -17,17 +17,22 @@ export function Header() {
             className="logo-mark"
             priority
           />
-          {site.name}
+          <span className="logo-text">{site.name}</span>
         </Link>
         <nav className="nav">
           <Link href="/#funciones" className="hide-mobile">
             Funciones
           </Link>
-          <Link href="/login">Cuenta</Link>
+          <Link href="/login" className="nav-account">
+            Cuenta
+          </Link>
           <Link href="/terminos" className="hide-mobile">
             Términos
           </Link>
-          <ApkDownloadButton>Descargar APK</ApkDownloadButton>
+          <ApkDownloadButton className="btn btn-primary nav-apk-btn">
+            <span className="hide-narrow">Descargar APK</span>
+            <span className="show-narrow">APK</span>
+          </ApkDownloadButton>
         </nav>
       </div>
     </header>

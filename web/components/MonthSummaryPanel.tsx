@@ -1,15 +1,20 @@
 "use client";
 
 import { formatMoney, formatMonthFull } from "@/lib/format";
+import { shiftYearMonth, compareYearMonths, parseYearMonth } from "@/lib/payroll/dates";
 import type { ExpenseSummary } from "@/lib/expenses";
 import type { MonthSummary } from "@/lib/payroll/models";
 
 interface MonthSummaryPanelProps {
   profileName: string | null;
-  summaries: MonthSummary[];
+  selectedYearMonth: string;
+  minYearMonth: string;
+  maxYearMonth: string;
+  summary: MonthSummary | null;
   expenseSummary: ExpenseSummary | null;
   loading: boolean;
   error: string | null;
+  onSelectYearMonth: (yearMonth: string) => void;
   onSignOut: () => void;
   signingOut: boolean;
 }
@@ -25,13 +30,27 @@ function SummaryRow({ label, value, variant }: { label: string; value: string; v
 
 export function MonthSummaryPanel({
   profileName,
-  summaries,
+  selectedYearMonth,
+  minYearMonth,
+  maxYearMonth,
+  summary,
   expenseSummary,
   loading,
   error,
+  onSelectYearMonth,
   onSignOut,
   signingOut,
 }: MonthSummaryPanelProps) {
+  const { year, month } = summary
+    ? { year: summary.year, month: summary.month }
+    : expenseSummary
+      ? { year: expenseSummary.year, month: expenseSummary.month }
+      : parseYearMonth(selectedYearMonth);
+  const monthLabel = formatMonthFull(year, month);
+  const canGoPrev = compareYearMonths(selectedYearMonth, minYearMonth) > 0;
+  const canGoNext = compareYearMonths(selectedYearMonth, maxYearMonth) < 0;
+  const isCurrentMonth = selectedYearMonth === maxYearMonth;
+
   return (
     <div className="dashboard-panel">
       <div className="dashboard-header">
@@ -49,11 +68,46 @@ export function MonthSummaryPanel({
         </button>
       </div>
 
+      {profileName && (
+        <div className="month-nav">
+          <div className="month-nav-controls">
+            <button
+              type="button"
+              className="month-nav-btn"
+              aria-label="Mes anterior"
+              disabled={!canGoPrev}
+              onClick={() => onSelectYearMonth(shiftYearMonth(selectedYearMonth, -1))}
+            >
+              ‹
+            </button>
+            <span className="month-nav-label">{monthLabel}</span>
+            <button
+              type="button"
+              className="month-nav-btn"
+              aria-label="Mes siguiente"
+              disabled={!canGoNext}
+              onClick={() => onSelectYearMonth(shiftYearMonth(selectedYearMonth, 1))}
+            >
+              ›
+            </button>
+          </div>
+          {!isCurrentMonth && (
+            <button
+              type="button"
+              className="month-nav-today"
+              onClick={() => onSelectYearMonth(maxYearMonth)}
+            >
+              Hoy
+            </button>
+          )}
+        </div>
+      )}
+
       {loading && <p className="dashboard-status">Cargando resumen…</p>}
 
       {error && <div className="form-message error">{error}</div>}
 
-      {!loading && !error && !profileName && summaries.length === 0 && (
+      {!loading && !error && !profileName && !summary && (
         <div className="dashboard-empty">
           <p>Configura tu perfil en la app para ver el resumen</p>
         </div>
@@ -61,9 +115,7 @@ export function MonthSummaryPanel({
 
       {!loading && !error && expenseSummary && (
         <article className="summary-card expense-card">
-          <h2 className="summary-month">
-            Gastos · {formatMonthFull(expenseSummary.year, expenseSummary.month)}
-          </h2>
+          <h2 className="summary-month">Gastos · {monthLabel}</h2>
           <SummaryRow label="Neto estimado" value={formatMoney(expenseSummary.netTotal)} variant="net" />
           <SummaryRow label="Gastos del mes" value={formatMoney(expenseSummary.totalExpenses)} variant="expense" />
           <SummaryRow
@@ -87,26 +139,22 @@ export function MonthSummaryPanel({
         </article>
       )}
 
-      {!loading && !error && summaries.length > 0 && (
-        <div className="summary-grid">
-          {summaries.map((summary) => (
-            <article key={`${summary.year}-${summary.month}`} className="summary-card">
-              <h2 className="summary-month">{formatMonthFull(summary.year, summary.month)}</h2>
-              <SummaryRow label="Bruto" value={formatMoney(summary.grossTotal)} />
-              <SummaryRow
-                label="Descuentos legales"
-                value={formatMoney(summary.legalDeductions)}
-                variant="deduction"
-              />
-              <SummaryRow
-                label="Egresos manuales"
-                value={formatMoney(summary.manualDeductions)}
-                variant="deduction"
-              />
-              <SummaryRow label="Neto" value={formatMoney(summary.netTotal)} variant="net" />
-            </article>
-          ))}
-        </div>
+      {!loading && !error && summary && (
+        <article className="summary-card">
+          <h2 className="summary-month">Nómina · {monthLabel}</h2>
+          <SummaryRow label="Bruto" value={formatMoney(summary.grossTotal)} />
+          <SummaryRow
+            label="Descuentos legales"
+            value={formatMoney(summary.legalDeductions)}
+            variant="deduction"
+          />
+          <SummaryRow
+            label="Egresos manuales"
+            value={formatMoney(summary.manualDeductions)}
+            variant="deduction"
+          />
+          <SummaryRow label="Neto" value={formatMoney(summary.netTotal)} variant="net" />
+        </article>
       )}
 
       <p className="auth-note">

@@ -35,7 +35,14 @@ export function LoginForm() {
   const [dashboardError, setDashboardError] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [summaries, setSummaries] = useState<MonthSummary[]>([]);
-  const [expenseSummary, setExpenseSummary] = useState<ExpenseSummary | null>(null);
+  const [expenseSummaries, setExpenseSummaries] = useState<ExpenseSummary[]>([]);
+  const [selectedYearMonth, setSelectedYearMonth] = useState(() => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    return `${now.getFullYear()}-${month}`;
+  });
+  const [minYearMonth, setMinYearMonth] = useState(selectedYearMonth);
+  const [maxYearMonth, setMaxYearMonth] = useState(selectedYearMonth);
   const [signingOut, setSigningOut] = useState(false);
 
   const passwordError = useMemo(() => {
@@ -69,13 +76,16 @@ export function LoginForm() {
       const data = await fetchDashboard(userId);
       setProfileName(data.profileName);
       setSummaries(data.summaries);
-      setExpenseSummary(data.expenseSummary);
+      setExpenseSummaries(data.expenseSummaries);
+      setMinYearMonth(data.minYearMonth);
+      setMaxYearMonth(data.maxYearMonth);
+      setSelectedYearMonth(data.maxYearMonth);
     } catch (err) {
       const text = err instanceof Error ? err.message : "No se pudo cargar el resumen.";
       setDashboardError(text);
       setProfileName(null);
       setSummaries([]);
-      setExpenseSummary(null);
+      setExpenseSummaries([]);
     } finally {
       setDashboardLoading(false);
     }
@@ -106,7 +116,7 @@ export function LoginForm() {
       } else {
         setProfileName(null);
         setSummaries([]);
-        setExpenseSummary(null);
+        setExpenseSummaries([]);
         setDashboardError(null);
       }
     });
@@ -210,13 +220,24 @@ export function LoginForm() {
   }
 
   if (sessionChecked && session) {
+    const selectedIndex = summaries.findIndex(
+      (summary) =>
+        `${summary.year}-${String(summary.month).padStart(2, "0")}` === selectedYearMonth,
+    );
+    const summary = selectedIndex >= 0 ? summaries[selectedIndex] : null;
+    const expenseSummary = selectedIndex >= 0 ? expenseSummaries[selectedIndex] : null;
+
     return (
       <MonthSummaryPanel
         profileName={profileName}
-        summaries={summaries}
+        selectedYearMonth={selectedYearMonth}
+        minYearMonth={minYearMonth}
+        maxYearMonth={maxYearMonth}
+        summary={summary}
         expenseSummary={expenseSummary}
         loading={dashboardLoading}
         error={dashboardError}
+        onSelectYearMonth={setSelectedYearMonth}
         onSignOut={handleSignOut}
         signingOut={signingOut}
       />

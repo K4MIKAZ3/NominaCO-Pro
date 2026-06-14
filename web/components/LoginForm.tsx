@@ -1,9 +1,8 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { Session } from "@supabase/supabase-js";
-import { MonthSummaryPanel } from "@/components/MonthSummaryPanel";
+import { useRouter } from "next/navigation";
 import { PasswordField } from "@/components/PasswordField";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import {
@@ -14,12 +13,11 @@ import {
   validatePassword,
 } from "@/lib/password";
 import { resetPasswordRedirectUrl, site } from "@/lib/site";
-import type { ExpenseSummary } from "@/lib/expenses";
-import type { MonthSummary } from "@/lib/payroll/models";
 
 type AuthMode = "login" | "signup" | "reset";
 
 export function LoginForm() {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,21 +27,8 @@ export function LoginForm() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null,
   );
-  const [session, setSession] = useState<Session | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [dashboardError, setDashboardError] = useState<string | null>(null);
-  const [profileName, setProfileName] = useState<string | null>(null);
-  const [summaries, setSummaries] = useState<MonthSummary[]>([]);
-  const [expenseSummaries, setExpenseSummaries] = useState<ExpenseSummary[]>([]);
-  const [selectedYearMonth, setSelectedYearMonth] = useState(() => {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    return `${now.getFullYear()}-${month}`;
-  });
-  const [minYearMonth, setMinYearMonth] = useState(selectedYearMonth);
-  const [maxYearMonth, setMaxYearMonth] = useState(selectedYearMonth);
-  const [signingOut, setSigningOut] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
   const passwordError = useMemo(() => {
     if (mode !== "signup") return null;
@@ -68,29 +53,6 @@ export function LoginForm() {
     setTouched({ password: false, confirm: false });
   }, [mode]);
 
-  const loadDashboard = useCallback(async (userId: string) => {
-    setDashboardLoading(true);
-    setDashboardError(null);
-    try {
-      const { fetchDashboard } = await import("@/lib/dashboard");
-      const data = await fetchDashboard(userId);
-      setProfileName(data.profileName);
-      setSummaries(data.summaries);
-      setExpenseSummaries(data.expenseSummaries);
-      setMinYearMonth(data.minYearMonth);
-      setMaxYearMonth(data.maxYearMonth);
-      setSelectedYearMonth(data.maxYearMonth);
-    } catch (err) {
-      const text = err instanceof Error ? err.message : "No se pudo cargar el resumen.";
-      setDashboardError(text);
-      setProfileName(null);
-      setSummaries([]);
-      setExpenseSummaries([]);
-    } finally {
-      setDashboardLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     const supabase = getSupabase();
     if (!supabase) {
@@ -98,31 +60,25 @@ export function LoginForm() {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session: current } }) => {
-      setSession(current);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session);
       setSessionChecked(true);
-      if (current?.user) {
-        // Evita deadlock de Supabase: no llamar a la API dentro del callback de auth.
-        window.setTimeout(() => loadDashboard(current.user.id), 0);
-      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      if (nextSession?.user) {
-        window.setTimeout(() => loadDashboard(nextSession.user.id), 0);
-      } else {
-        setProfileName(null);
-        setSummaries([]);
-        setExpenseSummaries([]);
-        setDashboardError(null);
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasSession(!!session);
     });
 
     return () => subscription.unsubscribe();
-  }, [loadDashboard]);
+  }, []);
+
+  useEffect(() => {
+    if (sessionChecked && hasSession) {
+      router.replace(site.auth.homePath);
+    }
+  }, [sessionChecked, hasSession, router]);
 
   if (!isSupabaseConfigured()) {
     return (
@@ -144,6 +100,14 @@ export function LoginForm() {
     );
   }
 
+  if (!sessionChecked || hasSession) {
+    return (
+      <div className="auth-card">
+        <p className="dashboard-status">Verificando sesión…</p>
+      </div>
+    );
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -158,13 +122,9 @@ export function LoginForm() {
 
     try {
       if (mode === "login") {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        if (data.session) {
-          setSession(data.session);
-          setSessionChecked(true);
-          window.setTimeout(() => loadDashboard(data.session.user.id), 0);
-        }
+        router.replace(site.auth.homePath);
       } else if (mode === "signup") {
         setTouched({ password: true, confirm: true });
         const validationError = validatePassword(password);
@@ -181,7 +141,7 @@ export function LoginForm() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${site.url}/login` },
+          options: { emailRedirectTo: `${site.url}${site.auth.homePath}` },
         });
         if (error) throw error;
         setMessage({
@@ -205,43 +165,6 @@ export function LoginForm() {
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleSignOut() {
-    const supabase = getSupabase();
-    if (!supabase) return;
-    setSigningOut(true);
-    try {
-      await supabase.auth.signOut();
-      setMessage(null);
-    } finally {
-      setSigningOut(false);
-    }
-  }
-
-  if (sessionChecked && session) {
-    const selectedIndex = summaries.findIndex(
-      (summary) =>
-        `${summary.year}-${String(summary.month).padStart(2, "0")}` === selectedYearMonth,
-    );
-    const summary = selectedIndex >= 0 ? summaries[selectedIndex] : null;
-    const expenseSummary = selectedIndex >= 0 ? expenseSummaries[selectedIndex] : null;
-
-    return (
-      <MonthSummaryPanel
-        profileName={profileName}
-        selectedYearMonth={selectedYearMonth}
-        minYearMonth={minYearMonth}
-        maxYearMonth={maxYearMonth}
-        summary={summary}
-        expenseSummary={expenseSummary}
-        loading={dashboardLoading}
-        error={dashboardError}
-        onSelectYearMonth={setSelectedYearMonth}
-        onSignOut={handleSignOut}
-        signingOut={signingOut}
-      />
-    );
   }
 
   return (

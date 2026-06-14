@@ -9,6 +9,7 @@ export const site = {
   contactEmail: "contacto@nominapp.xyz",
   auth: {
     loginPath: "/login",
+    homePath: "/inicio",
     resetPasswordPath: "/restablecer-contrasena",
   },
   /** Último APK publicado por CI en GitHub Releases (main) */

@@ -23,7 +23,7 @@ export function Header() {
           <Link href="/#funciones" className="hide-mobile">
             Funciones
           </Link>
-          <Link href="/login" className="nav-account">
+          <Link href={site.auth.homePath} className="nav-account">
             Cuenta
           </Link>
           <Link href="/terminos" className="hide-mobile">

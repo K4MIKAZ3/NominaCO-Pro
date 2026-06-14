@@ -7,6 +7,7 @@ on:
       - 'web/public/version.json'
       - 'web/public/releases.json'
       - 'app/build.gradle.kts'
+      - 'web/vercel.json'
   workflow_dispatch:
 
 env:

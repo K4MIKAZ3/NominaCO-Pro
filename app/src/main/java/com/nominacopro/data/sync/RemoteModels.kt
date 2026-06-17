@@ -52,7 +52,7 @@ data class RemoteExpenseEntry(
     @SerialName("date_iso") val dateIso: String,
     val label: String,
     val amount: Long,
-    val category: String,
+    val category: String = "OTHER",
     @SerialName("is_fixed") val isFixed: Boolean = false,
 )
 

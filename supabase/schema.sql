@@ -78,22 +78,6 @@ CREATE TABLE IF NOT EXISTS public.expense_entries (
 CREATE INDEX IF NOT EXISTS expense_entries_user_month
     ON public.expense_entries (user_id, year_month);
 
-CREATE OR REPLACE FUNCTION public.normalize_expense_category()
-RETURNS trigger AS $$
-BEGIN
-    NEW.category := COALESCE(NULLIF(NEW.category, ''), 'OTHER');
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS normalize_expense_category_trigger
-ON public.expense_entries;
-
-CREATE TRIGGER normalize_expense_category_trigger
-BEFORE INSERT OR UPDATE ON public.expense_entries
-FOR EACH ROW
-EXECUTE FUNCTION public.normalize_expense_category();
-
 -- Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.work_days ENABLE ROW LEVEL SECURITY;

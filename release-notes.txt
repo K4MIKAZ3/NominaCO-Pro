@@ -1,1 +1,1 @@
-Corrige la sincronización de gastos en categoría Otros para evitar errores de Supabase al subir respaldos en la nube.
+Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.

@@ -475,7 +475,7 @@ private fun ExpenseEntity.toRemote(userId: String): RemoteExpenseEntry {
         dateIso = dateIso,
         label = label,
         amount = amount,
-        category = category,
+        category = category.normalizedExpenseCategory(),
         isFixed = isFixed,
     )
 }
@@ -486,9 +486,12 @@ private fun RemoteExpenseEntry.toEntity() = ExpenseEntity(
     dateIso = dateIso,
     label = label,
     amount = amount,
-    category = category,
+    category = category.normalizedExpenseCategory(),
     isFixed = isFixed,
 )
+
+private fun String?.normalizedExpenseCategory(): String =
+    this?.takeIf { it.isNotBlank() } ?: "OTHER"
 
 private fun AppPreferences.toRemote(userId: String) = RemoteAppPreferences(
     userId = userId,

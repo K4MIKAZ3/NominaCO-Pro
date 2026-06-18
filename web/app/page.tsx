@@ -58,9 +58,9 @@ export default function HomePage() {
                 width={480}
                 height={480}
                 sizes="(max-width: 768px) min(100vw, 360px), 480px"
-                quality={85}
                 className="hero-image"
                 priority
+                unoptimized
               />
             </div>
           </div>
@@ -138,8 +138,8 @@ export default function HomePage() {
                       width={400}
                       height={300}
                       sizes="(max-width: 768px) 100vw, (max-width: 1100px) 50vw, 360px"
-                      quality={85}
                       loading="lazy"
+                      unoptimized
                     />
                   )}
                   <h3>{feature.title}</h3>

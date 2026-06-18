@@ -16,6 +16,7 @@ export function Header() {
             sizes="36px"
             className="logo-mark"
             priority
+            unoptimized
           />
           <span className="logo-text">{site.name}</span>
         </Link>

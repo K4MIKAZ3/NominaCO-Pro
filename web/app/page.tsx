@@ -152,6 +152,23 @@ export default function HomePage() {
 
         <FaqSection />
 
+        <section className="section section-muted" id="guia">
+          <div className="container">
+            <div className="section-title">
+              <h2>Guía de nómina en Colombia</h2>
+              <p>
+                Aprende a calcular tu liquidación, recargos y prestaciones con
+                artículos claros y actualizados.
+              </p>
+            </div>
+            <div className="hero-actions cta-actions">
+              <Link href="/guia" className="btn btn-primary">
+                Ver todos los artículos
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <section className="cta-band">
           <div className="container">
             <h2>Empieza hoy mismo</h2>

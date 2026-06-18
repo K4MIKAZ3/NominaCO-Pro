@@ -21,6 +21,9 @@ export function Header() {
           <span className="logo-text">{site.name}</span>
         </Link>
         <nav className="nav">
+          <Link href="/guia" className="hide-mobile">
+            Guía
+          </Link>
           <Link href="/#funciones" className="hide-mobile">
             Funciones
           </Link>

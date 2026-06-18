@@ -3,6 +3,7 @@ package com.nominacopro.data
 import android.content.Context
 import androidx.room.Room
 import com.nominacopro.data.local.NominaDatabase
+import com.nominacopro.data.local.NominaMigrations
 import com.nominacopro.data.local.entity.ExpenseEntity
 import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
@@ -44,7 +45,9 @@ class NominaRepository(context: Context) {
         appContext,
         NominaDatabase::class.java,
         "nomina_co_pro.db",
-    ).fallbackToDestructiveMigration().build()
+    )
+        .addMigrations(*NominaMigrations.ALL)
+        .build()
 
     private val profileDao = db.profileDao()
     private val workDayDao = db.workDayDao()

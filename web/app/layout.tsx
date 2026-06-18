@@ -3,7 +3,10 @@ import { Analytics } from "@vercel/analytics/next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { site } from "@/lib/site";
+import { seoKeywords } from "@/lib/seo";
 import "./globals.css";
+
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -12,6 +15,19 @@ export const metadata: Metadata = {
     template: `%s · ${site.name}`,
   },
   description: site.description,
+  keywords: [...seoKeywords],
+  applicationName: site.name,
+  authors: [{ name: site.name, url: site.url }],
+  creator: site.name,
+  publisher: site.name,
+  category: "finance",
+  alternates: {
+    canonical: site.url,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: site.name,
     description: site.description,
@@ -21,10 +37,15 @@ export const metadata: Metadata = {
     type: "website",
     images: [{ url: "/icon.png", width: 1024, height: 1024, alt: site.name }],
   },
-  icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
+  twitter: {
+    card: "summary_large_image",
+    title: `${site.name} — Nómina personal Colombia`,
+    description: site.description,
+    images: ["/icon.png"],
   },
+  ...(googleSiteVerification
+    ? { verification: { google: googleSiteVerification } }
+    : {}),
 };
 
 export default function RootLayout({

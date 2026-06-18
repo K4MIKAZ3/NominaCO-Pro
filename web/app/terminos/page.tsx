@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
-import { site } from "@/lib/site";
+import { site, absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
   description:
     "Términos de uso y política de privacidad de Nominapp, aplicación de nómina personal para Colombia.",
+  alternates: {
+    canonical: absoluteUrl("/terminos"),
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function TerminosPage() {

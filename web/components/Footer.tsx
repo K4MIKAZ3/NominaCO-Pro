@@ -10,6 +10,8 @@ export function Footer() {
           © {site.year} {site.name} · {site.country}
         </p>
         <div className="footer-links">
+          <Link href="/#funciones">Funciones</Link>
+          <Link href="/#preguntas">Preguntas frecuentes</Link>
           <Link href="/terminos">Términos y privacidad</Link>
           <Link href="/login">Iniciar sesión</Link>
           <ContactDialog />

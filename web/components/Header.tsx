@@ -23,6 +23,9 @@ export function Header() {
           <Link href="/#funciones" className="hide-mobile">
             Funciones
           </Link>
+          <Link href="/#preguntas" className="hide-mobile">
+            FAQ
+          </Link>
           <Link href={site.auth.homePath} className="nav-account">
             Cuenta
           </Link>

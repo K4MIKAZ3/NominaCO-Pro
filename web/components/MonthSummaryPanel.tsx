@@ -15,8 +15,7 @@ interface MonthSummaryPanelProps {
   loading: boolean;
   error: string | null;
   onSelectYearMonth: (yearMonth: string) => void;
-  onSignOut: () => void;
-  signingOut: boolean;
+  onOpenProfile: () => void;
 }
 
 function SummaryRow({ label, value, variant }: { label: string; value: string; variant?: "net" | "deduction" | "expense" }) {
@@ -38,8 +37,7 @@ export function MonthSummaryPanel({
   loading,
   error,
   onSelectYearMonth,
-  onSignOut,
-  signingOut,
+  onOpenProfile,
 }: MonthSummaryPanelProps) {
   const { year, month } = summary
     ? { year: summary.year, month: summary.month }
@@ -52,22 +50,7 @@ export function MonthSummaryPanel({
   const isCurrentMonth = selectedYearMonth === maxYearMonth;
 
   return (
-    <div className="dashboard-panel">
-      <div className="dashboard-header">
-        <div>
-          <h1>Hola{profileName ? `, ${profileName}` : ""}</h1>
-          <p className="subtitle">Resumen de nómina y gastos sincronizados desde la app</p>
-        </div>
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          onClick={onSignOut}
-          disabled={signingOut}
-        >
-          {signingOut ? "Cerrando…" : "Cerrar sesión"}
-        </button>
-      </div>
-
+    <>
       {profileName && (
         <div className="month-nav">
           <div className="month-nav-controls">
@@ -109,7 +92,10 @@ export function MonthSummaryPanel({
 
       {!loading && !error && !profileName && !summary && (
         <div className="dashboard-empty">
-          <p>Configura tu perfil en la app para ver el resumen</p>
+          <p>Configura tu perfil laboral para ver el resumen.</p>
+          <button type="button" className="btn btn-primary" onClick={onOpenProfile}>
+            Ir a perfil
+          </button>
         </div>
       )}
 
@@ -156,10 +142,6 @@ export function MonthSummaryPanel({
           <SummaryRow label="Neto" value={formatMoney(summary.netTotal)} variant="net" />
         </article>
       )}
-
-      <p className="auth-note">
-        Los datos se sincronizan desde la app Android con la misma cuenta. Edita gastos y días en la app.
-      </p>
-    </div>
+    </>
   );
 }

@@ -6,7 +6,9 @@ import { site } from "@/lib/site";
 import { seoKeywords } from "@/lib/seo";
 import "./globals.css";
 
-const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+const googleSiteVerification =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
+  "PTjFQKOuqiS3b5yJ_IUyj_7Xi-_RDgGI8c2EtXZvv4I";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -43,9 +45,9 @@ export const metadata: Metadata = {
     description: site.description,
     images: ["/icon.png"],
   },
-  ...(googleSiteVerification
-    ? { verification: { google: googleSiteVerification } }
-    : {}),
+  verification: {
+    google: googleSiteVerification,
+  },
 };
 
 export default function RootLayout({

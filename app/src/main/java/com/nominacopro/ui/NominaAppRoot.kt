@@ -258,11 +258,8 @@ fun NominaAppRoot(app: NominaApp) {
                         authMessage = null
                     },
                     onContinueOffline = ::enterOfflineMode,
-                    onVerifyEmailForReset = { email, onResult ->
-                        authVm.verifyEmailForReset(email, onResult)
-                    },
-                    onCompletePasswordReset = { email, otp, newPassword, onResult ->
-                        authVm.completePasswordReset(email, otp, newPassword, onResult)
+                    onRequestPasswordReset = { email, onResult ->
+                        authVm.requestPasswordReset(email, onResult)
                     },
                 )
             }
@@ -359,11 +356,8 @@ fun NominaAppRoot(app: NominaApp) {
                     authMessage = null
                 },
                 onContinueOffline = { authOverlay = AuthOverlay.None },
-                onVerifyEmailForReset = { email, onResult ->
-                    authVm.verifyEmailForReset(email, onResult)
-                },
-                onCompletePasswordReset = { email, otp, newPassword, onResult ->
-                    authVm.completePasswordReset(email, otp, newPassword, onResult)
+                onRequestPasswordReset = { email, onResult ->
+                    authVm.requestPasswordReset(email, onResult)
                 },
                 )
             }

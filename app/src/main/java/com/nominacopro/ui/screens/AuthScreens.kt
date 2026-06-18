@@ -43,7 +43,7 @@ import com.nominacopro.ui.theme.NominaDesign
 
 private enum class ForgotPasswordStep {
     EMAIL,
-    NEW_PASSWORD,
+    SENT,
 }
 
 @Composable
@@ -54,28 +54,20 @@ fun LoginScreen(
     onLogin: (email: String, password: String) -> Unit,
     onGoToRegister: () -> Unit,
     onContinueOffline: () -> Unit,
-    onVerifyEmailForReset: (email: String, onResult: (Boolean, String?) -> Unit) -> Unit,
-    onCompletePasswordReset: (email: String, otp: String, newPassword: String, onResult: (Boolean, String?) -> Unit) -> Unit,
+    onRequestPasswordReset: (email: String, onResult: (Boolean, String?) -> Unit) -> Unit,
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var showForgotDialog by rememberSaveable { mutableStateOf(false) }
     var forgotEmail by rememberSaveable { mutableStateOf("") }
     var forgotStep by rememberSaveable { mutableStateOf(ForgotPasswordStep.EMAIL) }
-    var forgotOtp by rememberSaveable { mutableStateOf("") }
-    var forgotNewPassword by rememberSaveable { mutableStateOf("") }
-    var forgotConfirmPassword by rememberSaveable { mutableStateOf("") }
     var forgotMessage by remember { mutableStateOf<String?>(null) }
     var forgotIsError by remember { mutableStateOf(false) }
     var forgotBusy by remember { mutableStateOf(false) }
-    val passwordMismatchMessage = stringResource(R.string.auth_password_mismatch)
 
     fun resetForgotDialog() {
         showForgotDialog = false
         forgotStep = ForgotPasswordStep.EMAIL
-        forgotOtp = ""
-        forgotNewPassword = ""
-        forgotConfirmPassword = ""
         forgotMessage = null
         forgotIsError = false
         forgotBusy = false
@@ -90,7 +82,7 @@ fun LoginScreen(
                     when (forgotStep) {
                         ForgotPasswordStep.EMAIL -> {
                             Text(
-                                "Ingresa el correo de tu cuenta. Te enviaremos un código de recuperación.",
+                                stringResource(R.string.auth_forgot_password_intro),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             )
@@ -104,42 +96,11 @@ fun LoginScreen(
                                 singleLine = true,
                             )
                         }
-                        ForgotPasswordStep.NEW_PASSWORD -> {
+                        ForgotPasswordStep.SENT -> {
                             Text(
-                                "Revisa tu correo: copia el código de 6 dígitos del mensaje de recuperación. Luego elige tu nueva contraseña.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                stringResource(R.string.auth_password_requirements_hint),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            OutlinedTextField(
-                                value = forgotOtp,
-                                onValueChange = { value ->
-                                    forgotOtp = value.filter { it.isDigit() }.take(6)
-                                },
-                                label = { Text("Código del correo") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            PasswordTextField(
-                                value = forgotNewPassword,
-                                onValueChange = { forgotNewPassword = it },
-                                label = "Nueva contraseña",
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            PasswordTextField(
-                                value = forgotConfirmPassword,
-                                onValueChange = { forgotConfirmPassword = it },
-                                label = "Confirmar contraseña",
-                                modifier = Modifier.fillMaxWidth(),
+                                stringResource(R.string.auth_forgot_password_sent),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -160,11 +121,11 @@ fun LoginScreen(
                             onClick = {
                                 forgotBusy = true
                                 forgotMessage = null
-                                onVerifyEmailForReset(forgotEmail) { ok, msg ->
+                                onRequestPasswordReset(forgotEmail) { ok, msg ->
                                     forgotBusy = false
                                     if (ok) {
-                                        forgotStep = ForgotPasswordStep.NEW_PASSWORD
-                                        forgotMessage = "Correo de recuperación enviado."
+                                        forgotStep = ForgotPasswordStep.SENT
+                                        forgotMessage = null
                                         forgotIsError = false
                                     } else {
                                         forgotMessage = msg
@@ -173,72 +134,20 @@ fun LoginScreen(
                                 }
                             },
                             enabled = forgotEmail.isNotBlank() && !forgotBusy,
-                        ) { Text("Continuar") }
+                        ) { Text(stringResource(R.string.auth_forgot_password_send)) }
                     }
-                    ForgotPasswordStep.NEW_PASSWORD -> {
+                    ForgotPasswordStep.SENT -> {
                         TextButton(
-                            onClick = {
-                                when {
-                                    forgotOtp.length != 6 -> {
-                                        forgotMessage = "Ingresa el código de 6 dígitos del correo"
-                                        forgotIsError = true
-                                    }
-                                    else -> {
-                                        val validationError = PasswordRules.validate(forgotNewPassword)
-                                        when {
-                                            validationError != null -> {
-                                                forgotMessage = validationError
-                                                forgotIsError = true
-                                            }
-                                            forgotNewPassword != forgotConfirmPassword -> {
-                                                forgotMessage = passwordMismatchMessage
-                                                forgotIsError = true
-                                            }
-                                            else -> {
-                                                forgotBusy = true
-                                                forgotMessage = null
-                                                onCompletePasswordReset(
-                                                    forgotEmail,
-                                                    forgotOtp,
-                                                    forgotNewPassword,
-                                                ) { ok, msg ->
-                                                    forgotBusy = false
-                                                    forgotMessage = msg
-                                                    forgotIsError = !ok
-                                                    if (ok) resetForgotDialog()
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            enabled = !forgotBusy &&
-                                forgotOtp.length == 6 &&
-                                PasswordRules.isValid(forgotNewPassword) &&
-                                forgotNewPassword == forgotConfirmPassword,
-                        ) { Text("Restablecer contraseña") }
+                            onClick = { resetForgotDialog() },
+                            enabled = !forgotBusy,
+                        ) { Text(stringResource(R.string.auth_forgot_password_done)) }
                     }
                 }
             },
             dismissButton = {
-                when (forgotStep) {
-                    ForgotPasswordStep.EMAIL -> {
-                        TextButton(onClick = { resetForgotDialog() }, enabled = !forgotBusy) {
-                            Text("Cancelar")
-                        }
-                    }
-                    ForgotPasswordStep.NEW_PASSWORD -> {
-                        TextButton(
-                            onClick = {
-                                forgotStep = ForgotPasswordStep.EMAIL
-                                forgotOtp = ""
-                                forgotNewPassword = ""
-                                forgotConfirmPassword = ""
-                                forgotMessage = null
-                                forgotIsError = false
-                            },
-                            enabled = !forgotBusy,
-                        ) { Text("Atrás") }
+                if (forgotStep == ForgotPasswordStep.EMAIL) {
+                    TextButton(onClick = { resetForgotDialog() }, enabled = !forgotBusy) {
+                        Text("Cancelar")
                     }
                 }
             },
@@ -304,9 +213,6 @@ fun LoginScreen(
                 onClick = {
                     forgotEmail = email
                     forgotStep = ForgotPasswordStep.EMAIL
-                    forgotOtp = ""
-                    forgotNewPassword = ""
-                    forgotConfirmPassword = ""
                     forgotMessage = null
                     forgotIsError = false
                     showForgotDialog = true

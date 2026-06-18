@@ -55,7 +55,7 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
         }
     }
 
-    fun verifyEmailForReset(email: String, onResult: (Boolean, String?) -> Unit) {
+    fun requestPasswordReset(email: String, onResult: (Boolean, String?) -> Unit) {
         viewModelScope.launch {
             val verifyError = repository.verifyEmailRegistered(email)
             if (verifyError != null) {
@@ -67,22 +67,6 @@ class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
                 onResult(true, null)
             } else {
                 onResult(false, sendError)
-            }
-        }
-    }
-
-    fun completePasswordReset(
-        email: String,
-        otp: String,
-        newPassword: String,
-        onResult: (Boolean, String?) -> Unit,
-    ) {
-        viewModelScope.launch {
-            val error = repository.resetPasswordWithOtp(email, otp, newPassword)
-            if (error == null) {
-                onResult(true, "Contraseña actualizada. Inicia sesión con tu nueva contraseña.")
-            } else {
-                onResult(false, error)
             }
         }
     }

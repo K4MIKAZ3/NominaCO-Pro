@@ -31,6 +31,10 @@
     <string name="auth_password_mismatch">Las contraseñas no coinciden.</string>
     <string name="auth_offline_mode">Modo offline</string>
     <string name="auth_login_subtitle">Crea tu cuenta para respaldar tu nómina en la nube.</string>
+    <string name="auth_forgot_password_intro">Ingresa el correo de tu cuenta. Si existe, te enviaremos un enlace para restablecer tu contraseña.</string>
+    <string name="auth_forgot_password_sent">Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.</string>
+    <string name="auth_forgot_password_send">Enviar enlace</string>
+    <string name="auth_forgot_password_done">Entendido</string>
     <string name="auth_delete_account">Eliminar cuenta</string>
     <string name="auth_delete_account_summary">Borra tu cuenta y todos los datos asociados en la nube. Esta acción es permanente.</string>
     <string name="auth_delete_account_reason_title">¿Por qué eliminas tu cuenta?</string>

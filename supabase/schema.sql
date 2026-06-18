@@ -103,3 +103,15 @@ CREATE POLICY "app_preferences_own" ON public.app_preferences
 
 CREATE POLICY "expense_entries_own" ON public.expense_entries
     FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- Migración: ejecuta si la sincronización falla por category NULL
+ALTER TABLE public.expense_entries
+    ALTER COLUMN category SET DEFAULT 'OTHER';
+UPDATE public.expense_entries
+    SET category = 'OTHER'
+    WHERE category IS NULL OR btrim(category) = '';
+ALTER TABLE public.work_days
+    ALTER COLUMN notes SET DEFAULT '';
+UPDATE public.work_days
+    SET notes = ''
+    WHERE notes IS NULL;

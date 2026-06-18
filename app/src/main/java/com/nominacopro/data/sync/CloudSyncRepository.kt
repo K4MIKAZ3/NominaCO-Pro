@@ -359,8 +359,17 @@ class CloudSyncRepository(
         }
     }
 
-    private fun parseSyncError(e: Exception): String =
-        e.message?.substringBefore("\nURL:")?.trim() ?: "Error de sincronización"
+    private fun parseSyncError(e: Exception): String {
+        val raw = e.message?.substringBefore("\nURL:")?.trim().orEmpty()
+        return when {
+            raw.contains("expense_entries") && raw.contains("category") ->
+                "Error al subir gastos: falta la categoría. Actualiza la app e intenta de nuevo."
+            raw.contains("violates not-null constraint") ->
+                "Faltan datos obligatorios en la nube. Actualiza la app e intenta sincronizar de nuevo."
+            raw.isNotBlank() -> raw
+            else -> "Error de sincronización"
+        }
+    }
 
     private companion object {
         const val TABLE_PROFILES = "profiles"
@@ -412,8 +421,8 @@ private fun WorkDayEntry.toRemote(userId: String) = RemoteWorkDay(
     dateIso = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
     startTime = start.toString(),
     endTime = end.toString(),
-    dayType = dayType.name,
-    notes = notes,
+    dayType = dayType.name.ifBlank { "NORMAL" },
+    notes = notes.orEmpty(),
 )
 
 private fun WorkDayEntity.toRemote(userId: String) = RemoteWorkDay(
@@ -421,16 +430,16 @@ private fun WorkDayEntity.toRemote(userId: String) = RemoteWorkDay(
     dateIso = dateIso,
     startTime = startTime,
     endTime = endTime,
-    dayType = dayType,
-    notes = notes,
+    dayType = dayType.ifBlank { "NORMAL" },
+    notes = notes.orEmpty(),
 )
 
 private fun RemoteWorkDay.toEntity() = WorkDayEntity(
     dateIso = dateIso,
     startTime = startTime,
     endTime = endTime,
-    dayType = dayType,
-    notes = notes,
+    dayType = dayType.ifBlank { "NORMAL" },
+    notes = notes.orEmpty(),
 )
 
 private fun ManualHolidayEntity.toRemote(userId: String) = RemoteManualHoliday(
@@ -450,20 +459,20 @@ private fun ManualDeductionEntity.toRemote(userId: String): RemoteManualDeductio
         id = cloudId,
         userId = userId,
         yearMonth = yearMonth,
-        effectiveDateIso = effectiveDateIso,
+        effectiveDateIso = effectiveDateIso.ifBlank { null },
         label = label,
         amount = amount,
-        entryType = entryType,
+        entryType = entryType.ifBlank { "DEDUCTION" },
     )
 }
 
 private fun RemoteManualDeduction.toEntity() = ManualDeductionEntity(
     cloudId = id,
     yearMonth = yearMonth,
-    effectiveDateIso = effectiveDateIso ?: "${yearMonth}-01",
+    effectiveDateIso = effectiveDateIso?.takeIf { it.isNotBlank() } ?: "${yearMonth}-01",
     label = label,
     amount = amount,
-    entryType = entryType,
+    entryType = entryType.ifBlank { "DEDUCTION" },
 )
 
 private fun ExpenseEntity.toRemote(userId: String): RemoteExpenseEntry {
@@ -475,7 +484,7 @@ private fun ExpenseEntity.toRemote(userId: String): RemoteExpenseEntry {
         dateIso = dateIso,
         label = label,
         amount = amount,
-        category = category,
+        category = category.normalizeExpenseCategory(),
         isFixed = isFixed,
     )
 }
@@ -486,9 +495,14 @@ private fun RemoteExpenseEntry.toEntity() = ExpenseEntity(
     dateIso = dateIso,
     label = label,
     amount = amount,
-    category = category,
+    category = category.normalizeExpenseCategory(),
     isFixed = isFixed,
 )
+
+private fun String?.normalizeExpenseCategory(): String {
+    val value = this?.trim().orEmpty()
+    return if (value.isBlank()) "OTHER" else value
+}
 
 private fun AppPreferences.toRemote(userId: String) = RemoteAppPreferences(
     userId = userId,

@@ -353,7 +353,7 @@ private fun ExpenseEntity.toDomain() = ExpenseEntry(
     date = LocalDate.parse(dateIso, DateTimeFormatter.ISO_LOCAL_DATE),
     label = label,
     amount = amount,
-    category = ExpenseCategory.fromStored(category),
+    category = ExpenseCategory.fromStored(category.takeIf { it.isNotBlank() }),
     isFixed = isFixed,
 )
 

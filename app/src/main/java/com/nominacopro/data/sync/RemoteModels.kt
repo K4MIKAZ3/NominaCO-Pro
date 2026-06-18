@@ -22,7 +22,7 @@ data class RemoteWorkDay(
     @SerialName("date_iso") val dateIso: String,
     @SerialName("start_time") val startTime: String,
     @SerialName("end_time") val endTime: String,
-    @SerialName("day_type") val dayType: String,
+    @SerialName("day_type") val dayType: String = "NORMAL",
     val notes: String = "",
 )
 
@@ -52,7 +52,7 @@ data class RemoteExpenseEntry(
     @SerialName("date_iso") val dateIso: String,
     val label: String,
     val amount: Long,
-    val category: String = "OTHER",
+    val category: String? = null,
     @SerialName("is_fixed") val isFixed: Boolean = false,
 )
 

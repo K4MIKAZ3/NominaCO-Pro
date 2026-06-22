@@ -10,12 +10,12 @@ export function Footer() {
           © {site.year} {site.name} · {site.country}
         </p>
         <div className="footer-links">
-          <Link href="/guia">Guía de nómina</Link>
-          <Link href="/#funciones">Funciones</Link>
+          <Link href="/#proyectos">Proyectos</Link>
+          <Link href="/#servicios">Servicios</Link>
           <Link href="/#preguntas">Preguntas frecuentes</Link>
-          <Link href="/terminos">Términos y privacidad</Link>
-          <Link href="/login">Iniciar sesión</Link>
-          <ContactDialog />
+          <Link href="/terminos">Términos</Link>
+          <a href={`mailto:${site.contactEmail}`}>{site.contactEmail}</a>
+          <ContactDialog triggerLabel="Cotizar proyecto" />
         </div>
       </div>
     </footer>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ApkDownloadButton } from "@/components/ApkDownloadButton";
+import { ContactDialog } from "@/components/ContactDialog";
 import { site } from "@/lib/site";
 
 export function Header() {
@@ -9,7 +9,7 @@ export function Header() {
       <div className="container site-header-inner">
         <Link href="/" className="logo">
           <Image
-            src="/icon.png"
+            src="/icon.svg"
             alt={`${site.name} logo`}
             width={36}
             height={36}
@@ -21,25 +21,20 @@ export function Header() {
           <span className="logo-text">{site.name}</span>
         </Link>
         <nav className="nav">
-          <Link href="/guia" className="hide-mobile">
-            Guía
+          <Link href="/#proyectos" className="hide-mobile">
+            Proyectos
           </Link>
-          <Link href="/#funciones" className="hide-mobile">
-            Funciones
+          <Link href="/#servicios" className="hide-mobile">
+            Servicios
           </Link>
           <Link href="/#preguntas" className="hide-mobile">
             FAQ
           </Link>
-          <Link href={site.auth.homePath} className="nav-account">
-            Cuenta
-          </Link>
-          <Link href="/terminos" className="hide-mobile">
-            Términos
-          </Link>
-          <ApkDownloadButton className="btn btn-primary nav-apk-btn">
-            <span className="hide-narrow">Descargar APK</span>
-            <span className="show-narrow">APK</span>
-          </ApkDownloadButton>
+          <ContactDialog
+            triggerLabel="Cotizar"
+            triggerClassName="btn btn-primary nav-quote-btn"
+            defaultSubject="Cotización de proyecto IA"
+          />
         </nav>
       </div>
     </header>

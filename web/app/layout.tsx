@@ -13,7 +13,7 @@ const googleSiteVerification =
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} — Nómina personal Colombia 2026`,
+    default: `${site.name} — Proyectos de IA y automatización`,
     template: `%s · ${site.name}`,
   },
   description: site.description,
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
   publisher: site.name,
-  category: "finance",
+  category: "technology",
   alternates: {
     canonical: site.url,
   },
@@ -37,13 +37,17 @@ export const metadata: Metadata = {
     siteName: site.name,
     locale: "es_CO",
     type: "website",
-    images: [{ url: "/icon.png", width: 1024, height: 1024, alt: site.name }],
+    images: [{ url: "/images/vibe-og.svg", width: 1200, height: 630, alt: site.name }],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name} — Nómina personal Colombia`,
+    title: `${site.name} — Desarrollo con IA`,
     description: site.description,
-    images: ["/icon.png"],
+    images: ["/images/vibe-og.svg"],
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
   },
   verification: {
     google: googleSiteVerification,

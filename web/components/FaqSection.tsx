@@ -7,8 +7,7 @@ export function FaqSection() {
         <div className="section-title">
           <h2>Preguntas frecuentes</h2>
           <p>
-            Respuestas claras sobre cómo usar Nominapp y qué esperar de la
-            liquidación estimada.
+            Respuestas rápidas antes de cotizar tu próximo proyecto de IA.
           </p>
         </div>
         <div className="faq-list">

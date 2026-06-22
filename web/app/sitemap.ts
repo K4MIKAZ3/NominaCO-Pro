@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { getAllSlugs } from "@/lib/blog/articles";
 import { absoluteUrl, site } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -12,19 +11,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: path === "/" ? 1 : 0.5,
   }));
 
-  const guiaIndex = {
-    url: absoluteUrl("/guia"),
-    lastModified,
-    changeFrequency: "weekly" as const,
-    priority: 0.9,
-  };
-
-  const articles = getAllSlugs().map((slug) => ({
-    url: absoluteUrl(`/guia/${slug}`),
-    lastModified,
-    changeFrequency: "monthly" as const,
-    priority: 0.8,
-  }));
-
-  return [...staticPages, guiaIndex, ...articles];
+  return staticPages;
 }

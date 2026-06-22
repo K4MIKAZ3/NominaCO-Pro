@@ -1,109 +1,111 @@
 export const site = {
-  name: "Nominapp",
-  tagline: "Liquidación de nómina personal en Colombia",
+  name: "Vibe Coding Company",
+  tagline: "A new wAI to development",
   description:
-    "App Android gratuita para registrar jornadas, calcular devengados y descuentos según la normativa laboral colombiana 2026. Uso personal.",
-  url: "https://www.nominapp.xyz",
+    "Creamos proyectos de inteligencia artificial, automatizaciones, agentes y experiencias digitales para empresas que quieren construir más rápido.",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://vibe-coding-company.vercel.app",
   country: "Colombia",
   year: 2026,
-  contactEmail: "contacto@nominapp.xyz",
+  contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@vibecoding.company",
   auth: {
     loginPath: "/login",
     homePath: "/inicio",
     resetPasswordPath: "/restablecer-contrasena",
   },
   /** Rutas públicas que deben indexarse */
-  indexedPaths: ["/", "/terminos", "/guia"] as const,
-  /** Último APK publicado por CI en GitHub Releases (main) */
+  indexedPaths: ["/", "/terminos"] as const,
   apkDownloadUrl:
     process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL ??
     "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/latest/download/Nominapp.apk",
   featuresList: [
-    "Calendario de jornadas laborales",
-    "Liquidación mensual con devengados y descuentos",
-    "Períodos quincenales, semanales y mensuales",
-    "Control de gastos personales",
-    "Estimación de prestaciones sociales",
-    "Respaldo opcional en la nube",
-    "Exportación a PDF",
+    "Agentes de IA a medida",
+    "Chatbots para ventas y soporte",
+    "Automatización de procesos",
+    "Dashboards inteligentes",
+    "Integraciones con APIs y CRMs",
+    "Landing pages y MVPs con IA",
   ],
 } as const;
 
 export const heroStats = [
-  { value: "Gratis", label: "Sin suscripción" },
-  { value: "Android 8+", label: "Instalación directa" },
-  { value: "2026", label: "Parámetros legales CO" },
+  { value: "IA", label: "Aplicada a problemas reales" },
+  { value: "MVP", label: "De idea a producto usable" },
+  { value: "24/7", label: "Automatizaciones siempre activas" },
 ] as const;
 
-export const howItWorks = [
+export const processSteps = [
   {
     step: "1",
-    title: "Descarga la APK",
+    title: "Entendemos tu operación",
     description:
-      "Instala Nominapp desde el enlace oficial. No necesitas Play Store.",
+      "Revisamos tu idea, dolores del negocio, datos disponibles y flujo actual para detectar oportunidades reales con IA.",
   },
   {
     step: "2",
-    title: "Configura tu perfil",
+    title: "Diseñamos el prototipo",
     description:
-      "Indica salario, jornada, tipo de contrato y período de cobro (quincenal, mensual, etc.).",
+      "Definimos el alcance, arquitectura, experiencia de usuario e integraciones necesarias antes de construir.",
   },
   {
     step: "3",
-    title: "Registra y consulta",
+    title: "Construimos y desplegamos",
     description:
-      "Marca tus días trabajados, revisa la liquidación estimada y exporta PDF si lo necesitas.",
+      "Entregamos una solución responsiva, medible y lista para Vercel, con iteraciones rápidas y soporte para evolucionarla.",
   },
 ] as const;
 
-export const audiencePoints = [
+export const projectHighlights = [
   {
-    title: "Empleados con nómina quincenal o mensual",
+    title: "Agentes IA para atención y ventas",
     description:
-      "Lleva el control de lo devengado, descuentos de salud y pensión, y tu neto estimado mes a mes.",
+      "Asistentes que califican leads, responden preguntas frecuentes, capturan datos y escalan casos complejos a tu equipo.",
+    tag: "Conversacional",
   },
   {
-    title: "Trabajadores con horarios variables",
+    title: "Automatización de procesos internos",
     description:
-      "Registra entrada, salida, dominical, festivo y recargos nocturnos desde el calendario.",
+      "Flujos que conectan formularios, correos, hojas de cálculo, CRMs y APIs para reducir tareas repetitivas.",
+    tag: "Operaciones",
   },
   {
-    title: "Quienes quieren ordenar sus finanzas",
+    title: "Dashboards y análisis con IA",
     description:
-      "Combina tu nómina con gastos fijos y variables para ver cuánto te queda realmente.",
+      "Paneles que resumen información clave, detectan patrones y ayudan a decidir con datos claros.",
+    tag: "Data",
+  },
+  {
+    title: "MVPs y landing pages inteligentes",
+    description:
+      "Sitios, prototipos y productos web con formularios, pagos, bases de datos, contenido dinámico e IA integrada.",
+    tag: "Producto",
   },
 ] as const;
 
 export const faqItems = [
   {
-    question: "¿Nominapp reemplaza la nómina oficial de mi empleador?",
+    question: "¿Qué tipo de proyectos de IA pueden cotizar?",
     answer:
-      "No. Nominapp es una herramienta personal de estimación. Los valores son orientativos según la información que tú registras y la normativa configurada. Para decisiones legales o contables consulta a un profesional o a tu área de nómina.",
+      "Podemos cotizar chatbots, agentes internos, automatizaciones, paneles de datos, landing pages, MVPs y herramientas web conectadas a APIs, CRMs o bases de datos.",
   },
   {
-    question: "¿Sirve para calcular mi liquidación en Colombia?",
+    question: "¿Necesito tener todo definido antes de contactarlos?",
     answer:
-      "Sí, está pensada para trabajadores en Colombia. Incorpora referencias como SMMLV, auxilio de transporte, recargos, salud, pensión y prestaciones estimadas según jornadas registradas, con parámetros actualizados a 2026.",
+      "No. Puedes escribir con una idea inicial, un problema operativo o un proceso manual que quieras mejorar. Te ayudamos a convertirlo en un alcance claro.",
   },
   {
-    question: "¿Necesito crear una cuenta para usar la app?",
+    question: "¿La web queda lista para desplegarse en Vercel?",
     answer:
-      "No. Puedes usar Nominapp en modo local sin registrarte. La cuenta con correo y contraseña es opcional y sirve para respaldar y sincronizar tus datos entre dispositivos.",
+      "Sí. Diseñamos y construimos con tecnologías compatibles con Vercel para que el despliegue sea rápido, seguro y escalable.",
   },
   {
-    question: "¿Por qué se descarga como APK y no desde Play Store?",
+    question: "¿También trabajan sobre proyectos existentes?",
     answer:
-      "Por ahora la distribución es directa (sideload) desde este sitio oficial. Descarga solo desde nominapp.xyz para evitar archivos alterados. La app está firmada y puede actualizarse desde Ajustes.",
+      "Sí. Podemos revisar una web, app o flujo existente, identificar puntos de automatización e integrar IA sin rehacer todo desde cero.",
   },
   {
-    question: "¿Mis datos están seguros en la nube?",
+    question: "¿Cómo empieza una cotización?",
     answer:
-      "Si activas la cuenta, tus datos se almacenan en Supabase con aislamiento por usuario (RLS). Puedes usar la app sin subir nada a la nube. Consulta los términos y privacidad para más detalle.",
-  },
-  {
-    question: "¿Puedo exportar mi liquidación?",
-    answer:
-      "Sí. Desde la app puedes generar PDFs de la liquidación mensual y del reporte de días laborados para tu archivo personal.",
+      "Envíanos tu objetivo, referencias, presupuesto aproximado si lo tienes y datos de contacto. Respondemos con preguntas clave y una propuesta de alcance.",
   },
 ] as const;
 
@@ -115,54 +117,32 @@ export function resetPasswordRedirectUrl(): string {
   return absoluteUrl(site.auth.resetPasswordPath);
 }
 
-export const features = [
+export const services = [
   {
-    title: "Calendario de jornadas",
+    title: "Consultoría y estrategia IA",
     description:
-      "Marca días trabajados, domingos y festivos. Registra entrada, salida y notas por jornada.",
-    image: "/images/feature-calendar.webp",
+      "Priorizamos casos de uso, elegimos herramientas y trazamos una ruta técnica que tenga impacto medible.",
   },
   {
-    title: "Liquidación mensual",
+    title: "Desarrollo web con IA",
     description:
-      "Devengados, recargos nocturnos, dominical y festivos, salud, pensión y neto a pagar.",
-    image: "/images/feature-payroll.webp",
+      "Creamos interfaces modernas, responsivas y optimizadas con modelos de lenguaje, formularios y automatizaciones.",
   },
   {
-    title: "Períodos de cobro",
+    title: "Integraciones y automatización",
     description:
-      "Semanal, quincenal, ventana de 21 días o mensual. Avances, bonos y saldo pendiente.",
-    image: "/images/feature-periods.webp",
+      "Conectamos servicios como WhatsApp, correo, Google Sheets, Supabase, CRMs, pagos y APIs de terceros.",
   },
   {
-    title: "Control de gastos",
+    title: "Optimización y despliegue",
     description:
-      "Registra egresos personales, marca gastos fijos cada mes (arriendo, alimentación…) y compara neto vs gastos.",
-    image: "/images/feature-expenses.webp",
-  },
-  {
-    title: "Prestaciones estimadas",
-    description:
-      "Prima, cesantías e indicadores de liquidación según jornadas registradas (base CST).",
-    image: "/images/feature-benefits.webp",
-  },
-  {
-    title: "Respaldo en la nube",
-    description:
-      "Cuenta con correo y contraseña. Sincroniza perfil, jornadas, egresos de nómina y gastos personales.",
-    image: "/images/feature-cloud.webp",
-  },
-  {
-    title: "Exportar PDF",
-    description:
-      "Genera comprobantes de nómina y reporte de días laborados para tu archivo personal.",
-    image: "/images/feature-pdf.webp",
+      "Preparamos builds para Vercel, mejoramos performance y dejamos bases sólidas para crecer.",
   },
 ] as const;
 
-export const legalHighlights = [
-  "SMMLV, auxilio de transporte y topes 2026",
-  "Recargo nocturno Ley 2466/2025",
-  "Dominical y festivo remunerado",
-  "Salud 4% · Pensión 4%",
+export const techHighlights = [
+  "Next.js + Vercel",
+  "Agentes y chatbots IA",
+  "Automatizaciones con APIs",
+  "UX responsiva y moderna",
 ] as const;

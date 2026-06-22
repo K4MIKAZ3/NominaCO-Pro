@@ -58,7 +58,7 @@ function buildArticleJsonLd(slug: string) {
       name: site.name,
       logo: {
         "@type": "ImageObject",
-        url: absoluteUrl("/icon.png"),
+        url: absoluteUrl("/icon.svg"),
       },
     },
     mainEntityOfPage: absoluteUrl(`/guia/${article.slug}`),

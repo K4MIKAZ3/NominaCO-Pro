@@ -2,22 +2,21 @@ import type { Metadata } from "next";
 import { absoluteUrl, faqItems, site } from "@/lib/site";
 
 export const seoKeywords = [
-  "nómina personal Colombia",
-  "calcular liquidación nómina",
-  "app nómina Android Colombia",
-  "liquidación quincenal",
-  "devengados y descuentos",
-  "recargo nocturno Colombia",
-  "auxilio de transporte 2026",
-  "control de gastos personales",
-  "prestaciones sociales estimadas",
-  "calendario jornadas laborales",
+  "vibe coding",
+  "proyectos de inteligencia artificial",
+  "desarrollo con IA",
+  "agentes de IA",
+  "chatbots para empresas",
+  "automatización de procesos",
+  "landing pages con IA",
+  "MVP con inteligencia artificial",
+  "desarrollo web en Vercel",
+  "consultoría IA Colombia",
 ] as const;
 
 export const homeMetadata: Metadata = {
-  title: "Calculadora de nómina personal Colombia 2026",
-  description:
-    "Descarga Nominapp gratis para Android. Registra jornadas, calcula devengados, descuentos legales, prestaciones y gastos personales según la normativa laboral colombiana.",
+  title: "Proyectos de IA, automatización y desarrollo web",
+  description: site.description,
   keywords: [...seoKeywords],
   alternates: {
     canonical: site.url,
@@ -41,18 +40,18 @@ export const homeMetadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/hero-phone.webp",
-        width: 480,
-        height: 480,
-        alt: "Liquidación de nómina personal en Nominapp",
+        url: "/images/vibe-og.svg",
+        width: 1200,
+        height: 630,
+        alt: `${site.name} — proyectos de IA`,
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name} — Nómina personal Colombia`,
+    title: `${site.name} — Desarrollo con IA`,
     description: site.description,
-    images: ["/images/hero-phone.webp"],
+    images: ["/images/vibe-og.svg"],
   },
 };
 
@@ -68,7 +67,7 @@ export function buildOrganizationJsonLd() {
     "@type": "Organization",
     name: site.name,
     url: site.url,
-    logo: absoluteUrl("/icon.png"),
+    logo: absoluteUrl("/icon.svg"),
     email: site.contactEmail,
     areaServed: {
       "@type": "Country",
@@ -88,26 +87,16 @@ export function buildWebSiteJsonLd() {
   };
 }
 
-export function buildSoftwareApplicationJsonLd() {
+export function buildProfessionalServiceJsonLd() {
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": "ProfessionalService",
     name: site.name,
-    applicationCategory: "FinanceApplication",
-    operatingSystem: "Android 8.0+",
     description: site.description,
     url: site.url,
-    downloadUrl: site.apkDownloadUrl,
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "COP",
-    },
-    featureList: site.featuresList,
-    author: {
-      "@type": "Organization",
-      name: site.name,
-    },
+    areaServed: site.country,
+    serviceType: site.featuresList,
+    slogan: site.tagline,
   };
 }
 
@@ -130,7 +119,7 @@ export function buildHomeJsonLd() {
   return [
     buildOrganizationJsonLd(),
     buildWebSiteJsonLd(),
-    buildSoftwareApplicationJsonLd(),
+    buildProfessionalServiceJsonLd(),
     buildFaqJsonLd(),
   ];
 }

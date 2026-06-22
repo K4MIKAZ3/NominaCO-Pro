@@ -5,11 +5,21 @@ import { site } from "@/lib/site";
 
 type FormStatus = "idle" | "sending" | "success" | "error";
 
-export function ContactDialog() {
+interface ContactDialogProps {
+  triggerLabel?: string;
+  triggerClassName?: string;
+  defaultSubject?: string;
+}
+
+export function ContactDialog({
+  triggerLabel = "Contacto",
+  triggerClassName = "footer-contact-trigger",
+  defaultSubject = "",
+}: ContactDialogProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] = useState(defaultSubject);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<FormStatus>("idle");
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -30,7 +40,7 @@ export function ContactDialog() {
   function resetForm() {
     setName("");
     setEmail("");
-    setSubject("");
+    setSubject(defaultSubject);
     setMessage("");
     setStatus("idle");
     setErrorText(null);
@@ -68,8 +78,8 @@ export function ContactDialog() {
 
   return (
     <>
-      <button type="button" className="footer-contact-trigger" onClick={() => setOpen(true)}>
-        Contacto
+      <button type="button" className={triggerClassName} onClick={() => setOpen(true)}>
+        {triggerLabel}
       </button>
 
       {open && (
@@ -99,8 +109,8 @@ export function ContactDialog() {
               <div className="contact-success">
                 <h2 id="contact-dialog-title">Mensaje enviado</h2>
                 <p className="subtitle">
-                  Gracias por escribirnos. Revisaré tu solicitud y te responderé al correo que
-                  indicaste.
+                  Gracias por escribirnos. Revisaremos tu solicitud y te responderemos al correo
+                  que indicaste.
                 </p>
                 <button type="button" className="btn btn-primary" onClick={closeDialog}>
                   Cerrar
@@ -108,9 +118,9 @@ export function ContactDialog() {
               </div>
             ) : (
               <>
-                <h2 id="contact-dialog-title">Contacto</h2>
+                <h2 id="contact-dialog-title">Cotiza tu proyecto</h2>
                 <p className="subtitle">
-                  Cuéntanos tu consulta sobre {site.name}. Te responderemos a tu correo.
+                  Cuéntanos qué quieres construir con {site.name}. Te responderemos a tu correo.
                 </p>
 
                 <form onSubmit={handleSubmit}>
@@ -169,7 +179,7 @@ export function ContactDialog() {
                       rows={5}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Escribe aquí tu pregunta, sugerencia o problema…"
+                      placeholder="Ej: quiero un chatbot para ventas, automatizar reportes o crear una landing con IA..."
                     />
                   </div>
 

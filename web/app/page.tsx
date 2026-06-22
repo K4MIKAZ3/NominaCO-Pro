@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ApkDownloadButton } from "@/components/ApkDownloadButton";
+import { ContactDialog } from "@/components/ContactDialog";
 import { FaqSection } from "@/components/FaqSection";
 import { JsonLd } from "@/components/JsonLd";
 import {
-  audiencePoints,
-  features,
   heroStats,
-  howItWorks,
-  legalHighlights,
+  processSteps,
+  projectHighlights,
+  services,
   site,
+  techHighlights,
 } from "@/lib/site";
 import { buildHomeJsonLd, homeMetadata } from "@/lib/seo";
 
@@ -23,19 +23,24 @@ export default function HomePage() {
       <main>
         <section className="hero">
           <div className="container hero-grid">
-            <div>
-              <span className="hero-badge">Colombia · Normativa 2026</span>
-              <h1>Tu nómina personal, clara y al día</h1>
+            <div className="hero-copy">
+              <span className="hero-badge">Vibe Coding · AI products studio</span>
+              <h1>
+                Creamos proyectos de IA que convierten ideas en productos reales.
+              </h1>
               <p className="hero-lead">
-                {site.name} es la app Android para registrar jornadas, calcular
-                devengados y descuentos legales, estimar prestaciones, controlar
-                gastos y exportar PDFs. Gratis y pensada para trabajadores en
-                Colombia.
+                {site.name} diseña y desarrolla agentes, automatizaciones,
+                dashboards y webs inteligentes para que tu negocio venda,
+                responda y opere mejor.
               </p>
               <div className="hero-actions">
-                <ApkDownloadButton>Descargar APK para Android</ApkDownloadButton>
-                <Link href="/login" className="btn btn-ghost">
-                  Acceder a mi cuenta
+                <ContactDialog
+                  triggerLabel="Cotizar mi proyecto"
+                  triggerClassName="btn btn-primary"
+                  defaultSubject="Cotización de proyecto IA"
+                />
+                <Link href="/#proyectos" className="btn btn-ghost">
+                  Ver proyectos
                 </Link>
               </div>
               <ul className="hero-stats" aria-label="Ventajas principales">
@@ -46,31 +51,37 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-              <p className="hero-note">
-                Uso personal · No sustituye asesoría contable ni legal oficial ·
-                Descarga solo desde {site.url}
-              </p>
             </div>
-            <div className="hero-image-wrap">
-              <Image
-                src="/images/hero-phone.webp"
-                alt="App Nominapp mostrando liquidación de nómina personal en Colombia"
-                width={480}
-                height={480}
-                sizes="(max-width: 768px) min(100vw, 360px), 480px"
-                className="hero-image"
-                priority
-                unoptimized
-              />
+
+            <div className="hero-visual" aria-label="Identidad visual de Vibe Coding Company">
+              <div className="hero-logo-card">
+                <Image
+                  src="/icon.svg"
+                  alt={`${site.name} logo`}
+                  width={420}
+                  height={420}
+                  sizes="(max-width: 768px) 82vw, 420px"
+                  priority
+                  unoptimized
+                />
+              </div>
+              <div className="floating-card floating-card-top">
+                <span>AI Agent</span>
+                <strong>Lead scoring</strong>
+              </div>
+              <div className="floating-card floating-card-bottom">
+                <span>Automation</span>
+                <strong>Reportes 24/7</strong>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="legal-strip section">
+        <section className="tech-strip section">
           <div className="container">
-            <div className="legal-pills">
-              {legalHighlights.map((item) => (
-                <span key={item} className="legal-pill">
+            <div className="tech-pills">
+              {techHighlights.map((item) => (
+                <span key={item} className="tech-pill">
                   {item}
                 </span>
               ))}
@@ -78,17 +89,61 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="section" id="como-funciona">
+        <section className="section" id="proyectos">
           <div className="container">
             <div className="section-title">
-              <h2>Cómo funciona</h2>
+              <span className="eyebrow">Qué construimos</span>
+              <h2>Proyectos de IA para lanzar, vender y automatizar</h2>
               <p>
-                En tres pasos pasas de la descarga a tener tu liquidación
-                estimada bajo control.
+                Presenta tus soluciones o cuéntanos qué necesitas: convertimos
+                oportunidades de IA en productos claros y usables.
+              </p>
+            </div>
+            <div className="projects-grid">
+              {projectHighlights.map((project) => (
+                <article key={project.title} className="project-card">
+                  <span className="project-tag">{project.tag}</span>
+                  <h3>{project.title}</h3>
+                  <p>{project.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section section-muted" id="servicios">
+          <div className="container">
+            <div className="section-title">
+              <span className="eyebrow">Servicios</span>
+              <h2>Desde la idea hasta el despliegue en Vercel</h2>
+              <p>
+                Creamos soluciones modernas con foco en experiencia, velocidad
+                y valor de negocio.
+              </p>
+            </div>
+            <div className="services-grid">
+              {services.map((item) => (
+                <article key={item.title} className="service-card">
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="proceso">
+          <div className="container">
+            <div className="section-title">
+              <span className="eyebrow">Proceso</span>
+              <h2>Una forma simple de crear sin perder el foco</h2>
+              <p>
+                Trabajamos con entregables concretos para que puedas validar,
+                medir y seguir iterando.
               </p>
             </div>
             <ol className="steps-grid">
-              {howItWorks.map((step) => (
+              {processSteps.map((step) => (
                 <li key={step.step} className="step-card">
                   <span className="step-number">{step.step}</span>
                   <h3>{step.title}</h3>
@@ -99,89 +154,44 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="section section-muted" id="para-quien">
-          <div className="container">
-            <div className="section-title">
-              <h2>¿Para quién es Nominapp?</h2>
-              <p>
-                Si buscas una calculadora de nómina personal en Colombia, esta
-                app está hecha para ti.
-              </p>
-            </div>
-            <div className="audience-grid">
-              {audiencePoints.map((item) => (
-                <article key={item.title} className="audience-card">
-                  <h3>{item.title}</h3>
-                  <p>{item.description}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="section" id="funciones">
-          <div className="container">
-            <div className="section-title">
-              <h2>Todo lo que necesitas en una sola app</h2>
-              <p>
-                Diseñada para trabajadores que quieren llevar el control de su
-                liquidación sin depender de hojas de cálculo.
-              </p>
-            </div>
-            <div className="features-grid">
-              {features.map((feature) => (
-                <article key={feature.title} className="feature-card">
-                  {"image" in feature && feature.image && (
-                    <Image
-                      src={feature.image}
-                      alt={feature.title}
-                      width={400}
-                      height={300}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1100px) 50vw, 360px"
-                      loading="lazy"
-                      unoptimized
-                    />
-                  )}
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <FaqSection />
 
-        <section className="section section-muted" id="guia">
+        <section className="section section-muted" id="contacto">
           <div className="container">
-            <div className="section-title">
-              <h2>Guía de nómina en Colombia</h2>
-              <p>
-                Aprende a calcular tu liquidación, recargos y prestaciones con
-                artículos claros y actualizados.
-              </p>
-            </div>
-            <div className="hero-actions cta-actions">
-              <Link href="/guia" className="btn btn-primary">
-                Ver todos los artículos
-              </Link>
+            <div className="contact-panel">
+              <div>
+                <span className="eyebrow">Hablemos</span>
+                <h2>¿Tienes una idea o un proceso que quieres automatizar?</h2>
+                <p>
+                  Cuéntanos el objetivo, el flujo actual y lo que esperas lograr.
+                  Te ayudamos a definir una solución de IA viable para tu negocio.
+                </p>
+              </div>
+              <ContactDialog
+                triggerLabel="Solicitar cotización"
+                triggerClassName="btn btn-primary"
+                defaultSubject="Solicitud de cotización"
+              />
             </div>
           </div>
         </section>
 
         <section className="cta-band">
           <div className="container">
-            <h2>Empieza hoy mismo</h2>
+            <h2>{site.tagline}</h2>
             <p>
-              Descarga la app, configura tu perfil laboral y registra tu primera
-              jornada en minutos. También puedes crear cuenta para respaldo en la
-              nube.
+              Dale una nueva forma a tu desarrollo: más rápida, automatizada y
+              preparada para crecer en la nube.
             </p>
             <div className="hero-actions cta-actions">
-              <ApkDownloadButton>Descargar Nominapp</ApkDownloadButton>
-              <Link href="/#preguntas" className="btn btn-ghost">
-                Ver preguntas frecuentes
-              </Link>
+              <ContactDialog
+                triggerLabel="Cotizar ahora"
+                triggerClassName="btn btn-primary"
+                defaultSubject="Cotización de proyecto IA"
+              />
+              <a href={`mailto:${site.contactEmail}`} className="btn btn-ghost">
+                Escribir por correo
+              </a>
             </div>
           </div>
         </section>

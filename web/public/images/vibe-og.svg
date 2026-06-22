@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Vibe Coding Company</title>
+  <desc id="desc">Imagen de vista previa con marca Vibe Coding Company y tema neon.</desc>
+  <defs>
+    <linearGradient id="brand-gradient" x1="164" y1="104" x2="1018" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1687ff"/>
+      <stop offset="0.48" stop-color="#7d3cff"/>
+      <stop offset="1" stop-color="#df28ff"/>
+    </linearGradient>
+    <radialGradient id="bg-blue" cx="18%" cy="20%" r="50%">
+      <stop offset="0" stop-color="#1687ff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#02030a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bg-purple" cx="82%" cy="32%" r="55%">
+      <stop offset="0" stop-color="#df28ff" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#02030a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.48 0 0 0 0 0.22 0 0 0 0 1 0 0 0 0.9 0" result="glow-color"/>
+      <feMerge>
+        <feMergeNode in="glow-color"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="#02030a"/>
+  <rect width="1200" height="630" fill="url(#bg-blue)"/>
+  <rect width="1200" height="630" fill="url(#bg-purple)"/>
+  <rect x="58" y="58" width="1084" height="514" rx="46" fill="#080d1d" fill-opacity="0.76" stroke="#ffffff" stroke-opacity="0.12"/>
+  <g transform="translate(122 118)" filter="url(#glow)" fill="none" stroke="url(#brand-gradient)" stroke-width="38" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M176 72 44 162l132 90"/>
+    <path d="M316 72 448 162 316 252"/>
+    <path d="M270 50 222 274"/>
+  </g>
+  <g transform="translate(122 118)" fill="url(#brand-gradient)">
+    <path d="M396 18c13 48 23 58 71 71-48 13-58 23-71 71-13-48-23-58-71-71 48-13 58-23 71-71z"/>
+    <path d="M484 92c7 26 13 32 39 39-26 7-32 13-39 39-7-26-13-32-39-39 26-7 32-13 39-39z"/>
+  </g>
+  <text x="122" y="430" font-family="Segoe UI, Arial, sans-serif" font-size="78" font-weight="800" letter-spacing="-2">
+    <tspan fill="url(#brand-gradient)">Vibe</tspan><tspan fill="#ffffff"> Coding</tspan>
+  </text>
+  <text x="126" y="492" font-family="Segoe UI, Arial, sans-serif" font-size="29" font-weight="400" letter-spacing="13" fill="#d8dbe8">COMPANY</text>
+  <text x="680" y="202" font-family="Segoe UI, Arial, sans-serif" font-size="47" font-weight="800" fill="#ffffff">Proyectos de IA</text>
+  <text x="680" y="266" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#a6b0c3">Automatizaciones, agentes, dashboards</text>
+  <text x="680" y="312" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="#a6b0c3">y webs listas para desplegar en Vercel.</text>
+  <rect x="680" y="380" width="330" height="64" rx="32" fill="url(#brand-gradient)"/>
+  <text x="845" y="422" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="800" fill="#ffffff">Cotiza tu proyecto</text>
+</svg>

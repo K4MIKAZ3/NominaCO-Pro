@@ -85,9 +85,9 @@ export async function POST(request: Request) {
 
   const to = process.env.CONTACT_TO_EMAIL ?? site.contactEmail;
   const from =
-    process.env.RESEND_FROM_EMAIL ?? `Nominapp <contacto@nominapp.xyz>`;
+    process.env.RESEND_FROM_EMAIL ?? `${site.name} <${site.contactEmail}>`;
   const emailSubject =
-    subject.length > 0 ? `[Nominapp] ${subject}` : `[Nominapp] Contacto de ${name}`;
+    subject.length > 0 ? `[${site.name}] ${subject}` : `[${site.name}] Contacto de ${name}`;
 
   const resend = new Resend(apiKey);
   const { error } = await resend.emails.send({
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     replyTo: email,
     subject: emailSubject,
     text: [
-      "Nuevo mensaje desde nominapp.xyz",
+      `Nuevo mensaje desde ${site.name}`,
       "",
       `Nombre: ${name}`,
       `Correo: ${email}`,

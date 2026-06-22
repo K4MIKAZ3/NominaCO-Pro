@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Vibe Coding Company</title>
+  <desc id="desc">Logo oscuro con simbolo de codigo en gradiente azul y morado.</desc>
+  <defs>
+    <linearGradient id="brand-gradient" x1="180" y1="240" x2="850" y2="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1687ff"/>
+      <stop offset="0.48" stop-color="#7d3cff"/>
+      <stop offset="1" stop-color="#df28ff"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="38%" r="58%">
+      <stop offset="0" stop-color="#7d3cff" stop-opacity="0.42"/>
+      <stop offset="0.55" stop-color="#1687ff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft-glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.48 0 0 0 0 0.22 0 0 0 0 1 0 0 0 0.9 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="132" fill="#02030a"/>
+  <circle cx="512" cy="360" r="390" fill="url(#halo)"/>
+  <g filter="url(#soft-glow)" fill="none" stroke="url(#brand-gradient)" stroke-width="54" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M410 286 222 416l188 130"/>
+    <path d="M614 286 802 416 614 546"/>
+    <path d="M548 254 476 586"/>
+  </g>
+  <g fill="url(#brand-gradient)">
+    <path d="M684 214c16 60 29 73 89 89-60 16-73 29-89 89-16-60-29-73-89-89 60-16 73-29 89-89z"/>
+    <path d="M788 312c8 30 15 37 45 45-30 8-37 15-45 45-8-30-15-37-45-45 30-8 37-15 45-45z"/>
+  </g>
+  <text x="512" y="708" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="92" font-weight="800" letter-spacing="-3">
+    <tspan fill="url(#brand-gradient)">Vibe</tspan><tspan fill="#ffffff"> Coding</tspan>
+  </text>
+  <text x="512" y="782" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="400" letter-spacing="18" fill="#d8dbe8">COMPANY</text>
+  <text x="512" y="864" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="400" fill="#f4f7ff">
+    A new <tspan fill="url(#brand-gradient)" font-weight="700">wAI</tspan> to development
+  </text>
+</svg>

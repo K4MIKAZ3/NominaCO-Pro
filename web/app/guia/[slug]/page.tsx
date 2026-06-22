@@ -1,80 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { ArticleBody } from "@/components/ArticleBody";
-import { JsonLd } from "@/components/JsonLd";
-import { getAllSlugs, getArticle } from "@/lib/blog/articles";
-import { absoluteUrl, site } from "@/lib/site";
+import { redirect } from "next/navigation";
 
-type PageProps = {
-  params: { slug: string };
+export const metadata: Metadata = {
+  title: "Vibe Coding Company",
+  robots: { index: false, follow: false },
 };
 
-export function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }));
-}
-
-export function generateMetadata({ params }: PageProps): Metadata {
-  const article = getArticle(params.slug);
-  if (!article) return {};
-
-  const url = absoluteUrl(`/guia/${article.slug}`);
-
-  return {
-    title: article.title,
-    description: article.description,
-    keywords: article.keywords,
-    alternates: { canonical: url },
-    openGraph: {
-      title: article.title,
-      description: article.description,
-      url,
-      type: "article",
-      publishedTime: article.publishedAt,
-      locale: "es_CO",
-      siteName: site.name,
-    },
-  };
-}
-
-function buildArticleJsonLd(slug: string) {
-  const article = getArticle(slug);
-  if (!article) return null;
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.title,
-    description: article.description,
-    datePublished: article.publishedAt,
-    dateModified: article.publishedAt,
-    inLanguage: "es-CO",
-    author: {
-      "@type": "Organization",
-      name: site.name,
-      url: site.url,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: site.name,
-      logo: {
-        "@type": "ImageObject",
-        url: absoluteUrl("/icon.svg"),
-      },
-    },
-    mainEntityOfPage: absoluteUrl(`/guia/${article.slug}`),
-  };
-}
-
-export default function GuiaArticlePage({ params }: PageProps) {
-  const article = getArticle(params.slug);
-  if (!article) notFound();
-
-  const jsonLd = buildArticleJsonLd(params.slug);
-
-  return (
-    <main className="page-main">
-      {jsonLd ? <JsonLd data={jsonLd} /> : null}
-      <ArticleBody article={article} />
-    </main>
-  );
+export default function GuiaArticlePage() {
+  redirect("/");
 }

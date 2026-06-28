@@ -431,16 +431,18 @@ export function PayrollPanel({
         <button
           type="button"
           className="btn btn-primary btn-sm"
-          onClick={() => exportPayrollPdf(profile, payroll, preferences.use24HourFormat)}
+          onClick={() => {
+            void exportPayrollPdf(profile, payroll, preferences.use24HourFormat);
+          }}
         >
           PDF nómina
         </button>
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          onClick={() =>
-            exportWorkDaysPdf(profile, payroll, periodWorkDays, preferences.use24HourFormat)
-          }
+          onClick={() => {
+            void exportWorkDaysPdf(profile, payroll, periodWorkDays, preferences.use24HourFormat);
+          }}
         >
           PDF días
         </button>

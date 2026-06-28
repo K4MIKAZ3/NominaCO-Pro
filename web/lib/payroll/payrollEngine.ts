@@ -18,6 +18,7 @@ import {
   type MonthSummary,
   type MonthlyPayroll,
   type PayrollLine,
+  type PeriodPayrollSummary,
   type WorkDayEntry,
 } from "./models";
 
@@ -250,6 +251,34 @@ export function applyManualEntries(
     legalDeductions,
     grossTotal: gross,
     netTotal: gross - salud - pension - deductionTotal,
+  };
+}
+
+export function buildPeriodSummary(
+  payroll: MonthlyPayroll,
+  periodLabel: string,
+  periodStart: LocalDate,
+  periodEnd: LocalDate,
+  manualEntries: ManualDeduction[],
+): PeriodPayrollSummary {
+  const deductions = manualEntries.filter((m) => m.entryType === "DEDUCTION");
+  const advances = manualEntries.filter((m) => m.entryType === "ADVANCE");
+  const bonuses = manualEntries.filter((m) => m.entryType === "BONUS");
+  const payrollWithEntries = applyManualEntries(payroll, [...deductions, ...bonuses]);
+  const advancesTotal = advances.reduce((s, a) => s + a.amount, 0);
+  return {
+    periodLabel,
+    periodStart,
+    periodEnd,
+    workedDays: payroll.workedDays,
+    dailyRate: payroll.dailyRate,
+    grossTotal: payrollWithEntries.grossTotal,
+    legalDeductions: payrollWithEntries.legalDeductions.reduce((s, d) => s + d.amount, 0),
+    manualDeductions: deductions.reduce((s, d) => s + d.amount, 0),
+    bonuses: bonuses.reduce((s, b) => s + b.amount, 0),
+    advances: advancesTotal,
+    netTotal: payrollWithEntries.netTotal,
+    pendingBalance: payrollWithEntries.netTotal - advancesTotal,
   };
 }
 

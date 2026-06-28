@@ -8,12 +8,18 @@ export const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
   OTHER: "Otros",
 };
 
+export const EXPENSE_CATEGORY_OPTIONS = Object.entries(EXPENSE_CATEGORY_LABELS).map(
+  ([value, label]) => ({ value, label }),
+);
+
 export interface ExpenseRow {
+  id: string;
   label: string;
   amount: number;
   category: string;
   is_fixed: boolean;
   year_month: string;
+  date_iso: string;
 }
 
 export interface ExpenseSummary {

@@ -1,5 +1,6 @@
+import type { ExpenseRow } from "@/lib/expenses";
 import { getSupabase } from "@/lib/supabase";
-import type { DayType, WorkDayEntry } from "@/lib/payroll/models";
+import type { AppPreferences, DayType, PayrollEntryType, WorkDayEntry } from "@/lib/payroll/models";
 
 export type ContractType = "INDEFINIDO" | "OBRA_LABOR" | "TERMINO_DEFINIDO";
 export type PayPeriodType = "MONTHLY" | "WEEKLY" | "BIWEEKLY" | "VENTEEN";
@@ -211,4 +212,301 @@ export async function deleteWorkDay(userId: string, dateIso: string): Promise<vo
 
 export function dayTypeLabel(dayType: DayType): string {
   return DAY_TYPE_OPTIONS.find((option) => option.value === dayType)?.label ?? dayType;
+}
+
+// --- Manual holidays ---
+
+export interface ManualHolidayRecord {
+  dateIso: string;
+  label: string;
+}
+
+export async function fetchManualHolidays(userId: string): Promise<ManualHolidayRecord[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("manual_holidays")
+    .select("*")
+    .eq("user_id", userId)
+    .order("date_iso", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { date_iso: string; label: string }[]).map((row) => ({
+    dateIso: row.date_iso,
+    label: row.label ?? "",
+  }));
+}
+
+export async function upsertManualHoliday(
+  userId: string,
+  dateIso: string,
+  label: string = "",
+): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  const { error } = await supabase.from("manual_holidays").upsert(
+    {
+      user_id: userId,
+      date_iso: dateIso,
+      label: label.trim(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,date_iso" },
+  );
+
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteManualHoliday(userId: string, dateIso: string): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  const { error } = await supabase
+    .from("manual_holidays")
+    .delete()
+    .eq("user_id", userId)
+    .eq("date_iso", dateIso);
+
+  if (error) throw new Error(error.message);
+}
+
+// --- App preferences ---
+
+export const defaultAppPreferences = (): AppPreferences => ({
+  defaultStartHour: 8,
+  defaultStartMinute: 0,
+  defaultEndHour: 16,
+  defaultEndMinute: 30,
+  use24HourFormat: true,
+  reminderEnabled: false,
+  reminderHour: 18,
+  reminderMinute: 0,
+});
+
+interface AppPreferencesRow {
+  default_start_hour: number;
+  default_start_minute: number;
+  default_end_hour: number;
+  default_end_minute: number;
+  use_24h_format: boolean;
+  reminder_enabled: boolean;
+  reminder_hour: number;
+  reminder_minute: number;
+}
+
+function mapAppPreferences(row: AppPreferencesRow): AppPreferences {
+  return {
+    defaultStartHour: row.default_start_hour,
+    defaultStartMinute: row.default_start_minute,
+    defaultEndHour: row.default_end_hour,
+    defaultEndMinute: row.default_end_minute,
+    use24HourFormat: row.use_24h_format,
+    reminderEnabled: row.reminder_enabled,
+    reminderHour: row.reminder_hour,
+    reminderMinute: row.reminder_minute,
+  };
+}
+
+function toAppPreferencesRow(userId: string, prefs: AppPreferences) {
+  return {
+    user_id: userId,
+    default_start_hour: prefs.defaultStartHour,
+    default_start_minute: prefs.defaultStartMinute,
+    default_end_hour: prefs.defaultEndHour,
+    default_end_minute: prefs.defaultEndMinute,
+    use_24h_format: prefs.use24HourFormat,
+    reminder_enabled: prefs.reminderEnabled,
+    reminder_hour: prefs.reminderHour,
+    reminder_minute: prefs.reminderMinute,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function fetchAppPreferences(userId: string): Promise<AppPreferences> {
+  const supabase = getSupabase();
+  if (!supabase) return defaultAppPreferences();
+
+  const { data, error } = await supabase
+    .from("app_preferences")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return defaultAppPreferences();
+  return mapAppPreferences(data as AppPreferencesRow);
+}
+
+export async function saveAppPreferences(userId: string, prefs: AppPreferences): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  const { error } = await supabase
+    .from("app_preferences")
+    .upsert(toAppPreferencesRow(userId, prefs), { onConflict: "user_id" });
+
+  if (error) throw new Error(error.message);
+}
+
+// --- Manual deductions ---
+
+export interface ManualDeductionRecord {
+  id: string;
+  yearMonth: string;
+  effectiveDate: string;
+  label: string;
+  amount: number;
+  entryType: PayrollEntryType;
+}
+
+interface ManualDeductionRow {
+  id: string;
+  year_month: string;
+  effective_date_iso: string | null;
+  label: string;
+  amount: number;
+  entry_type: string;
+}
+
+function mapManualDeductionRow(row: ManualDeductionRow): ManualDeductionRecord {
+  return {
+    id: row.id,
+    yearMonth: row.year_month,
+    effectiveDate: row.effective_date_iso ?? `${row.year_month}-01`,
+    label: row.label,
+    amount: row.amount,
+    entryType: parseEntryType(row.entry_type),
+  };
+}
+
+function parseEntryType(value: string): PayrollEntryType {
+  if (value === "ADVANCE" || value === "BONUS") return value;
+  return "DEDUCTION";
+}
+
+export async function fetchManualDeductionsForMonth(
+  userId: string,
+  yearMonth: string,
+): Promise<ManualDeductionRecord[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("manual_deductions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("year_month", yearMonth)
+    .order("updated_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as ManualDeductionRow[]).map(mapManualDeductionRow);
+}
+
+export async function addManualDeduction(
+  userId: string,
+  entry: Omit<ManualDeductionRecord, "id">,
+): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  if (!entry.label.trim()) throw new Error("Indica un concepto.");
+  if (entry.amount <= 0) throw new Error("Indica un valor válido.");
+
+  const { error } = await supabase.from("manual_deductions").insert({
+    user_id: userId,
+    year_month: entry.yearMonth,
+    effective_date_iso: entry.effectiveDate,
+    label: entry.label.trim(),
+    amount: Math.trunc(entry.amount),
+    entry_type: entry.entryType,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteManualDeduction(userId: string, id: string): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  const { error } = await supabase
+    .from("manual_deductions")
+    .delete()
+    .eq("user_id", userId)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+}
+
+// --- Expense entries ---
+
+export interface ExpenseEntryInput {
+  yearMonth: string;
+  dateIso: string;
+  label: string;
+  amount: number;
+  category: string;
+  isFixed: boolean;
+}
+
+export async function fetchExpenseEntriesForMonth(
+  userId: string,
+  yearMonth: string,
+): Promise<ExpenseRow[]> {
+  const supabase = getSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("expense_entries")
+    .select("*")
+    .eq("user_id", userId)
+    .or(`year_month.eq.${yearMonth},is_fixed.eq.true`)
+    .order("date_iso", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ExpenseRow[];
+}
+
+export async function addExpenseEntry(userId: string, entry: ExpenseEntryInput): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  if (!entry.label.trim()) throw new Error("Indica un concepto.");
+  if (entry.amount <= 0) throw new Error("Indica un valor válido.");
+
+  const { error } = await supabase.from("expense_entries").insert({
+    user_id: userId,
+    year_month: entry.yearMonth,
+    date_iso: entry.dateIso,
+    label: entry.label.trim(),
+    amount: Math.trunc(entry.amount),
+    category: entry.category || "OTHER",
+    is_fixed: entry.isFixed,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteExpenseEntry(userId: string, id: string): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  const { error } = await supabase
+    .from("expense_entries")
+    .delete()
+    .eq("user_id", userId)
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteOwnAccount(): Promise<void> {
+  const supabase = getSupabase();
+  if (!supabase) throw new Error("Supabase no configurado");
+
+  const { error } = await supabase.rpc("delete_own_account");
+  if (error) throw new Error(error.message);
 }

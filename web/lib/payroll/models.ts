@@ -49,12 +49,94 @@ export function addHourBreakdown(a: HourBreakdown, b: HourBreakdown): HourBreakd
   };
 }
 
+export type ContractType = "INDEFINIDO" | "OBRA_LABOR" | "TERMINO_DEFINIDO";
+export type PayPeriodType = "MONTHLY" | "WEEKLY" | "BIWEEKLY" | "VENTEEN";
+
 export interface EmployeeProfile {
   name: string;
   documentId: string;
   jobTitle: string;
   monthlySalary: number;
   dailyHours: number;
+  contractType: ContractType;
+  payPeriodType: PayPeriodType;
+  pendingVacationDays: number;
+}
+
+export interface CalendarMark {
+  worked: boolean;
+  officialHoliday: boolean;
+  manualHoliday: boolean;
+  sunday: boolean;
+}
+
+export interface PeriodPayrollSummary {
+  periodLabel: string;
+  periodStart: LocalDate;
+  periodEnd: LocalDate;
+  workedDays: number;
+  dailyRate: number;
+  grossTotal: number;
+  legalDeductions: number;
+  manualDeductions: number;
+  bonuses: number;
+  advances: number;
+  netTotal: number;
+  pendingBalance: number;
+}
+
+export interface SemesterSettlement {
+  label: string;
+  start: LocalDate;
+  end: LocalDate;
+  workedDays: number;
+  remuneratedRestDays: number;
+  primaAmount: number;
+  paymentDeadline: string;
+}
+
+export interface LiquidationEstimate {
+  cesantias: number;
+  interesesCesantias: number;
+  primaProporcional: number;
+  vacaciones: number;
+  pendingVacationDays: number;
+  periodEnd: LocalDate;
+  total: number;
+}
+
+export interface YearSettlementReport {
+  year: number;
+  firstSemester: SemesterSettlement;
+  secondSemester: SemesterSettlement;
+  annualCesantias: number;
+  annualInteresesCesantias: number;
+  liquidation: LiquidationEstimate;
+}
+
+export interface AppPreferences {
+  defaultStartHour: number;
+  defaultStartMinute: number;
+  defaultEndHour: number;
+  defaultEndMinute: number;
+  use24HourFormat: boolean;
+  reminderEnabled: boolean;
+  reminderHour: number;
+  reminderMinute: number;
+}
+
+export function totalHourBreakdown(b: HourBreakdown): number {
+  return Math.round(
+    (b.normalDiurna +
+      b.nocturnaOrdinaria +
+      b.extraDiurna +
+      b.extraNocturna +
+      b.dominicalDiurna +
+      b.dominicalNocturna +
+      b.extraDominicalDiurna +
+      b.extraDominicalNocturna) *
+      100,
+  ) / 100;
 }
 
 export interface PayrollLine {

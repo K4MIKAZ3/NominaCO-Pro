@@ -25,6 +25,18 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 export function middleware(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+
+  if (
+    pathname === "/" &&
+    (searchParams.get("code") ||
+      (searchParams.get("type") === "recovery" && searchParams.get("token_hash")))
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/restablecer-contrasena";
+    return NextResponse.redirect(url);
+  }
+
   const response = NextResponse.next();
 
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {

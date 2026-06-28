@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { AuthRecoveryRedirect } from "@/components/AuthRecoveryRedirect";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { site } from "@/lib/site";
@@ -58,6 +59,7 @@ export default function RootLayout({
   return (
     <html lang="es-CO">
       <body>
+        <AuthRecoveryRedirect />
         <Header />
         {children}
         <Footer />

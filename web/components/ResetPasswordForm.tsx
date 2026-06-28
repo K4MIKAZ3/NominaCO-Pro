@@ -10,6 +10,7 @@ import {
   passwordsMatch,
   validatePassword,
 } from "@/lib/password";
+import { parseRecoveryHashError, resetPasswordPath } from "@/lib/auth-recovery";
 import { site } from "@/lib/site";
 
 type Phase = "loading" | "invalid" | "ready" | "success";
@@ -19,6 +20,7 @@ export function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null,
   );
@@ -62,6 +64,20 @@ export function ResetPasswordForm() {
     async function initRecoverySession() {
       try {
         const url = new URL(window.location.href);
+        const hashError = parseRecoveryHashError(url.hash);
+        if (hashError) {
+          if (!cancelled) {
+            setRecoveryError(hashError);
+            setPhase("invalid");
+          }
+          return;
+        }
+
+        const hashParams = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const hashType = hashParams.get("type");
+
         const code = url.searchParams.get("code");
         const tokenHash = url.searchParams.get("token_hash");
         const type = url.searchParams.get("type");
@@ -69,14 +85,21 @@ export function ResetPasswordForm() {
         if (code) {
           const { error } = await client.auth.exchangeCodeForSession(code);
           if (error) throw error;
-          window.history.replaceState({}, document.title, url.pathname);
+          window.history.replaceState({}, document.title, resetPasswordPath());
+        } else if (accessToken && refreshToken && hashType === "recovery") {
+          const { error } = await client.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+          window.history.replaceState({}, document.title, resetPasswordPath());
         } else if (tokenHash && type === "recovery") {
           const { error } = await client.auth.verifyOtp({
             token_hash: tokenHash,
             type: "recovery",
           });
           if (error) throw error;
-          window.history.replaceState({}, document.title, url.pathname);
+          window.history.replaceState({}, document.title, resetPasswordPath());
         } else {
           await client.auth.getSession();
         }
@@ -90,8 +113,16 @@ export function ResetPasswordForm() {
         if (!cancelled) {
           setPhase(session ? "ready" : "invalid");
         }
-      } catch {
-        if (!cancelled) setPhase("invalid");
+      } catch (err) {
+        if (!cancelled) {
+          const raw = err instanceof Error ? err.message : "";
+          setRecoveryError(
+            raw.includes("expired") || raw.includes("invalid")
+              ? "El enlace expiró o ya fue usado. Solicita uno nuevo y ábrelo de inmediato."
+              : raw || "No se pudo validar el enlace de recuperación.",
+          );
+          setPhase("invalid");
+        }
       }
     }
 
@@ -173,14 +204,18 @@ export function ResetPasswordForm() {
       <div className="auth-card">
         <h1>Enlace no válido</h1>
         <p className="subtitle">
-          El enlace expiró o ya fue usado. Solicita uno nuevo desde la pantalla de
-          recuperación.
+          {recoveryError ??
+            "El enlace expiró o ya fue usado. Solicita uno nuevo desde la pantalla de recuperación."}
         </p>
         <div className="form-actions">
           <Link href="/login" className="btn btn-primary">
             Ir a recuperar contraseña
           </Link>
         </div>
+        <p className="auth-note">
+          Consejo: abre el enlace del correo en menos de 1 hora y solo una vez. Si tu correo
+          previsualiza enlaces, solicita el correo de nuevo y usa «Abrir en el navegador».
+        </p>
         <p className="auth-note">
           <Link href="/">← Volver al inicio</Link>
         </p>

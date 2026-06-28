@@ -32,6 +32,7 @@ export const blogArticles: BlogArticle[] = [
     ],
     publishedAt: "2026-06-14",
     readingMinutes: 6,
+    heroImage: "/images/guia/liquidacion-quincenal-colombia.png",
     sections: [
       {
         type: "p",
@@ -91,6 +92,7 @@ export const blogArticles: BlogArticle[] = [
     ],
     publishedAt: "2026-06-14",
     readingMinutes: 5,
+    heroImage: "/images/guia/recargo-nocturno-colombia.png",
     sections: [
       {
         type: "p",
@@ -143,6 +145,7 @@ export const blogArticles: BlogArticle[] = [
     ],
     publishedAt: "2026-06-14",
     readingMinutes: 5,
+    heroImage: "/images/guia/auxilio-transporte-salario-minimo-colombia.png",
     sections: [
       {
         type: "p",
@@ -195,6 +198,7 @@ export const blogArticles: BlogArticle[] = [
     ],
     publishedAt: "2026-06-14",
     readingMinutes: 5,
+    heroImage: "/images/guia/descuentos-salud-pension-colombia.png",
     sections: [
       {
         type: "p",
@@ -247,6 +251,7 @@ export const blogArticles: BlogArticle[] = [
     ],
     publishedAt: "2026-06-14",
     readingMinutes: 6,
+    heroImage: "/images/guia/prestaciones-prima-cesantias-colombia.png",
     sections: [
       {
         type: "p",
@@ -299,6 +304,7 @@ export const blogArticles: BlogArticle[] = [
     ],
     publishedAt: "2026-06-14",
     readingMinutes: 5,
+    heroImage: "/images/guia/dominical-festivo-trabajo-colombia.png",
     sections: [
       {
         type: "p",

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ApkDownloadButton } from "@/components/ApkDownloadButton";
 import type { BlogArticle, BlogSection } from "@/lib/blog/articles";
@@ -22,6 +23,21 @@ function renderSection(section: BlogSection, index: number) {
         <aside key={index} className="article-callout">
           <p>{section.text}</p>
         </aside>
+      );
+    case "image":
+      return (
+        <figure key={index} className="article-figure">
+          <Image
+            src={section.src}
+            alt={section.alt}
+            width={800}
+            height={450}
+            className="article-inline-image"
+          />
+          {section.caption ? (
+            <figcaption>{section.caption}</figcaption>
+          ) : null}
+        </figure>
       );
     default:
       return null;
@@ -52,6 +68,18 @@ export function ArticleBody({ article }: ArticleBodyProps) {
         })}{" "}
         · {article.readingMinutes} min de lectura
       </p>
+      {article.heroImage ? (
+        <figure className="article-hero-image">
+          <Image
+            src={article.heroImage}
+            alt=""
+            width={960}
+            height={540}
+            priority
+            className="article-hero-img"
+          />
+        </figure>
+      ) : null}
       {article.sections.map((section, index) => renderSection(section, index))}
       <section className="article-cta">
         <h2>Lleva el control con {site.name}</h2>

@@ -18,6 +18,9 @@ export function generateMetadata({ params }: PageProps): Metadata {
   if (!article) return {};
 
   const url = absoluteUrl(`/guia/${article.slug}`);
+  const ogImages = article.heroImage
+    ? [{ url: absoluteUrl(article.heroImage), width: 960, height: 540, alt: article.title }]
+    : undefined;
 
   return {
     title: article.title,
@@ -32,6 +35,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
       publishedTime: article.publishedAt,
       locale: "es_CO",
       siteName: site.name,
+      ...(ogImages ? { images: ogImages } : {}),
     },
   };
 }

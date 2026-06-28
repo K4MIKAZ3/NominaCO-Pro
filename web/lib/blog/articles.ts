@@ -1,8 +1,11 @@
+import { reformaArticles } from "./articles-reforma";
+
 export type BlogSection =
   | { type: "p"; text: string }
   | { type: "h2"; text: string }
   | { type: "ul"; items: string[] }
-  | { type: "callout"; text: string };
+  | { type: "callout"; text: string }
+  | { type: "image"; src: string; alt: string; caption?: string };
 
 export type BlogArticle = {
   slug: string;
@@ -11,6 +14,7 @@ export type BlogArticle = {
   keywords: string[];
   publishedAt: string;
   readingMinutes: number;
+  heroImage?: string;
   sections: BlogSection[];
 };
 
@@ -330,6 +334,7 @@ export const blogArticles: BlogArticle[] = [
       },
     ],
   },
+  ...reformaArticles,
 ];
 
 export function getAllArticles(): BlogArticle[] {

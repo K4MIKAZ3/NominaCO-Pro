@@ -8,7 +8,9 @@ import { getSupabase } from "@/lib/supabase";
 import {
   compareYearMonths,
   enumerateYearMonths,
+  navigationYearMonthBounds,
   parseYearMonth,
+  todayYearMonth,
   yearMonthPrefix,
 } from "@/lib/payroll/dates";
 import { computeMonthSummary } from "@/lib/payroll/payrollEngine";
@@ -111,6 +113,9 @@ export interface DashboardData {
   expenseSummaries: ExpenseSummary[];
   minYearMonth: string;
   maxYearMonth: string;
+  navMinYearMonth: string;
+  navMaxYearMonth: string;
+  todayYearMonth: string;
 }
 
 function parseDayType(value: string): DayType {
@@ -173,8 +178,8 @@ function collectYearMonthRange(
   deductions: ManualDeduction[],
   expenseRows: ExpenseRow[],
 ): { minYearMonth: string; maxYearMonth: string } {
-  const maxYearMonth = currentYearMonth();
-  const keys = new Set<string>([maxYearMonth]);
+  const today = todayYearMonth();
+  const keys = new Set<string>([today]);
 
   for (const entry of workDays) {
     keys.add(entry.date.slice(0, 7));
@@ -189,13 +194,15 @@ function collectYearMonthRange(
   }
 
   const sorted = Array.from(keys).sort(compareYearMonths);
-  const minYearMonth = sorted[0] ?? maxYearMonth;
+  const minYearMonth = sorted[0] ?? today;
+  const maxYearMonth = sorted[sorted.length - 1] ?? today;
   return { minYearMonth, maxYearMonth };
 }
 
 export async function fetchDashboard(userId: string): Promise<DashboardData> {
   const supabase = getSupabase();
   if (!supabase) {
+    const nav = navigationYearMonthBounds();
     return {
       profileName: null,
       profile: null,
@@ -208,8 +215,11 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
       preferences: defaultPreferences(),
       summaries: [],
       expenseSummaries: [],
-      minYearMonth: currentYearMonth(),
-      maxYearMonth: currentYearMonth(),
+      minYearMonth: nav.todayYearMonth,
+      maxYearMonth: nav.todayYearMonth,
+      navMinYearMonth: nav.minYearMonth,
+      navMaxYearMonth: nav.maxYearMonth,
+      todayYearMonth: nav.todayYearMonth,
     };
   }
 
@@ -235,7 +245,7 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
   }
 
   if (!profileRes.data) {
-    const now = currentYearMonth();
+    const nav = navigationYearMonthBounds();
     return {
       profileName: null,
       profile: null,
@@ -248,8 +258,11 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
       preferences: mapPreferences(prefsRes.data as AppPreferencesRow | null),
       summaries: [],
       expenseSummaries: [],
-      minYearMonth: now,
-      maxYearMonth: now,
+      minYearMonth: nav.todayYearMonth,
+      maxYearMonth: nav.todayYearMonth,
+      navMinYearMonth: nav.minYearMonth,
+      navMaxYearMonth: nav.maxYearMonth,
+      todayYearMonth: nav.todayYearMonth,
     };
   }
 
@@ -269,7 +282,11 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
   const preferences = mapPreferences(prefsRes.data as AppPreferencesRow | null);
 
   const { minYearMonth, maxYearMonth } = collectYearMonthRange(workDays, deductions, expenseRows);
-  const yearMonths = enumerateYearMonths(minYearMonth, maxYearMonth);
+  const navBounds = navigationYearMonthBounds();
+  const summaryEnd = compareYearMonths(maxYearMonth, navBounds.maxYearMonth) > 0
+    ? maxYearMonth
+    : navBounds.maxYearMonth;
+  const yearMonths = enumerateYearMonths(minYearMonth, summaryEnd);
 
   const summaries = yearMonths.map((yearMonth) => {
     const { year, month } = parseYearMonth(yearMonth);
@@ -298,5 +315,8 @@ export async function fetchDashboard(userId: string): Promise<DashboardData> {
     expenseSummaries,
     minYearMonth,
     maxYearMonth,
+    navMinYearMonth: navBounds.minYearMonth,
+    navMaxYearMonth: navBounds.maxYearMonth,
+    todayYearMonth: navBounds.todayYearMonth,
   };
 }

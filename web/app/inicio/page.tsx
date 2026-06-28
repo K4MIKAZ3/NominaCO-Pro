@@ -10,10 +10,8 @@ export const metadata: Metadata = {
 
 export default function InicioPage() {
   return (
-    <main className="page-main">
-      <div className="container">
-        <Dashboard />
-      </div>
+    <main className="page-main page-main--dashboard">
+      <Dashboard />
     </main>
   );
 }

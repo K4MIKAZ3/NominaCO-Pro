@@ -20,6 +20,7 @@ interface CalendarPanelProps {
   selectedYearMonth: string;
   minYearMonth: string;
   maxYearMonth: string;
+  todayYearMonth: string;
   profile: EmployeeProfile | null;
   manualHolidays: Set<LocalDate>;
   allWorkDays: WorkDayEntry[];
@@ -36,6 +37,7 @@ export function CalendarPanel({
   selectedYearMonth,
   minYearMonth,
   maxYearMonth,
+  todayYearMonth,
   profile,
   manualHolidays,
   allWorkDays,
@@ -96,6 +98,9 @@ export function CalendarPanel({
     ? monthEntries.find((e) => e.date === selectedDate) ?? null
     : null;
 
+  const isCurrentMonth = selectedYearMonth === todayYearMonth;
+  const isFutureMonth = compareYearMonths(selectedYearMonth, todayYearMonth) > 0;
+
   function handleDayClick(date: LocalDate) {
     setSelectedDate(date);
   }
@@ -106,11 +111,26 @@ export function CalendarPanel({
   }
 
   return (
-    <section className="editor-section">
-      <h2>Calendario</h2>
-      <p className="editor-lead">{monthLabel}</p>
+    <section className="editor-section calendar-panel">
+      <div className="calendar-panel-header">
+        <div>
+          <h2>Calendario</h2>
+          <p className="editor-lead">
+            Toca un día para registrar o editar tu jornada. Puedes planificar meses futuros.
+          </p>
+        </div>
+        {!isCurrentMonth && (
+          <button
+            type="button"
+            className="month-nav-today"
+            onClick={() => onSelectYearMonth(todayYearMonth)}
+          >
+            Hoy
+          </button>
+        )}
+      </div>
 
-      <div className="month-nav">
+      <div className="month-nav month-nav--calendar">
         <div className="month-nav-controls">
           <button
             type="button"
@@ -121,7 +141,20 @@ export function CalendarPanel({
           >
             ‹
           </button>
-          <span className="month-nav-label">{monthLabel}</span>
+          <label className="month-nav-picker">
+            <span className="sr-only">Ir a mes</span>
+            <input
+              type="month"
+              className="month-nav-input"
+              value={selectedYearMonth}
+              min={minYearMonth}
+              max={maxYearMonth}
+              onChange={(e) => {
+                if (e.target.value) onSelectYearMonth(e.target.value);
+              }}
+            />
+            <span className="month-nav-label">{monthLabel}</span>
+          </label>
           <button
             type="button"
             className="month-nav-btn"
@@ -132,14 +165,8 @@ export function CalendarPanel({
             ›
           </button>
         </div>
-        {selectedYearMonth !== maxYearMonth && (
-          <button
-            type="button"
-            className="month-nav-today"
-            onClick={() => onSelectYearMonth(maxYearMonth)}
-          >
-            Hoy
-          </button>
+        {isFutureMonth && (
+          <span className="month-badge month-badge--future">Mes futuro</span>
         )}
       </div>
 
@@ -184,6 +211,12 @@ export function CalendarPanel({
       </div>
 
       {loading && <p className="dashboard-status">Cargando calendario…</p>}
+
+      {!loading && monthEntries.length === 0 && (
+        <p className="calendar-empty-hint">
+          Sin jornadas en este mes. Toca cualquier día del calendario para empezar.
+        </p>
+      )}
 
       <div className="summary-card calendar-summary">
         <p className="summary-month">Resumen de {monthLabel.toLowerCase()}</p>

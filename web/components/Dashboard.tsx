@@ -11,6 +11,7 @@ import type { ManualDeductionRecord } from "@/lib/dashboard-api";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
 import { site } from "@/lib/site";
 import type { DashboardData } from "@/lib/dashboard";
+import { isYearMonthInRange, shiftYearMonth, todayYearMonth } from "@/lib/payroll/dates";
 
 type DashboardTab = "calendario" | "nomina" | "gastos" | "ajustes";
 
@@ -21,30 +22,38 @@ const TABS: { id: DashboardTab; label: string; short: string }[] = [
   { id: "ajustes", label: "Ajustes", short: "Aj." },
 ];
 
-const emptyData = (now: string): DashboardData => ({
-  profileName: null,
-  profile: null,
-  workDays: [],
-  manualHolidays: new Set(),
-  manualHolidayLabels: new Map(),
-  deductions: [],
-  deductionIds: new Map(),
-  expenseRows: [],
-  preferences: {
-    defaultStartHour: 8,
-    defaultStartMinute: 0,
-    defaultEndHour: 16,
-    defaultEndMinute: 30,
-    use24HourFormat: true,
-    reminderEnabled: false,
-    reminderHour: 18,
-    reminderMinute: 0,
-  },
-  summaries: [],
-  expenseSummaries: [],
-  minYearMonth: now,
-  maxYearMonth: now,
-});
+const emptyData = (now: string): DashboardData => {
+  const nav = {
+    navMinYearMonth: shiftYearMonth(now, -60),
+    navMaxYearMonth: shiftYearMonth(now, 24),
+    todayYearMonth: now,
+  };
+  return {
+    profileName: null,
+    profile: null,
+    workDays: [],
+    manualHolidays: new Set(),
+    manualHolidayLabels: new Map(),
+    deductions: [],
+    deductionIds: new Map(),
+    expenseRows: [],
+    preferences: {
+      defaultStartHour: 8,
+      defaultStartMinute: 0,
+      defaultEndHour: 16,
+      defaultEndMinute: 30,
+      use24HourFormat: true,
+      reminderEnabled: false,
+      reminderHour: 18,
+      reminderMinute: 0,
+    },
+    summaries: [],
+    expenseSummaries: [],
+    minYearMonth: now,
+    maxYearMonth: now,
+    ...nav,
+  };
+};
 
 export function Dashboard() {
   const router = useRouter();
@@ -67,12 +76,10 @@ export function Dashboard() {
       const next = await fetchDashboard(userId);
       setData(next);
       setSelectedYearMonth((current) => {
-        if (next.summaries.length === 0) return next.maxYearMonth;
-        const hasCurrent = next.summaries.some(
-          (summary) =>
-            `${summary.year}-${String(summary.month).padStart(2, "0")}` === current,
-        );
-        return hasCurrent ? current : next.maxYearMonth;
+        if (isYearMonthInRange(current, next.navMinYearMonth, next.navMaxYearMonth)) {
+          return current;
+        }
+        return next.todayYearMonth;
       });
     } catch (err) {
       const text = err instanceof Error ? err.message : "No se pudo cargar el panel.";
@@ -168,19 +175,28 @@ export function Dashboard() {
 
   const userId = session.user.id;
   const profileName = data?.profileName ?? null;
-  const minYearMonth = data?.minYearMonth ?? selectedYearMonth;
-  const maxYearMonth = data?.maxYearMonth ?? selectedYearMonth;
+  const navMinYearMonth = data?.navMinYearMonth ?? todayYearMonth();
+  const navMaxYearMonth = data?.navMaxYearMonth ?? todayYearMonth();
+  const todayYm = data?.todayYearMonth ?? todayYearMonth();
 
   return (
     <div className="dashboard-shell">
-      <div className="dashboard-panel">
-        <div className="dashboard-header">
+      <header className="dashboard-appbar">
+        <div className="dashboard-appbar-brand">
+          <span className="dashboard-appbar-logo" aria-hidden="true">N</span>
           <div>
-            <h1>Hola{profileName ? `, ${profileName}` : ""}</h1>
-            <p className="subtitle">Panel web sincronizado con tu cuenta Nominapp</p>
+            <p className="dashboard-appbar-title">Nominapp</p>
+            <p className="dashboard-appbar-sub">
+              Hola{profileName ? `, ${profileName}` : ""}
+            </p>
           </div>
         </div>
+        <button type="button" className="btn btn-ghost btn-sm" onClick={handleSignOut}>
+          Salir
+        </button>
+      </header>
 
+      <div className="dashboard-panel">
         {dashboardError && <div className="form-message error">{dashboardError}</div>}
         {dashboardLoading && <p className="dashboard-status">Sincronizando datos…</p>}
 
@@ -190,8 +206,9 @@ export function Dashboard() {
               <CalendarPanel
                 userId={userId}
                 selectedYearMonth={selectedYearMonth}
-                minYearMonth={minYearMonth}
-                maxYearMonth={maxYearMonth}
+                minYearMonth={navMinYearMonth}
+                maxYearMonth={navMaxYearMonth}
+                todayYearMonth={todayYm}
                 profile={data.profile}
                 manualHolidays={data.manualHolidays}
                 allWorkDays={data.workDays}
@@ -206,8 +223,9 @@ export function Dashboard() {
               <PayrollPanel
                 userId={userId}
                 selectedYearMonth={selectedYearMonth}
-                minYearMonth={minYearMonth}
-                maxYearMonth={maxYearMonth}
+                minYearMonth={navMinYearMonth}
+                maxYearMonth={navMaxYearMonth}
+                todayYearMonth={todayYm}
                 profile={data.profile}
                 allWorkDays={data.workDays}
                 manualHolidays={data.manualHolidays}
@@ -222,8 +240,9 @@ export function Dashboard() {
               <ExpensesPanel
                 userId={userId}
                 selectedYearMonth={selectedYearMonth}
-                minYearMonth={minYearMonth}
-                maxYearMonth={maxYearMonth}
+                minYearMonth={navMinYearMonth}
+                maxYearMonth={navMaxYearMonth}
+                todayYearMonth={todayYm}
                 profile={data.profile}
                 allWorkDays={data.workDays}
                 manualHolidays={data.manualHolidays}
@@ -249,7 +268,7 @@ export function Dashboard() {
         )}
 
         <p className="auth-note">
-          Los cambios se guardan en la nube y se reflejan en la app Android al sincronizar.
+          Marca cualquier mes (pasado o futuro). Los cambios se guardan en la nube y se sincronizan con la app Android.
         </p>
       </div>
 

@@ -100,3 +100,29 @@ export function enumerateYearMonths(fromKey: string, toKey: string): string[] {
   }
   return result;
 }
+
+export function todayYearMonth(from: Date = new Date()): string {
+  return yearMonthPrefix(from.getFullYear(), from.getMonth() + 1);
+}
+
+/** Límites de navegación del calendario (como la app Android: sin tope en el mes actual). */
+export function navigationYearMonthBounds(
+  from: Date = new Date(),
+  pastMonths = 60,
+  futureMonths = 24,
+): { minYearMonth: string; maxYearMonth: string; todayYearMonth: string } {
+  const today = todayYearMonth(from);
+  return {
+    minYearMonth: shiftYearMonth(today, -pastMonths),
+    maxYearMonth: shiftYearMonth(today, futureMonths),
+    todayYearMonth: today,
+  };
+}
+
+export function isYearMonthInRange(
+  key: string,
+  minYearMonth: string,
+  maxYearMonth: string,
+): boolean {
+  return compareYearMonths(key, minYearMonth) >= 0 && compareYearMonths(key, maxYearMonth) <= 0;
+}

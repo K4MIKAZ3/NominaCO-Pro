@@ -15,6 +15,7 @@ interface ExpensesPanelProps {
   selectedYearMonth: string;
   minYearMonth: string;
   maxYearMonth: string;
+  todayYearMonth: string;
   profile: EmployeeProfile | null;
   allWorkDays: WorkDayEntry[];
   manualHolidays: Set<LocalDate>;
@@ -29,6 +30,7 @@ export function ExpensesPanel({
   selectedYearMonth,
   minYearMonth,
   maxYearMonth,
+  todayYearMonth,
   profile,
   allWorkDays,
   manualHolidays,
@@ -118,7 +120,7 @@ export function ExpensesPanel({
       <h2>Gastos</h2>
       <p className="editor-lead">{monthLabel}</p>
 
-      <div className="month-nav">
+      <div className="month-nav month-nav--calendar">
         <div className="month-nav-controls">
           <button
             type="button"
@@ -128,7 +130,20 @@ export function ExpensesPanel({
           >
             ‹
           </button>
-          <span className="month-nav-label">{monthLabel}</span>
+          <label className="month-nav-picker">
+            <span className="sr-only">Ir a mes</span>
+            <input
+              type="month"
+              className="month-nav-input"
+              value={selectedYearMonth}
+              min={minYearMonth}
+              max={maxYearMonth}
+              onChange={(e) => {
+                if (e.target.value) onSelectYearMonth(e.target.value);
+              }}
+            />
+            <span className="month-nav-label">{monthLabel}</span>
+          </label>
           <button
             type="button"
             className="month-nav-btn"
@@ -138,11 +153,11 @@ export function ExpensesPanel({
             ›
           </button>
         </div>
-        {selectedYearMonth !== maxYearMonth && (
+        {selectedYearMonth !== todayYearMonth && (
           <button
             type="button"
             className="month-nav-today"
-            onClick={() => onSelectYearMonth(maxYearMonth)}
+            onClick={() => onSelectYearMonth(todayYearMonth)}
           >
             Hoy
           </button>

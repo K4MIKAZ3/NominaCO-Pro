@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "versionCode": 41,
+      "versionName": "1.7.30",
+      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.30/Nominapp.apk",
+      "sha256": "64b5b6735e990051b42af117c314095a0a83d891123b438b84639d70e67aedb1",
+      "releaseNotes": "Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.",
+      "publishedAt": "2026-06-28"
+    },
+    {
       "versionCode": 40,
       "versionName": "1.7.29",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.29/Nominapp.apk",
@@ -13,14 +21,6 @@
       "versionName": "1.7.28",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.28/Nominapp.apk",
       "sha256": "1c0f2c900f2fc003127ad81e50560470915ad17f9f1fac532729d4718b9a16de",
-      "releaseNotes": "Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.",
-      "publishedAt": "2026-06-28"
-    },
-    {
-      "versionCode": 38,
-      "versionName": "1.7.27",
-      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.27/Nominapp.apk",
-      "sha256": "2e2e7474ac10adf92de67c5bfdddef336c5e6bf7e1b4821a4ad3ecd7dbef3062",
       "releaseNotes": "Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.",
       "publishedAt": "2026-06-28"
     }

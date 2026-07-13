@@ -60,12 +60,27 @@ export function ArticleBody({ article }: ArticleBodyProps) {
       </nav>
       <h1>{article.title}</h1>
       <p className="updated">
-        Publicado:{" "}
-        {new Date(article.publishedAt).toLocaleDateString("es-CO", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        })}{" "}
+        Por {site.contentAuthor} · Publicado:{" "}
+        <time dateTime={article.publishedAt}>
+          {new Date(article.publishedAt).toLocaleDateString("es-CO", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </time>
+        {article.updatedAt && article.updatedAt !== article.publishedAt ? (
+          <>
+            {" "}
+            · Actualizado:{" "}
+            <time dateTime={article.updatedAt}>
+              {new Date(article.updatedAt).toLocaleDateString("es-CO", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </time>
+          </>
+        ) : null}{" "}
         · {article.readingMinutes} min de lectura
       </p>
       {article.heroImage ? (

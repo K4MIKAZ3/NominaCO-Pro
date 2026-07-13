@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { getAllArticles } from "@/lib/blog/articles";
+import { JsonLd } from "@/components/JsonLd";
+import { getAllArticles, getArticleModifiedAt } from "@/lib/blog/articles";
+import { buildBreadcrumbJsonLd, buildGuiaIndexJsonLd } from "@/lib/seo";
 import { absoluteUrl, site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -10,12 +12,33 @@ export const metadata: Metadata = {
     "Artículos sobre liquidación quincenal, recargo nocturno, auxilio de transporte, reforma laboral 2026, jornada de 42 horas, contratos y derechos de empleados en Colombia.",
   alternates: {
     canonical: absoluteUrl("/guia"),
+    types: {
+      "application/rss+xml": absoluteUrl("/feed.xml"),
+    },
   },
   openGraph: {
     title: `Guía de nómina · ${site.name}`,
     description:
       "Aprende a calcular tu liquidación, entender la reforma laboral y tus derechos como empleado en Colombia.",
     url: absoluteUrl("/guia"),
+    siteName: site.name,
+    locale: "es_CO",
+    type: "website",
+    images: [
+      {
+        url: "/images/hero-phone.webp",
+        width: 480,
+        height: 480,
+        alt: "Guía de nómina personal Nominapp",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Guía de nómina · ${site.name}`,
+    description:
+      "Liquidación, recargos, auxilio de transporte y reforma laboral 2026 explicados para empleados.",
+    images: ["/images/hero-phone.webp"],
   },
 };
 
@@ -24,6 +47,15 @@ export default function GuiaIndexPage() {
 
   return (
     <main className="page-main">
+      <JsonLd
+        data={[
+          buildGuiaIndexJsonLd(articles),
+          buildBreadcrumbJsonLd([
+            { name: "Inicio", path: "/" },
+            { name: "Guía", path: "/guia" },
+          ]),
+        ]}
+      />
       <div className="container">
         <div className="section-title blog-index-header">
           <h1>Guía de nómina personal</h1>
@@ -52,7 +84,11 @@ export default function GuiaIndexPage() {
                 </div>
               ) : null}
               <span className="blog-card-meta">
-                {article.readingMinutes} min · {site.year}
+                {article.readingMinutes} min ·{" "}
+                {new Date(getArticleModifiedAt(article)).toLocaleDateString(
+                  "es-CO",
+                  { year: "numeric", month: "short", day: "numeric" },
+                )}
               </span>
               <h2>{article.title}</h2>
               <p>{article.description}</p>

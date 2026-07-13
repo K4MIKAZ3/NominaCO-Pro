@@ -1,4 +1,9 @@
 import type { Metadata } from "next";
+import type { BlogArticle } from "@/lib/blog/articles";
+import {
+  estimateArticleWordCount,
+  getArticleModifiedAt,
+} from "@/lib/blog/articles";
 import { absoluteUrl, faqItems, site } from "@/lib/site";
 
 export const seoKeywords = [
@@ -21,6 +26,10 @@ export const homeMetadata: Metadata = {
   keywords: [...seoKeywords],
   alternates: {
     canonical: site.url,
+    types: {
+      "application/rss+xml": absoluteUrl("/feed.xml"),
+      "text/plain": absoluteUrl("/llms.txt"),
+    },
   },
   robots: {
     index: true,
@@ -70,9 +79,18 @@ export function buildOrganizationJsonLd() {
     url: site.url,
     logo: absoluteUrl("/icon.png"),
     email: site.contactEmail,
+    description: site.description,
+    foundingDate: "2026",
+    sameAs: [site.githubUrl],
     areaServed: {
       "@type": "Country",
       name: site.country,
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: site.contactEmail,
+      contactType: "customer support",
+      availableLanguage: ["es-CO", "es"],
     },
   };
 }
@@ -85,6 +103,11 @@ export function buildWebSiteJsonLd() {
     url: site.url,
     description: site.description,
     inLanguage: "es-CO",
+    publisher: {
+      "@type": "Organization",
+      name: site.name,
+      url: site.url,
+    },
   };
 }
 
@@ -94,10 +117,13 @@ export function buildSoftwareApplicationJsonLd() {
     "@type": "SoftwareApplication",
     name: site.name,
     applicationCategory: "FinanceApplication",
+    applicationSubCategory: "Payroll estimation",
     operatingSystem: "Android 8.0+",
     description: site.description,
     url: site.url,
     downloadUrl: site.apkDownloadUrl,
+    screenshot: absoluteUrl("/images/hero-phone.webp"),
+    inLanguage: "es-CO",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -107,6 +133,7 @@ export function buildSoftwareApplicationJsonLd() {
     author: {
       "@type": "Organization",
       name: site.name,
+      url: site.url,
     },
   };
 }
@@ -123,6 +150,89 @@ export function buildFaqJsonLd() {
         text: item.answer,
       },
     })),
+  };
+}
+
+export function buildBreadcrumbJsonLd(
+  items: { name: string; path: string }[],
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.path === "/" ? site.url : absoluteUrl(item.path),
+    })),
+  };
+}
+
+export function buildArticleJsonLd(article: BlogArticle) {
+  const url = absoluteUrl(`/guia/${article.slug}`);
+  const modified = getArticleModifiedAt(article);
+  const image = article.heroImage
+    ? absoluteUrl(article.heroImage)
+    : absoluteUrl("/images/hero-phone.webp");
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.description,
+    keywords: article.keywords.join(", "),
+    datePublished: article.publishedAt,
+    dateModified: modified,
+    inLanguage: "es-CO",
+    wordCount: estimateArticleWordCount(article),
+    timeRequired: `PT${article.readingMinutes}M`,
+    image: [image],
+    author: {
+      "@type": "Organization",
+      name: site.contentAuthor,
+      url: site.url,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: site.name,
+      url: site.url,
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/icon.png"),
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url,
+    },
+    isAccessibleForFree: true,
+  };
+}
+
+export function buildGuiaIndexJsonLd(articles: BlogArticle[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Guía de nómina personal Colombia",
+    description:
+      "Artículos sobre liquidación quincenal, recargos, auxilio de transporte, reforma laboral y derechos de empleados en Colombia.",
+    url: absoluteUrl("/guia"),
+    inLanguage: "es-CO",
+    isPartOf: {
+      "@type": "WebSite",
+      name: site.name,
+      url: site.url,
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: articles.length,
+      itemListElement: articles.map((article, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: absoluteUrl(`/guia/${article.slug}`),
+        name: article.title,
+      })),
+    },
   };
 }
 

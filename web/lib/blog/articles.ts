@@ -13,10 +13,30 @@ export type BlogArticle = {
   description: string;
   keywords: string[];
   publishedAt: string;
+  /** ISO date; defaults to publishedAt when omitted */
+  updatedAt?: string;
   readingMinutes: number;
   heroImage?: string;
   sections: BlogSection[];
 };
+
+export function getArticleModifiedAt(article: BlogArticle): string {
+  return article.updatedAt ?? article.publishedAt;
+}
+
+export function estimateArticleWordCount(article: BlogArticle): number {
+  const parts: string[] = [article.title, article.description];
+  for (const section of article.sections) {
+    if (section.type === "p" || section.type === "h2" || section.type === "callout") {
+      parts.push(section.text);
+    } else if (section.type === "ul") {
+      parts.push(...section.items);
+    } else if (section.type === "image") {
+      parts.push(section.alt, section.caption ?? "");
+    }
+  }
+  return parts.join(" ").split(/\s+/).filter(Boolean).length;
+}
 
 export const blogArticles: BlogArticle[] = [
   {

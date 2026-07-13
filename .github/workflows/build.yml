@@ -3,11 +3,14 @@ name: Build NominaCO-Pro APK
 on:
   push:
     branches: [main, master]
+    # Cambios solo de web/docs/CI no deben publicar APK ni subir versionCode (OTA falsa).
     paths-ignore:
-      - 'web/manifest/version.json'
-      - 'web/manifest/releases.json'
+      - 'web/**'
+      - 'docs/**'
+      - '.github/**'
+      - '**.md'
       - 'app/build.gradle.kts'
-      - 'web/vercel.json'
+      - 'scripts/generate-dnda-description-*.py'
   workflow_dispatch:
 
 env:

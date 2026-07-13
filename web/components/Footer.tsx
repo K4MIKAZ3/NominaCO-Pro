@@ -14,6 +14,7 @@ export function Footer() {
           <Link href="/#funciones">Funciones</Link>
           <Link href="/#preguntas">Preguntas frecuentes</Link>
           <Link href="/terminos">Términos y privacidad</Link>
+          <a href="/llms.txt">Para IA / LLM</a>
           <Link href="/login">Iniciar sesión</Link>
           <ContactDialog />
         </div>

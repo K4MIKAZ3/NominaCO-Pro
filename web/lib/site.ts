@@ -7,6 +7,8 @@ export const site = {
   country: "Colombia",
   year: 2026,
   contactEmail: "contacto@nominapp.xyz",
+  contentAuthor: "Equipo Nominapp",
+  githubUrl: "https://github.com/K4MIKAZ3/NominaCO-Pro",
   auth: {
     loginPath: "/login",
     homePath: "/inicio",

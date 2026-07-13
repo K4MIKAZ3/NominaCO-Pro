@@ -26,9 +26,9 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/hero-phone.webp",
-        width: 480,
-        height: 480,
+        url: "/images/og-default.png",
+        width: 1200,
+        height: 630,
         alt: "Guía de nómina personal Nominapp",
       },
     ],
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     title: `Guía de nómina · ${site.name}`,
     description:
       "Liquidación, recargos, auxilio de transporte y reforma laboral 2026 explicados para empleados.",
-    images: ["/images/hero-phone.webp"],
+    images: ["/images/og-default.png"],
   },
 };
 

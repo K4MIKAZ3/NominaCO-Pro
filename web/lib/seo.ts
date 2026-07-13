@@ -50,9 +50,9 @@ export const homeMetadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/hero-phone.webp",
-        width: 480,
-        height: 480,
+        url: "/images/og-default.png",
+        width: 1200,
+        height: 630,
         alt: "Liquidación de nómina personal en Nominapp",
       },
     ],
@@ -61,7 +61,7 @@ export const homeMetadata: Metadata = {
     card: "summary_large_image",
     title: `${site.name} — Nómina personal Colombia`,
     description: site.description,
-    images: ["/images/hero-phone.webp"],
+    images: ["/images/og-default.png"],
   },
 };
 
@@ -173,7 +173,14 @@ export function buildArticleJsonLd(article: BlogArticle) {
   const modified = getArticleModifiedAt(article);
   const image = article.heroImage
     ? absoluteUrl(article.heroImage)
-    : absoluteUrl("/images/hero-phone.webp");
+    : absoluteUrl("/images/og-default.png");
+
+  const citation = (article.sources ?? []).map((source) => ({
+    "@type": "CreativeWork",
+    name: source.title,
+    url: source.url,
+    publisher: source.publisher,
+  }));
 
   return {
     "@context": "https://schema.org",
@@ -206,6 +213,27 @@ export function buildArticleJsonLd(article: BlogArticle) {
       "@id": url,
     },
     isAccessibleForFree: true,
+    ...(citation.length > 0 ? { citation } : {}),
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["h1", ".article-faq-item h3", ".article-faq-item p"],
+    },
+  };
+}
+
+export function buildArticleFaqJsonLd(article: BlogArticle) {
+  if (!article.faq?.length) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: article.faq.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
   };
 }
 

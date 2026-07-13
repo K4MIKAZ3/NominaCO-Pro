@@ -15,7 +15,7 @@ export const site = {
     resetPasswordPath: "/restablecer-contrasena",
   },
   /** Rutas públicas que deben indexarse */
-  indexedPaths: ["/", "/terminos", "/guia"] as const,
+  indexedPaths: ["/", "/terminos", "/guia", "/acerca"] as const,
   /** Último APK publicado por CI en GitHub Releases (main) */
   apkDownloadUrl:
     process.env.NEXT_PUBLIC_APK_DOWNLOAD_URL ??

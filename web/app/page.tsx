@@ -48,7 +48,8 @@ export default function HomePage() {
               </ul>
               <p className="hero-note">
                 Uso personal · No sustituye asesoría contable ni legal oficial ·
-                Descarga solo desde {site.url}
+                Descarga solo desde {site.url} ·{" "}
+                <Link href="/acerca">Qué es Nominapp</Link>
               </p>
             </div>
             <div className="hero-image-wrap">

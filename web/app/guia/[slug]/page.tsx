@@ -8,6 +8,7 @@ import {
   getArticleModifiedAt,
 } from "@/lib/blog/articles";
 import {
+  buildArticleFaqJsonLd,
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
 } from "@/lib/seo";
@@ -27,23 +28,24 @@ export function generateMetadata({ params }: PageProps): Metadata {
 
   const url = absoluteUrl(`/guia/${article.slug}`);
   const modified = getArticleModifiedAt(article);
-  const ogImages = article.heroImage
-    ? [
-        {
-          url: absoluteUrl(article.heroImage),
-          width: 960,
-          height: 540,
-          alt: article.title,
-        },
-      ]
-    : [
-        {
-          url: absoluteUrl("/images/hero-phone.webp"),
-          width: 480,
-          height: 480,
-          alt: article.title,
-        },
-      ];
+  const ogImages = [
+    {
+      url: absoluteUrl("/images/og-default.png"),
+      width: 1200,
+      height: 630,
+      alt: article.title,
+    },
+    ...(article.heroImage
+      ? [
+          {
+            url: absoluteUrl(article.heroImage),
+            width: 960,
+            height: 540,
+            alt: article.title,
+          },
+        ]
+      : []),
+  ];
 
   return {
     title: article.title,
@@ -66,7 +68,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
       card: "summary_large_image",
       title: article.title,
       description: article.description,
-      images: ogImages.map((image) => image.url),
+      images: [absoluteUrl("/images/og-default.png")],
     },
   };
 }
@@ -75,6 +77,7 @@ export default function GuiaArticlePage({ params }: PageProps) {
   const article = getArticle(params.slug);
   if (!article) notFound();
 
+  const faqLd = buildArticleFaqJsonLd(article);
   const jsonLd = [
     buildArticleJsonLd(article),
     buildBreadcrumbJsonLd([
@@ -82,6 +85,7 @@ export default function GuiaArticlePage({ params }: PageProps) {
       { name: "Guía", path: "/guia" },
       { name: article.title, path: `/guia/${article.slug}` },
     ]),
+    ...(faqLd ? [faqLd] : []),
   ];
 
   return (

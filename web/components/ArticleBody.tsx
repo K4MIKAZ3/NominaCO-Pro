@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ApkDownloadButton } from "@/components/ApkDownloadButton";
 import type { BlogArticle, BlogSection } from "@/lib/blog/articles";
+import { getArticle } from "@/lib/blog/articles";
 import { site } from "@/lib/site";
 
 function renderSection(section: BlogSection, index: number) {
@@ -49,6 +50,11 @@ type ArticleBodyProps = {
 };
 
 export function ArticleBody({ article }: ArticleBodyProps) {
+  const related =
+    article.relatedSlugs
+      ?.map((slug) => getArticle(slug))
+      .filter((item): item is BlogArticle => Boolean(item)) ?? [];
+
   return (
     <article className="container prose article-prose">
       <nav className="article-breadcrumb" aria-label="Ruta">
@@ -96,6 +102,58 @@ export function ArticleBody({ article }: ArticleBodyProps) {
         </figure>
       ) : null}
       {article.sections.map((section, index) => renderSection(section, index))}
+
+      {article.faq && article.faq.length > 0 ? (
+        <section className="article-faq" aria-labelledby="faq-heading">
+          <h2 id="faq-heading">Preguntas frecuentes</h2>
+          {article.faq.map((item) => (
+            <div key={item.question} className="article-faq-item">
+              <h3>{item.question}</h3>
+              <p>{item.answer}</p>
+            </div>
+          ))}
+        </section>
+      ) : null}
+
+      {article.sources && article.sources.length > 0 ? (
+        <section className="article-sources" aria-labelledby="sources-heading">
+          <h2 id="sources-heading">Fuentes oficiales</h2>
+          <p className="article-sources-lead">
+            Consulta siempre el texto oficial. Nominapp resume para empleados;
+            no sustituye asesoría legal.
+          </p>
+          <ol>
+            {article.sources.map((source) => (
+              <li key={source.id}>
+                <a href={source.url} rel="noopener noreferrer">
+                  {source.title}
+                </a>
+                <span className="article-source-publisher">
+                  {" "}
+                  — {source.publisher}
+                </span>
+                {source.note ? (
+                  <p className="article-source-note">{source.note}</p>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
+
+      {related.length > 0 ? (
+        <section className="article-related" aria-labelledby="related-heading">
+          <h2 id="related-heading">Sigue leyendo</h2>
+          <ul className="article-related-list">
+            {related.map((item) => (
+              <li key={item.slug}>
+                <Link href={`/guia/${item.slug}`}>{item.title}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="article-cta">
         <h2>Lleva el control con {site.name}</h2>
         <p>
@@ -104,8 +162,8 @@ export function ArticleBody({ article }: ArticleBodyProps) {
         </p>
         <div className="hero-actions">
           <ApkDownloadButton>Descargar Nominapp</ApkDownloadButton>
-          <Link href="/#preguntas" className="btn btn-ghost">
-            Ver preguntas frecuentes
+          <Link href="/acerca" className="btn btn-ghost">
+            Qué es Nominapp
           </Link>
         </div>
       </section>

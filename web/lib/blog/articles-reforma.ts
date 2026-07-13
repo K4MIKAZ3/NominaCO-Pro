@@ -1,25 +1,61 @@
 import type { BlogArticle } from "./articles";
+import { pickSources } from "./sources";
 
 export const reformaArticles: BlogArticle[] = [
   {
     slug: "jornada-42-horas-colombia-2026",
     title: "Jornada de 42 horas en Colombia 2026: todo lo que debes saber como empleado",
     description:
-      "A partir del 15 de julio de 2026 la jornada máxima baja a 42 horas semanales. Qué dice la Ley 2466, si tu salario puede bajar y cómo exigir el cumplimiento.",
+      "A partir del 15 de julio de 2026 la jornada máxima baja a 42 horas semanales. Qué dice la Ley 2466 y la Ley 2101, si tu salario puede bajar y cómo exigir el cumplimiento.",
     keywords: [
       "jornada laboral 42 horas Colombia",
       "reforma laboral 2026 empleados",
       "horas de trabajo Colombia julio 2026",
       "Ley 2466 jornada laboral",
       "cuántas horas se trabaja en Colombia 2026",
+      "Ley 2101 jornada laboral",
     ],
     publishedAt: "2026-06-28",
-    readingMinutes: 8,
+    updatedAt: "2026-07-13",
+    readingMinutes: 10,
     heroImage: "/images/guia/jornada-42-horas-colombia.png",
+    sources: pickSources("ley2466", "ley2101", "decreto1469", "cst", "mintrabajo"),
+    relatedSlugs: [
+      "recargo-nocturno-colombia-2026",
+      "recargos-dominicales-nocturnos-colombia-2026",
+      "contratos-derechos-empleados-colombia-2026",
+    ],
+    faq: [
+      {
+        question: "¿Si trabajo en turno rotativo me aplica la jornada de 42 horas?",
+        answer:
+          "Sí. El promedio semanal no puede superar las 42 horas máximas a partir del 15 de julio de 2026, conforme a la Ley 2101 de 2021 y la Ley 2466 de 2025.",
+      },
+      {
+        question: "¿Puedo acordar trabajar más de 42 horas si quiero ganar más?",
+        answer:
+          "Solo si tu empleador solicita horas extra formalmente, te paga los recargos (extra diurna 25 %, extra nocturna 75 % sobre la hora ordinaria) y no se superan los límites legales (habitualmente hasta 2 horas diarias y 12 semanales).",
+      },
+      {
+        question: "¿El salario mínimo cambió también?",
+        answer:
+          "Sí. Desde enero de 2026, el SMMLV es $1.750.905 (Decreto 1469 de 2025 / Decreto 159 de 2026) más $249.095 de auxilio de transporte (Decreto 1470 de 2025), total orientativo $2.000.000 mensuales si aplicas al auxilio.",
+      },
+      {
+        question: "¿Mi salario puede bajar porque trabajo menos horas?",
+        answer:
+          "No. La reducción de la jornada máxima no autoriza reducir el salario. Si tu empleador lo intenta, puedes acudir al Ministerio del Trabajo.",
+      },
+      {
+        question: "¿A qué hora empieza la jornada nocturna?",
+        answer:
+          "Desde la Ley 2466, entre las 7:00 p. m. y las 6:00 a. m., con recargo nocturno del 35 % sobre la hora ordinaria.",
+      },
+    ],
     sections: [
       {
         type: "p",
-        text: "A partir del 15 de julio de 2026, Colombia reduce oficialmente su jornada máxima laboral a 42 horas semanales. Esto no es un rumor ni una propuesta: ya es ley. Si trabajas bajo contrato en Colombia, este cambio te afecta directamente y tu salario no puede reducirse por ello.",
+        text: "A partir del 15 de julio de 2026, Colombia reduce oficialmente su jornada máxima laboral a 42 horas semanales. Esto no es un rumor ni una propuesta: ya es ley (Ley 2101 de 2021 y Ley 2466 de 2025). Si trabajas bajo contrato en Colombia, este cambio te afecta directamente y tu salario no puede reducirse por ello.",
       },
       {
         type: "h2",
@@ -27,21 +63,28 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "La Ley 2466 de 2025, sancionada por el presidente Gustavo Petro el 25 de junio de 2025, establece la reducción gradual de la jornada laboral en Colombia. Es la continuación de la Ley 2101 de 2021, que fijó el siguiente cronograma:",
+        text: "La Ley 2466 de 2025, sancionada el 25 de junio de 2025, consolidó y complementó la reducción gradual de la jornada iniciada con la Ley 2101 de 2021. El cronograma de la jornada máxima semanal es:",
       },
       {
         type: "ul",
         items: [
-          "Hasta julio 2023: 47 horas semanales máximas",
+          "Hasta julio 2023: 48/47 horas según tramo previo de la reforma",
           "Julio 2023: 46 horas",
-          "Julio 2024: 44 horas",
-          "Julio 2025: 44 horas",
-          "15 de julio de 2026: 42 horas",
+          "Julio 2024–14 julio 2026: 44 horas (tramo vigente hasta el 14 de julio de 2026)",
+          "15 de julio de 2026 en adelante: 42 horas",
         ],
       },
       {
         type: "p",
-        text: "El límite diario sigue siendo 8 horas. Lo que cambia es el techo semanal.",
+        text: "El límite diario ordinario sigue siendo, en términos generales, de 8 horas. Lo que cambia el 15 de julio de 2026 es el techo semanal a 42 horas.",
+      },
+      {
+        type: "h2",
+        text: "Cifras 2026: salario y valor hora",
+      },
+      {
+        type: "p",
+        text: "Con el SMMLV en $1.750.905 (Decreto 1469 de 2025), al pasar a 42 horas semanales el valor de la hora ordinaria de referencia sube frente al esquema de 44 horas, porque el mismo salario se prorratea en menos horas. Con divisor aproximado de 182 horas/mes (42 h × 52 / 12), la hora ordinaria del mínimo ronda $9.620. Eso impacta el pago de extras y recargos.",
       },
       {
         type: "h2",
@@ -53,7 +96,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Si tu empleador intenta reducirte el salario argumentando la reducción de jornada, está violando la ley y puedes denunciarlo ante el Ministerio del Trabajo.",
+        text: "Si tu empleador intenta reducirte el salario argumentando la reducción de jornada, está violando la ley y puedes denunciarlo ante el Ministerio del Trabajo (mintrabajo.gov.co).",
       },
       {
         type: "h2",
@@ -61,14 +104,14 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Cualquier hora trabajada por encima de las 42 horas semanales debe pagarse como hora extra. Los recargos son:",
+        text: "Cualquier hora trabajada por encima de las 42 horas semanales (desde el 15 de julio de 2026) debe pagarse como hora extra. Los recargos habituales del CST son:",
       },
       {
         type: "ul",
         items: [
           "Hora extra diurna: recargo del 25 % sobre el valor de la hora ordinaria",
           "Hora extra nocturna: recargo del 75 % sobre el valor de la hora ordinaria",
-          "Las horas extra no pueden superar 2 horas diarias ni 12 horas semanales",
+          "Las horas extra no pueden superar, en la regla general, 2 horas diarias ni 12 horas semanales",
         ],
       },
       {
@@ -86,7 +129,7 @@ export const reformaArticles: BlogArticle[] = [
       {
         type: "ul",
         items: [
-          "No se supere el máximo de 8 horas diarias ordinarias",
+          "No se supera el máximo de 8 horas diarias ordinarias (salvo acuerdos permitidos)",
           "Se garantice al menos un día de descanso semanal",
           "Ese día de descanso no tiene que ser necesariamente el domingo, pero debe quedar por escrito",
           "Tu salario total no se vea afectado",
@@ -98,11 +141,11 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Sí. Desde el 25 de diciembre de 2025, la jornada nocturna en Colombia empieza a las 7:00 p. m. (antes era a las 9:00 p. m.). Esto significa que si trabajas entre las 7 p. m. y las 6 a. m., tienes derecho a un recargo nocturno del 35 % sobre tu hora ordinaria.",
+        text: "Sí. Desde el 25 de diciembre de 2025, la jornada nocturna en Colombia empieza a las 7:00 p. m. (antes era a las 9:00 p. m.) y va hasta las 6:00 a. m. Si trabajas en esa franja, tienes derecho a un recargo nocturno del 35 % sobre tu hora ordinaria (Ley 2466).",
       },
       {
         type: "p",
-        text: "Si tienes turnos que arrancan en la tarde o noche, revisa tu desprendible de nómina: tu empleador debía haber ajustado ese recargo desde diciembre pasado.",
+        text: "Si tienes turnos que arrancan en la tarde o noche, revisa tu desprendible: tu empleador debía haber ajustado ese recargo desde diciembre de 2025. Ejemplo con SMMLV: hora ≈ $9.620 → hora nocturna ordinaria ≈ $12.987.",
       },
       {
         type: "h2",
@@ -110,11 +153,11 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "La Ley 2466 aplica a todos los trabajadores con contrato de trabajo en Colombia: contrato a término indefinido, a término fijo, por obra o labor, teletrabajo o trabajo remoto.",
+        text: "La Ley 2466 aplica a los trabajadores con contrato de trabajo en Colombia: término indefinido, término fijo, obra o labor, teletrabajo o trabajo remoto, con las excepciones del régimen propio.",
       },
       {
         type: "p",
-        text: "No aplica para empleados públicos de carrera administrativa (tienen su propio régimen), ni para trabajadores independientes o por prestación de servicios.",
+        text: "No aplica de la misma forma para empleados públicos de carrera administrativa (tienen su propio régimen), ni para trabajadores independientes o por prestación de servicios.",
       },
       {
         type: "h2",
@@ -130,19 +173,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Las multas para empleadores que incumplan la reforma pueden llegar hasta 5.000 salarios mínimos mensuales (cerca de $8.754 millones de pesos en 2026).",
-      },
-      {
-        type: "h2",
-        text: "Preguntas frecuentes",
-      },
-      {
-        type: "ul",
-        items: [
-          "¿Si trabajo en turno rotativo me aplica igual? Sí. El promedio semanal no puede superar las 42 horas.",
-          "¿Puedo acordar trabajar más de 42 horas si quiero ganar más? Solo si tu empleador lo solicita formalmente, te paga los recargos de horas extra y no se superan las 12 horas extra semanales.",
-          "¿El salario mínimo cambió también? Sí. Desde enero de 2026, el salario mínimo es $1.750.905 más $249.095 de auxilio de transporte, total $2.000.000 mensuales.",
-        ],
+        text: "Las sanciones por infracciones laborales pueden ser muy altas (hasta varios miles de SMMLV según la gravedad y el procedimiento sancionatorio). Con SMMLV $1.750.905, incluso multas de menor cuantía resultan millonarias.",
       },
       {
         type: "h2",
@@ -154,7 +185,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "callout",
-        text: "Nominapp registra jornadas día a día y calcula recargos y horas extra según la Ley 2466. Descarga la app para llevar el control de tu jornada de 42 horas.",
+        text: "Nominapp registra jornadas día a día y calcula recargos y horas extra según la Ley 2466 y el cronograma de la Ley 2101. Descarga la app para llevar el control de tu jornada de 42 horas.",
       },
     ],
   },
@@ -162,21 +193,51 @@ export const reformaArticles: BlogArticle[] = [
     slug: "recargos-dominicales-nocturnos-colombia-2026",
     title: "Recargos dominicales y nocturnos en Colombia 2026: ¿te están pagando lo que te deben?",
     description:
-      "Recargo dominical al 90 % desde julio 2026, jornada nocturna desde las 7 p. m. y cómo verificar que tu nómina refleje los nuevos porcentajes de la Ley 2466.",
+      "Recargo dominical al 90 % desde julio 2026, jornada nocturna 7:00 p. m.–6:00 a. m. con 35 % y cómo verificar tu nómina según la Ley 2466.",
     keywords: [
       "recargo dominical Colombia 2026",
       "recargo nocturno Colombia reforma laboral",
       "cuánto pagan por trabajar domingo Colombia",
       "Ley 2466 recargos festivos",
       "trabajo nocturno Colombia 7pm recargo",
+      "recargo dominical 90 por ciento",
     ],
     publishedAt: "2026-06-28",
-    readingMinutes: 9,
+    updatedAt: "2026-07-13",
+    readingMinutes: 11,
     heroImage: "/images/guia/recargos-dominicales-nocturnos-colombia.png",
+    sources: pickSources("ley2466", "cst", "decreto1469", "decreto1470", "mintrabajo"),
+    relatedSlugs: [
+      "recargo-nocturno-colombia-2026",
+      "dominical-festivo-trabajo-colombia",
+      "jornada-42-horas-colombia-2026",
+    ],
+    faq: [
+      {
+        question: "¿El recargo aplica sobre el salario básico o todo lo que gano?",
+        answer:
+          "Sobre el salario ordinario (básico mensual) convertido a valor hora/jornada, no sobre comisiones ni bonificaciones ocasionales, salvo que la norma o la jurisprudencia les den carácter salarial.",
+      },
+      {
+        question: "¿Si el festivo cae en mi día de descanso habitual, me pagan doble?",
+        answer:
+          "Puedes tener derecho a la remuneración del día de descanso más el recargo por festivo laborado, según cómo se configure la jornada y lo que diga tu contrato/reglamento. Revisa el desprendible con el porcentaje vigente (90 % desde julio 2026).",
+      },
+      {
+        question: "¿Los trabajadores domésticos tienen estos derechos?",
+        answer:
+          "Sí. Con la Ley 2466 gozan de las mismas garantías de recargos nocturnos y dominicales/festivos que el resto de trabajadores subordinados.",
+      },
+      {
+        question: "¿Cuál es el cronograma exacto del recargo dominical?",
+        answer:
+          "Antes del 1 de julio de 2025: 75 %. Del 1 de julio de 2025 al 30 de junio de 2026: 80 %. Del 1 de julio de 2026 al 30 de junio de 2027: 90 %. Desde el 1 de julio de 2027: 100 %.",
+      },
+    ],
     sections: [
       {
         type: "p",
-        text: "Si trabajas los domingos, festivos o en turnos nocturnos en Colombia, hay dinero que quizás no te están pagando. La Ley 2466 de 2025 aumentó los recargos de forma escalonada y cambió el horario de inicio de la jornada nocturna. Aquí te explicamos exactamente cuánto te deben pagar y cómo verificar que tu nómina esté correcta.",
+        text: "Si trabajas los domingos, festivos o en turnos nocturnos en Colombia, hay dinero que quizás no te están pagando. La Ley 2466 de 2025 aumentó los recargos de forma escalonada y cambió el horario de inicio de la jornada nocturna a las 7:00 p. m. Aquí te explicamos cuánto te deben pagar en 2026 y cómo verificar tu nómina.",
       },
       {
         type: "h2",
@@ -189,15 +250,23 @@ export const reformaArticles: BlogArticle[] = [
       {
         type: "ul",
         items: [
-          "Antes de julio 2025: 75 %",
-          "Julio 2025 – junio 2026: 80 %",
-          "Julio 2026 – junio 2027: 90 % (aplica ahora)",
-          "Julio 2027 en adelante: 100 %",
+          "Antes del 1 de julio de 2025: 75 %",
+          "1 de julio de 2025 – 30 de junio de 2026: 80 %",
+          "1 de julio de 2026 – 30 de junio de 2027: 90 % (tramo actual desde julio 2026)",
+          "Desde el 1 de julio de 2027: 100 %",
         ],
       },
       {
         type: "p",
-        text: "Si tu salario ordinario por hora es de $10.000 y trabajas un domingo, ese día debes recibir $19.000 por hora (hora normal + 90 % de recargo). A partir de julio de 2027, será el doble: $20.000 por hora.",
+        text: "Si tu salario ordinario por hora es de $10.000 y trabajas un domingo en julio de 2026, esa hora debe liquidarse como $19.000 (hora normal + 90 % de recargo). A partir de julio de 2027, será el doble: $20.000 por hora.",
+      },
+      {
+        type: "h2",
+        text: "Ejemplo oficial con SMMLV 2026 ($1.750.905)",
+      },
+      {
+        type: "p",
+        text: "Con jornada de 42 horas semanales (desde el 15 de julio de 2026) y divisor de referencia ≈ 182 horas/mes, la hora ordinaria del mínimo es ≈ $9.620. Domingo diurno al 90 %: ≈ $18.278 por hora. Al 80 % (junio 2026 o antes en ese tramo): ≈ $17.316 por hora. Esas cifras deben reflejarse en tu colilla si laboraste descanso.",
       },
       {
         type: "h2",
@@ -205,23 +274,19 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Los recargos se acumulan. Ejemplo con salario mínimo 2026 ($1.750.905): valor hora ordinaria base 42 h semanales, divisor 182 ≈ $9.620. Domingo diurno (recargo 90 %): $9.620 + $8.658 = $18.278 por hora. Domingo nocturno (recargo 90 % + 35 %): aún más alto.",
-      },
-      {
-        type: "p",
-        text: "Si trabajas en comercio, vigilancia, salud o restaurantes, este cálculo impacta directamente tu bolsillo cada semana. Pide a tu empresa que te explique cómo liquidan esas horas.",
+        text: "Los recargos se acumulan según los factores del CST. Domingo nocturno = recargo dominical/festivo vigente (90 % desde julio 2026) + componente nocturno del 35 % (7:00 p. m.–6:00 a. m.). En comercio, vigilancia, salud o restaurantes este cálculo impacta cada semana.",
       },
       {
         type: "h2",
-        text: "La jornada nocturna empieza a las 7 p. m.",
+        text: "La jornada nocturna empieza a las 7:00 p. m.",
       },
       {
         type: "p",
-        text: "Desde el 25 de diciembre de 2025, la jornada nocturna ya no empieza a las 9 p. m.: ahora inicia a las 7 p. m. El recargo nocturno es del 35 % sobre la hora ordinaria y aplica entre las 7:00 p. m. y las 6:00 a. m.",
+        text: "Desde el 25 de diciembre de 2025, la jornada nocturna inicia a las 7:00 p. m. (antes 9:00 p. m.) y termina a las 6:00 a. m. El recargo nocturno ordinario es del 35 % (factor 1,35).",
       },
       {
         type: "callout",
-        text: "Antes, si entrabas a trabajar a las 7 p. m., las primeras dos horas no generaban recargo nocturno. Hoy sí. Si tu empleador no ajustó tu liquidación desde diciembre de 2025, te está debiendo dinero de forma retroactiva.",
+        text: "Antes, si entrabas a las 7:00 p. m., las primeras dos horas no generaban recargo nocturno. Hoy sí. Si tu empleador no ajustó tu liquidación desde diciembre de 2025, podrías tener diferencias reclamables.",
       },
       {
         type: "h2",
@@ -230,8 +295,8 @@ export const reformaArticles: BlogArticle[] = [
       {
         type: "ul",
         items: [
-          "Ocasional: 1 o 2 domingos o festivos al mes. Aplica el recargo, pero no necesariamente compensatorio.",
-          "Habitual: 3 o más domingos o festivos en un mismo mes. Además del recargo, tienes derecho a un día de descanso compensatorio.",
+          "Ocasional: 1 o 2 domingos o festivos al mes. Aplica el recargo; el compensatorio depende del caso.",
+          "Habitual: 3 o más domingos o festivos en un mismo mes. Además del recargo, suele corresponder día de descanso compensatorio.",
         ],
       },
       {
@@ -256,9 +321,9 @@ export const reformaArticles: BlogArticle[] = [
         type: "ul",
         items: [
           "Solicita tu desprendible detallado (es obligación legal entregarlo)",
-          "Identifica horas en domingo, festivo o después de las 7 p. m.",
-          "Verifica líneas de recargo dominical, festivo o nocturno con el porcentaje correcto",
-          "Compara: valor hora ordinaria × horas × porcentaje de recargo",
+          "Identifica horas en domingo, festivo o después de las 7:00 p. m.",
+          "Verifica líneas de recargo dominical, festivo o nocturno con el porcentaje correcto (80 % o 90 % según la fecha)",
+          "Compara: valor hora ordinaria × horas × (1 + porcentaje de recargo)",
         ],
       },
       {
@@ -267,23 +332,11 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Sí. Las acreencias laborales prescriben a los 3 años desde que se hicieron exigibles. Para diferencias en recargo nocturno desde diciembre de 2025 (inicio a las 7 p. m.), tienes tiempo para reclamar retroactivamente.",
-      },
-      {
-        type: "h2",
-        text: "Preguntas frecuentes",
-      },
-      {
-        type: "ul",
-        items: [
-          "¿El recargo aplica sobre el salario básico o todo lo que gano? Sobre el salario ordinario (básico mensual), no comisiones ni bonificaciones.",
-          "¿Si el festivo cae en mi día de descanso habitual, me pagan doble? Sí: día de descanso + recargo festivo.",
-          "¿Los trabajadores domésticos tienen estos derechos? Sí, desde la Ley 2466 gozan de las mismas garantías.",
-        ],
+        text: "Sí. Las acreencias laborales suelen prescribir a los 3 años desde que se hicieron exigibles. Para diferencias en recargo nocturno desde diciembre de 2025 (inicio a las 7:00 p. m.) o dominical mal liquidado al 80 %/90 %, tienes ventana para reclamar.",
       },
       {
         type: "callout",
-        text: "Nominapp identifica tramos nocturnos y marca dominical o festivo en el calendario. Registra cada jornada para estimar tus recargos acumulados del mes.",
+        text: "Nominapp identifica tramos nocturnos y marca dominical o festivo en el calendario. Registra cada jornada para estimar tus recargos acumulados del mes según la Ley 2466.",
       },
     ],
   },
@@ -291,7 +344,7 @@ export const reformaArticles: BlogArticle[] = [
     slug: "contratos-derechos-empleados-colombia-2026",
     title: "Contratos de trabajo en Colombia 2026: los nuevos derechos que debes conocer",
     description:
-      "Tope de 4 años en contratos fijos, debido proceso disciplinario, aprendices SENA, formalización doméstica y nuevas licencias remuneradas según la Ley 2466.",
+      "Tope de 4 años en contratos fijos, debido proceso disciplinario, aprendices SENA, formalización doméstica y licencias remuneradas según la Ley 2466.",
     keywords: [
       "contratos laborales Colombia 2026",
       "contrato a término fijo límite 4 años",
@@ -301,12 +354,41 @@ export const reformaArticles: BlogArticle[] = [
       "contrato por obra o labor Colombia",
     ],
     publishedAt: "2026-06-28",
-    readingMinutes: 10,
+    updatedAt: "2026-07-13",
+    readingMinutes: 12,
     heroImage: "/images/guia/contratos-derechos-empleados-colombia.png",
+    sources: pickSources("ley2466", "cst", "decreto1469", "mintrabajo", "ley100"),
+    relatedSlugs: [
+      "jornada-42-horas-colombia-2026",
+      "de-la-espriella-trabajo-empleados-colombia-2026",
+      "recargos-dominicales-nocturnos-colombia-2026",
+    ],
+    faq: [
+      {
+        question: "¿Cuántos años puede durar un contrato a término fijo bajo la Ley 2466?",
+        answer:
+          "El tope acumulado es de 4 años contados desde el 26 de junio de 2025. Superado ese lapso, el contrato se convierte en indefinido.",
+      },
+      {
+        question: "¿Qué pasa si la empresa me pide renunciar para firmar un contrato nuevo?",
+        answer:
+          "Puede ser una práctica para resetear antigüedad. No firmes sin asesoría: podrías perder derechos acumulados. La conversión a indefinido opera por ministerio de la ley cuando se cumplen los supuestos.",
+      },
+      {
+        question: "¿Los aprendices SENA ganan salario mínimo?",
+        answer:
+          "En etapa práctica deben recibir al menos el 100 % del SMMLV ($1.750.905 en 2026) más afiliación y prestaciones según la reforma. En etapa lectiva el apoyo es del 75 % del SMMLV más salud y ARL a cargo del empleador.",
+      },
+      {
+        question: "¿Cuántos días tengo para defenderme en un proceso disciplinario?",
+        answer:
+          "La Ley 2466 exige, como mínimo, 5 días para presentar descargos y pruebas antes de una sanción, además de notificación de hechos, entrega de pruebas y decisión motivada.",
+      },
+    ],
     sections: [
       {
         type: "p",
-        text: "Con la Ley 2466 de 2025, las reglas del juego cambiaron para millones de trabajadores colombianos. Hay prácticas que antes eran comunes —como renovar contratos a término fijo año tras año durante décadas— que hoy son ilegales. Si tienes contrato en Colombia, esto te afecta directamente.",
+        text: "Con la Ley 2466 de 2025, las reglas del juego cambiaron para millones de trabajadores colombianos. Prácticas como renovar contratos a término fijo año tras año durante décadas tienen un límite claro. Si tienes contrato en Colombia, esto te afecta directamente.",
       },
       {
         type: "h2",
@@ -323,9 +405,9 @@ export const reformaArticles: BlogArticle[] = [
       {
         type: "ul",
         items: [
-          "Si llevas más de 4 años con contrato fijo consecutivo, ya tienes derecho a contrato indefinido",
+          "Si llevas más de 4 años con contrato fijo consecutivo (bajo las reglas de la reforma), tienes derecho a contrato indefinido",
           "A partir de la cuarta prórroga de un contrato inferior a 1 año, la siguiente renovación debe ser por mínimo 1 año",
-          "Si la empresa no cumple, el contrato se entiende indefinido desde el inicio de la relación laboral",
+          "Si la empresa no cumple, el contrato se entiende indefinido",
         ],
       },
       {
@@ -334,15 +416,23 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "h2",
+        text: "Jornada, salario mínimo y recargos que debes exigir junto al contrato",
+      },
+      {
+        type: "p",
+        text: "Sea cual sea tu tipo de contrato, en 2026 rigen: SMMLV $1.750.905 (Decreto 1469/2025), auxilio $249.095 si ganas hasta 2 SMMLV (Decreto 1470/2025), jornada máxima 42 horas desde el 15 de julio de 2026, nocturna 7:00 p. m.–6:00 a. m. con 35 %, y recargo dominical/festivo del 90 % desde el 1 de julio de 2026.",
+      },
+      {
+        type: "h2",
         text: "El contrato indefinido: tu escudo de estabilidad",
       },
       {
         type: "ul",
         items: [
-          "Estabilidad: solo puedes ser despedido con justa causa o indemnización",
+          "Estabilidad: solo puedes ser despedido con justa causa o con indemnización",
           "Indemnización mayor si te despiden sin justa causa",
           "Antigüedad protegida para cesantías, vacaciones y otros beneficios",
-          "Preaviso de salida de 30 días; si no lo das, ya no te sancionan",
+          "Preaviso de salida de 30 días; si no lo das, ya no te sancionan como antes en varios supuestos",
         ],
       },
       {
@@ -353,8 +443,8 @@ export const reformaArticles: BlogArticle[] = [
         type: "ul",
         items: [
           "Deben celebrarse por escrito y especificar la obra o labor contratada",
-          "Deben garantizar todas las prestaciones sociales: primas, cesantías, intereses, dotación y vacaciones",
-          "Si al terminar la obra sigues prestando servicios, el contrato pasa automáticamente a ser indefinido",
+          "Deben garantizar prestaciones sociales: primas, cesantías, intereses, dotación y vacaciones",
+          "Si al terminar la obra sigues prestando servicios, el contrato pasa a ser indefinido",
         ],
       },
       {
@@ -382,9 +472,9 @@ export const reformaArticles: BlogArticle[] = [
       {
         type: "ul",
         items: [
-          "Etapa lectiva: apoyo del 75 % del salario mínimo + salud y ARL (empleador)",
-          "Etapa práctica: 100 % del salario mínimo + afiliación completa y prestaciones",
-          "Multa por aprendiz no contratado correctamente: 1,5 salarios mínimos por mes",
+          "Etapa lectiva: apoyo del 75 % del SMMLV ($1.313.179 en 2026) + salud y ARL (empleador)",
+          "Etapa práctica: 100 % del SMMLV ($1.750.905) + afiliación completa y prestaciones",
+          "Multa por aprendiz no contratado correctamente: 1,5 SMMLV por mes (≈ $2.626.358)",
         ],
       },
       {
@@ -396,8 +486,8 @@ export const reformaArticles: BlogArticle[] = [
         items: [
           "Contrato por escrito registrado en la PILA",
           "Salario mínimo completo (no pueden pagarte menos por «vivir en la casa»)",
-          "Prestaciones sociales completas y afiliación a salud, pensión y ARL",
-          "Recargos nocturnos y dominicales como cualquier otro trabajador",
+          "Prestaciones sociales completas y afiliación a salud, pensión y ARL (Ley 100 y afiliaciones)",
+          "Recargos nocturnos (35 %) y dominicales/festivos (90 % desde julio 2026) como cualquier otro trabajador",
         ],
       },
       {
@@ -406,7 +496,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Si trabajas en apps de domicilios (Rappi, iFood, inDrive, etc.), la Ley 2466 exige definir claramente si eres dependiente o independiente. Si hay subordinación y horarios definidos por la app, eres trabajador dependiente con todos los derechos laborales.",
+        text: "Si trabajas en apps de domicilios, la Ley 2466 exige definir claramente si eres dependiente o independiente. Si hay subordinación y horarios definidos por la app, eres trabajador dependiente con derechos laborales.",
       },
       {
         type: "h2",
@@ -428,7 +518,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Antes debía ser repetido y demostrable. Con la Ley 2466, un grito delante de compañeros, una amenaza o humillación pública ya configura acoso laboral. La protección se extiende a pasantes, aprendices, ex empleados y candidatos en selección.",
+        text: "Antes debía ser repetido y demostrable. Con la Ley 2466, un grito delante de compañeros, una amenaza o humillación pública ya puede configurar acoso laboral. La protección se extiende a pasantes, aprendices, ex empleados y candidatos en selección.",
       },
       {
         type: "h2",
@@ -438,8 +528,8 @@ export const reformaArticles: BlogArticle[] = [
         type: "ul",
         items: [
           "Más de 4 años con contrato fijo → exige contrato indefinido",
-          "Despido sin proceso previo → posible despido ilegal",
-          "Aprendiz SENA en práctica → salario mínimo completo + prestaciones",
+          "Despido sin proceso previo → posible despido irregular",
+          "Aprendiz SENA en práctica → SMMLV $1.750.905 + prestaciones",
           "Trabajo doméstico sin contrato → exige formalización y PILA",
           "Negativa de licencia médica → derecho legal, puedes denunciar",
           "Incidente de acoso → denunciable con un solo hecho",
@@ -447,7 +537,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "callout",
-        text: "Conoce tu tipo de contrato y lleva registro de comunicaciones laborales. Nominapp te ayuda a documentar jornadas y estimar liquidaciones mientras exiges tus derechos.",
+        text: "Conoce tu tipo de contrato y lleva registro de comunicaciones laborales. Nominapp te ayuda a documentar jornadas y estimar liquidaciones mientras exiges tus derechos bajo la Ley 2466.",
       },
     ],
   },
@@ -455,7 +545,7 @@ export const reformaArticles: BlogArticle[] = [
     slug: "de-la-espriella-trabajo-empleados-colombia-2026",
     title: "Abelardo de la Espriella y el trabajo en Colombia: ¿qué puede cambiar para los empleados?",
     description:
-      "El 21 de junio de 2026 Colombia eligió a Abelardo de la Espriella como presidente (2026-2030). Qué implica para la Ley 2466, la jornada de 42 horas y tus derechos laborales.",
+      "El 21 de junio de 2026 Colombia eligió a Abelardo de la Espriella como presidente (2026-2030). Qué implica para la Ley 2466 (norma vigente), la jornada de 42 horas y tus derechos laborales.",
     keywords: [
       "De la Espriella reforma laboral",
       "nuevo gobierno Colombia trabajo 2026",
@@ -465,12 +555,50 @@ export const reformaArticles: BlogArticle[] = [
       "presidente electo Colombia empleo",
     ],
     publishedAt: "2026-06-28",
-    readingMinutes: 9,
+    updatedAt: "2026-07-13",
+    readingMinutes: 11,
     heroImage: "/images/guia/casa-narino-presidencia-colombia.png",
+    sources: pickSources("ley2466", "ley2101", "cst", "mintrabajo", "decreto1469"),
+    relatedSlugs: [
+      "jornada-42-horas-colombia-2026",
+      "contratos-derechos-empleados-colombia-2026",
+      "recargos-dominicales-nocturnos-colombia-2026",
+    ],
+    faq: [
+      {
+        question: "¿Cuándo asume el presidente electo?",
+        answer:
+          "El 7 de agosto de 2026, en posesión ante el Congreso.",
+      },
+      {
+        question: "¿La jornada de 42 horas puede revertirse antes de agosto?",
+        answer:
+          "No por el solo cambio de gobierno. Entra el 15 de julio de 2026 y la Ley 2466 / Ley 2101 siguen vigentes hasta que el Congreso (o un fallo) las modifique. El gobierno saliente sigue en el cargo hasta el 7 de agosto.",
+      },
+      {
+        question: "¿Puede decretar cambios laborales sin el Congreso?",
+        answer:
+          "Solo en hipótesis excepcionales (p. ej. estados de excepción con límites constitucionales), no por decreto ordinario que derogue una ley estatutaria/ordinaria del Congreso de forma libre.",
+      },
+      {
+        question: "¿Qué pasa si el Congreso modifica la ley en 2027?",
+        answer:
+          "Los derechos ya causados y las acreencias generadas bajo la norma vigente no suelen poder quitarse retroactivamente. Lo que cambie a futuro dependerá del texto que apruebe el Congreso y del control de la Corte Constitucional.",
+      },
+      {
+        question: "¿Nominapp es una fuente oficial del Gobierno?",
+        answer:
+          "No. Nominapp publica análisis explicativo para trabajadores. La norma vinculante hoy es la Ley 2466 de 2025 (y el CST, decretos de salario, etc.). Consulta siempre el texto oficial en Función Pública / Diario Oficial.",
+      },
+    ],
     sections: [
       {
+        type: "callout",
+        text: "Aviso importante: este artículo de Nominapp es análisis periodístico y explicación educativa. No es una fuente oficial del Gobierno de Colombia ni sustituye el Diario Oficial, Función Pública o el Ministerio del Trabajo. La norma laboral vinculante hoy es la Ley 2466 de 2025 (reforma laboral), disponible en https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=260676, junto con el CST y los decretos de salario mínimo.",
+      },
+      {
         type: "p",
-        text: "El 21 de junio de 2026, Colombia eligió a Abelardo de la Espriella como nuevo presidente para el período 2026-2030. Asumirá el cargo el 7 de agosto. Para millones de trabajadores colombianos, la pregunta inmediata es la misma: ¿qué pasa con mis derechos laborales? ¿La reforma laboral de Petro se desmonta? ¿Cambia lo que me pagan?",
+        text: "El 21 de junio de 2026, Colombia eligió a Abelardo de la Espriella como nuevo presidente para el período 2026-2030. Asumirá el cargo el 7 de agosto. Para millones de trabajadores colombianos, la pregunta inmediata es la misma: ¿qué pasa con mis derechos laborales? ¿La reforma laboral se desmonta? ¿Cambia lo que me pagan?",
       },
       {
         type: "h2",
@@ -478,21 +606,22 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "La Ley 2466 de 2025 es ley vigente y seguirá siéndolo hasta que el Congreso vote otra cosa. De la Espriella asume el 7 de agosto. Incluso si presenta un proyecto para modificar la reforma, ese proceso legislativo toma meses y requiere mayorías. Nada cambia de un día para otro.",
+        text: "La Ley 2466 de 2025 es ley vigente y seguirá siéndolo hasta que el Congreso apruebe otra cosa (o un juez la module). De la Espriella asume el 7 de agosto. Incluso si presenta un proyecto para modificar la reforma, ese proceso legislativo toma meses y requiere mayorías. Nada cambia de un día para otro por el solo resultado electoral.",
       },
       {
         type: "ul",
         items: [
-          "Jornada de 42 horas semanales desde el 15 de julio de 2026",
-          "Recargo dominical del 90 % desde julio de 2026",
-          "Jornada nocturna desde las 7 p. m.",
-          "Contratos con tope de 4 años",
-          "Nuevas licencias remuneradas",
+          "Jornada de 42 horas semanales desde el 15 de julio de 2026 (Ley 2101 / Ley 2466)",
+          "Recargo dominical/festivo del 90 % desde el 1 de julio de 2026 (100 % desde julio 2027)",
+          "Jornada nocturna desde las 7:00 p. m. hasta las 6:00 a. m., recargo 35 %",
+          "Contratos a término fijo con tope de 4 años acumulados",
+          "Nuevas licencias remuneradas y reglas de debido proceso disciplinario",
+          "SMMLV 2026: $1.750.905; auxilio de transporte: $249.095 (Decretos 1469 y 1470 de 2025)",
         ],
       },
       {
         type: "callout",
-        text: "Si tu empleador usa la excusa del «nuevo gobierno» para no cumplir la ley actual, está cometiendo una infracción laboral. La ley no cambia por anticipación.",
+        text: "Si tu empleador usa la excusa del «nuevo gobierno» para no cumplir la ley actual, está cometiendo una infracción laboral. La ley no cambia por anticipación política.",
       },
       {
         type: "image",
@@ -506,7 +635,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Durante su campaña, De la Espriella planteó una visión económica basada en libre mercado, reducción del Estado y flexibilización laboral. Sus propuestas más concretas incluyen:",
+        text: "Durante su campaña, De la Espriella planteó una visión económica basada en libre mercado, reducción del Estado y flexibilización laboral. Sus propuestas más comentadas incluyen el trabajo por horas, la revisión de parafiscales e incentivos a la formalización. Esto es análisis de propuestas políticas, no texto legal vigente.",
       },
       {
         type: "h2",
@@ -514,7 +643,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "La propuesta central es legalizar de forma abierta el trabajo por horas como nueva modalidad de vinculación. Esto implicaría contratar por horas trabajadas, sin las obligaciones de un contrato tradicional.",
+        text: "La propuesta central es legalizar de forma abierta el trabajo por horas como nueva modalidad de vinculación. Eso implicaría contratar por horas trabajadas, con un régimen distinto al contrato tradicional del CST. Hoy, mientras no exista una ley nueva, rigen las normas actuales de la Ley 2466.",
       },
       {
         type: "p",
@@ -526,7 +655,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Su vicepresidente José Manuel Restrepo ha mencionado revisar el pago de parafiscales (SENA, ICBF y cajas de compensación) para reducir la carga sobre empresarios e incentivar empleo formal. El efecto puede ser positivo en creación de empleo, pero también menos recursos para programas sociales.",
+        text: "Su fórmula de gobierno ha mencionado revisar el pago de parafiscales (SENA, ICBF y cajas de compensación) para reducir la carga sobre empresarios e incentivar empleo formal. El efecto puede ser positivo en creación de empleo, pero también menos recursos para programas sociales. Cualquier cambio requiere ley.",
       },
       {
         type: "h2",
@@ -534,7 +663,7 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "En su plan de gobierno propone incentivos económicos para empresas que contraten formalmente a jóvenes, mujeres y personas mayores de 50 años. La Ley 2466 ya prevé un subsidio del 25 % del SMLMV por empleo nuevo para estos grupos.",
+        text: "En el plan de gobierno se habló de incentivos para contratar formalmente a jóvenes, mujeres y personas mayores de 50 años. La Ley 2466 ya prevé mecanismos de apoyo al empleo nuevo para estos grupos; mientras no se derogue, esa es la regla.",
       },
       {
         type: "image",
@@ -548,24 +677,32 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Técnicamente sí, pero derogar completamente sería complejo:",
+        text: "Técnicamente el Congreso puede modificarla o derogarla, pero no es automático:",
       },
       {
         type: "ul",
         items: [
           "El Congreso tiene composición diversa; no hay mayoría automática",
-          "Algunos cambios ya están implementados y generan costos retroactivos",
+          "Algunos cambios ya están implementados (nocturna 7:00 p. m., recargo 90 %, jornada 42 h)",
           "La presión sindical (CUT, CGT, CTC) defenderá los avances logrados",
           "La Corte Constitucional puede revisar modificaciones que afecten derechos adquiridos",
         ],
       },
       {
         type: "p",
-        text: "Lo más probable, según analistas, son modificaciones puntuales —especialmente en contratación y parafiscales— más que una derogación total.",
+        text: "Lo más probable, según analistas, son modificaciones puntuales —especialmente en contratación y parafiscales— más que una derogación total de un día para otro.",
       },
       {
         type: "h2",
-        text: "Cambios laborales más probables",
+        text: "Derechos concretos que hoy (julio 2026) debes verificar en tu nómina",
+      },
+      {
+        type: "p",
+        text: "Independiente del debate político, tu colilla de julio 2026 debería reflejar: jornada semanal máx. 42 h desde el 15 de julio; dominicales/festivos al 90 % desde el 1 de julio; nocturnas desde las 7:00 p. m. con 35 %; SMMLV $1.750.905 y, si aplica, auxilio $249.095. Eso sale de la Ley 2466 y los decretos de salario, no de un discurso de campaña.",
+      },
+      {
+        type: "h2",
+        text: "Cambios laborales más discusiones de probabilidad (análisis)",
       },
       {
         type: "ul",
@@ -574,7 +711,7 @@ export const reformaArticles: BlogArticle[] = [
           "Revisar tope de contratos fijos a 4 años — probabilidad media-baja",
           "Reducir aportes parafiscales — probabilidad media",
           "Derogar jornada 42 horas — probabilidad baja; alta resistencia sindical",
-          "Derogar recargo nocturno desde 7 p. m. — probabilidad media",
+          "Derogar recargo nocturno desde 7:00 p. m. — probabilidad media",
           "Eliminar licencias remuneradas — probabilidad baja",
         ],
       },
@@ -585,11 +722,12 @@ export const reformaArticles: BlogArticle[] = [
       {
         type: "ul",
         items: [
-          "Verifica tu nómina de julio: desde el 15 de julio la jornada debe ser 42 horas",
-          "Revisa recargos desde julio 1: el dominical y festivo subió al 90 %",
-          "Si llevas más de 4 años con contrato fijo, exige contrato indefinido ahora",
+          "Verifica tu nómina de julio: desde el 15 de julio la jornada máxima es 42 horas",
+          "Revisa recargos desde el 1 de julio: el dominical y festivo subió al 90 %",
+          "Si llevas más de 4 años con contrato fijo bajo la reforma, exige contrato indefinido",
           "Documenta contratos, desprendibles y comunicaciones laborales",
           "Acércate a tu sindicato si existe en tu empresa",
+          "Para norma oficial, lee la Ley 2466 en Función Pública — no te quedes solo con redes o apps",
         ],
       },
       {
@@ -602,19 +740,6 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "h2",
-        text: "Preguntas frecuentes",
-      },
-      {
-        type: "ul",
-        items: [
-          "¿Cuándo asume? El 7 de agosto de 2026, en posesión ante el Congreso.",
-          "¿La jornada de 42 horas puede revertirse antes de agosto? No. Entra el 15 de julio y Petro sigue en el cargo hasta el 7 de agosto.",
-          "¿Puede decretar cambios sin el Congreso? Solo en casos muy específicos de emergencia económica, no por decreto ordinario.",
-          "¿Qué pasa si el Congreso modifica la ley en 2027? Los derechos ya causados no pueden quitarse retroactivamente.",
-        ],
-      },
-      {
-        type: "h2",
         text: "Conclusión",
       },
       {
@@ -623,11 +748,11 @@ export const reformaArticles: BlogArticle[] = [
       },
       {
         type: "p",
-        text: "Lo que es seguro: hoy, ahora mismo, la Ley 2466 está vigente y te protege. Conoce tus derechos, exígelos y estate atento a los debates del segundo semestre de 2026.",
+        text: "Lo que es seguro: hoy, ahora mismo, la Ley 2466 de 2025 está vigente y te protege. Conoce tus derechos en el texto oficial, exígelos y estate atento a los debates del segundo semestre de 2026. Este artículo de Nominapp es guía explicativa, no acto administrativo ni interpretación oficial del Estado.",
       },
       {
         type: "callout",
-        text: "Nominapp te ayuda a registrar jornadas, recargos y liquidaciones según la normativa vigente. Descarga la app y lleva el control mientras se define el rumbo laboral del nuevo gobierno.",
+        text: "Nominapp te ayuda a registrar jornadas, recargos y liquidaciones según la normativa vigente (Ley 2466, CST, decretos de SMMLV). No somos el Gobierno: descarga la app y lleva el control mientras se define el rumbo laboral del nuevo gobierno.",
       },
     ],
   },

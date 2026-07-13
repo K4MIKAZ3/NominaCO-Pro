@@ -24,6 +24,9 @@ export function Header() {
           <Link href="/guia" className="hide-mobile">
             Guía
           </Link>
+          <Link href="/acerca" className="hide-mobile">
+            Acerca
+          </Link>
           <Link href="/#funciones" className="hide-mobile">
             Funciones
           </Link>

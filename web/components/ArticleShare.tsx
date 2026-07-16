@@ -6,14 +6,74 @@ type ArticleShareProps = {
   title: string;
   description: string;
   url: string;
+  imageUrl?: string;
 };
 
-export function ArticleShare({ title, description, url }: ArticleShareProps) {
+function extensionFromMime(mimeType: string): string {
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/webp") return "webp";
+  if (mimeType === "image/jpeg") return "jpg";
+  return "png";
+}
+
+async function svgBlobToPngFile(svgBlob: Blob, title: string): Promise<File> {
+  const svgUrl = URL.createObjectURL(svgBlob);
+  try {
+    const image = new window.Image();
+    image.decoding = "async";
+    image.src = svgUrl;
+    await image.decode();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth || 1200;
+    canvas.height = image.naturalHeight || 675;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Canvas no disponible");
+    }
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const pngBlob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("No se pudo convertir la imagen"));
+        }
+      }, "image/png");
+    });
+
+    return new File([pngBlob], `${title.slice(0, 48)}.png`, {
+      type: "image/png",
+    });
+  } finally {
+    URL.revokeObjectURL(svgUrl);
+  }
+}
+
+async function fetchShareImage(imageUrl: string, title: string): Promise<File | null> {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) return null;
+
+    const blob = await response.blob();
+    if (blob.type === "image/svg+xml" || imageUrl.endsWith(".svg")) {
+      return svgBlobToPngFile(blob, title);
+    }
+
+    const mimeType = blob.type || "image/png";
+    return new File([blob], `${title.slice(0, 48)}.${extensionFromMime(mimeType)}`, {
+      type: mimeType,
+    });
+  } catch {
+    return null;
+  }
+}
+
+export function ArticleShare({ title, description, url, imageUrl }: ArticleShareProps) {
   const [status, setStatus] = useState("");
-  const encodedUrl = encodeURIComponent(url);
-  const encodedTitle = encodeURIComponent(title);
-  const encodedShareText = encodeURIComponent(`${title}\n${url}`);
-  const encodedEmailBody = encodeURIComponent(`${description}\n\n${url}`);
 
   async function copyUrl() {
     try {
@@ -26,12 +86,27 @@ export function ArticleShare({ title, description, url }: ArticleShareProps) {
 
   async function shareArticle() {
     if (navigator.share) {
+      setStatus("Preparando para compartir...");
+
       try {
+        const imageFile = imageUrl ? await fetchShareImage(imageUrl, title) : null;
+        const text = `${description}\n\n${url}`;
+
+        if (
+          imageFile &&
+          navigator.canShare?.({ files: [imageFile], title, text })
+        ) {
+          await navigator.share({ files: [imageFile], title, text });
+          setStatus("Artículo compartido con imagen");
+          return;
+        }
+
         await navigator.share({ title, text: description, url });
         setStatus("Artículo compartido");
         return;
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
+          setStatus("");
           return;
         }
       }
@@ -44,41 +119,11 @@ export function ArticleShare({ title, description, url }: ArticleShareProps) {
     <section className="article-share" aria-labelledby="article-share-title">
       <div>
         <h2 id="article-share-title">Compartir artículo</h2>
-        <p>Envía esta guía por WhatsApp, correo o copia el enlace.</p>
+        <p>Usa el menú nativo de tu dispositivo. Si es compatible, se adjunta la imagen de portada.</p>
       </div>
-      <div className="article-share-actions">
-        <button type="button" className="share-button share-button-primary" onClick={shareArticle}>
-          Compartir
-        </button>
-        <a
-          className="share-button"
-          href={`https://wa.me/?text=${encodedShareText}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          WhatsApp
-        </a>
-        <a
-          className="share-button"
-          href={`https://t.me/share/url?url=${encodedUrl}&text=${encodedTitle}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Telegram
-        </a>
-        <a
-          className="share-button"
-          href={`mailto:?subject=${encodedTitle}&body=${encodedEmailBody}`}
-        >
-          Correo
-        </a>
-        <button type="button" className="share-button" onClick={copyUrl}>
-          Copiar enlace
-        </button>
-      </div>
-      <p className="article-share-url" title={url}>
-        {url}
-      </p>
+      <button type="button" className="share-button share-button-primary" onClick={shareArticle}>
+        Compartir artículo
+      </button>
       <p className="article-share-status" aria-live="polite">
         {status}
       </p>

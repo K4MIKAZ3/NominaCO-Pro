@@ -775,16 +775,11 @@ body:has(.page-main--dashboard) .site-footer {
   margin: 0;
 }
 
-.article-share-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
 .share-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: fit-content;
   min-height: 40px;
   padding: 0.55rem 0.8rem;
   border: 1px solid var(--border);
@@ -819,15 +814,6 @@ body:has(.page-main--dashboard) .site-footer {
 .share-button-primary:focus-visible {
   color: #ffffff;
   border-color: transparent;
-}
-
-.article-share-url {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.85rem;
-  color: var(--text-muted);
 }
 
 .article-share-status {

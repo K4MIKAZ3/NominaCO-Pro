@@ -52,6 +52,7 @@ type ArticleBodyProps = {
 
 export function ArticleBody({ article }: ArticleBodyProps) {
   const articleUrl = absoluteUrl(`/guia/${article.slug}`);
+  const articleImageUrl = article.heroImage ? absoluteUrl(article.heroImage) : undefined;
   const related =
     article.relatedSlugs
       ?.map((slug) => getArticle(slug))
@@ -95,6 +96,7 @@ export function ArticleBody({ article }: ArticleBodyProps) {
         title={article.title}
         description={article.description}
         url={articleUrl}
+        imageUrl={articleImageUrl}
       />
       {article.heroImage ? (
         <figure className="article-hero-image">

@@ -90,7 +90,8 @@ export function ArticleShare({ title, description, url, imageUrl }: ArticleShare
 
       try {
         const imageFile = imageUrl ? await fetchShareImage(imageUrl, title) : null;
-        const text = `${description}\n\n${url}`;
+        const text = `${title}\n\n${description}\n\n${url}`;
+        const textWithSeparateUrl = `${title}\n\n${description}`;
 
         if (
           imageFile &&
@@ -101,7 +102,7 @@ export function ArticleShare({ title, description, url, imageUrl }: ArticleShare
           return;
         }
 
-        await navigator.share({ title, text: description, url });
+        await navigator.share({ title, text: textWithSeparateUrl, url });
         setStatus("Artículo compartido");
         return;
       } catch (error) {

@@ -116,11 +116,7 @@ export function ArticleShare({ title, description, url, imageUrl }: ArticleShare
   }
 
   return (
-    <section className="article-share" aria-labelledby="article-share-title">
-      <div>
-        <h2 id="article-share-title">Compartir artículo</h2>
-        <p>Usa el menú nativo de tu dispositivo. Si es compatible, se adjunta la imagen de portada.</p>
-      </div>
+    <section className="article-share" aria-label="Compartir artículo">
       <button type="button" className="share-button share-button-primary" onClick={shareArticle}>
         Compartir artículo
       </button>

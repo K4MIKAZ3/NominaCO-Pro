@@ -9,30 +9,40 @@ type ArticleShareProps = {
   imageUrl?: string;
 };
 
-function extensionFromMime(mimeType: string): string {
-  if (mimeType === "image/png") return "png";
-  if (mimeType === "image/webp") return "webp";
-  if (mimeType === "image/jpeg") return "jpg";
-  return "png";
+const SHARE_IMAGE_WIDTH = 1920;
+const SHARE_IMAGE_HEIGHT = 1080;
+
+function fileNameFromTitle(title: string): string {
+  const normalized = title
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 58);
+
+  return normalized || "articulo-nominapp";
 }
 
-async function svgBlobToPngFile(svgBlob: Blob, title: string): Promise<File> {
-  const svgUrl = URL.createObjectURL(svgBlob);
+async function imageBlobToHighQualityPngFile(blob: Blob, title: string): Promise<File> {
+  const objectUrl = URL.createObjectURL(blob);
   try {
     const image = new window.Image();
     image.decoding = "async";
-    image.src = svgUrl;
+    image.src = objectUrl;
     await image.decode();
 
     const canvas = document.createElement("canvas");
-    canvas.width = image.naturalWidth || 1200;
-    canvas.height = image.naturalHeight || 675;
+    canvas.width = SHARE_IMAGE_WIDTH;
+    canvas.height = SHARE_IMAGE_HEIGHT;
 
     const context = canvas.getContext("2d");
     if (!context) {
       throw new Error("Canvas no disponible");
     }
 
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
     const pngBlob = await new Promise<Blob>((resolve, reject) => {
@@ -45,11 +55,11 @@ async function svgBlobToPngFile(svgBlob: Blob, title: string): Promise<File> {
       }, "image/png");
     });
 
-    return new File([pngBlob], `${title.slice(0, 48)}.png`, {
+    return new File([pngBlob], `${fileNameFromTitle(title)}.png`, {
       type: "image/png",
     });
   } finally {
-    URL.revokeObjectURL(svgUrl);
+    URL.revokeObjectURL(objectUrl);
   }
 }
 
@@ -59,14 +69,7 @@ async function fetchShareImage(imageUrl: string, title: string): Promise<File | 
     if (!response.ok) return null;
 
     const blob = await response.blob();
-    if (blob.type === "image/svg+xml" || imageUrl.endsWith(".svg")) {
-      return svgBlobToPngFile(blob, title);
-    }
-
-    const mimeType = blob.type || "image/png";
-    return new File([blob], `${title.slice(0, 48)}.${extensionFromMime(mimeType)}`, {
-      type: mimeType,
-    });
+    return imageBlobToHighQualityPngFile(blob, title);
   } catch {
     return null;
   }

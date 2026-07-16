@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">Semana de 42 horas con lunes festivo</title>
+  <desc id="desc">Comparacion entre el maximo semanal de 42 horas y una semana con lunes festivo remunerado no recuperable.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#eef2ff"/>
+      <stop offset="1" stop-color="#fff7ed"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <path d="M671 103c48 42 70 109 49 163-21 55-85 97-155 103-70 7-145-22-178-77-33-56-24-137 20-185 44-49 122-64 188-49 29 7 54 21 76 45z" fill="#2563eb" opacity="0.08"/>
+
+  <g filter="url(#shadow)">
+    <rect x="72" y="72" width="300" height="298" rx="30" fill="#ffffff"/>
+    <text x="222" y="118" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" text-anchor="middle">Semana ordinaria</text>
+    <text x="222" y="148" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="15" text-anchor="middle">Tope semanal desde julio 2026</text>
+    <rect x="116" y="184" width="212" height="36" rx="18" fill="#dbeafe"/>
+    <rect x="116" y="236" width="212" height="36" rx="18" fill="#dbeafe"/>
+    <rect x="116" y="288" width="212" height="36" rx="18" fill="#dbeafe"/>
+    <g font-family="Arial, Helvetica, sans-serif" font-weight="800" text-anchor="middle">
+      <text x="222" y="209" fill="#1d4ed8" font-size="17">Hasta 42 h ordinarias</text>
+      <text x="222" y="261" fill="#1d4ed8" font-size="17">Salario completo</text>
+      <text x="222" y="313" fill="#1d4ed8" font-size="17">Descanso semanal</text>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="428" y="72" width="300" height="298" rx="30" fill="#ffffff"/>
+    <text x="578" y="118" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" text-anchor="middle">Con lunes festivo</text>
+    <text x="578" y="148" fill="#475569" font-family="Arial, Helvetica, sans-serif" font-size="15" text-anchor="middle">Menos horas efectivas, mismo pago</text>
+
+    <rect x="471" y="186" width="38" height="120" rx="19" fill="#dcfce7"/>
+    <rect x="522" y="238" width="38" height="68" rx="19" fill="#bfdbfe"/>
+    <rect x="573" y="238" width="38" height="68" rx="19" fill="#bfdbfe"/>
+    <rect x="624" y="238" width="38" height="68" rx="19" fill="#bfdbfe"/>
+    <rect x="675" y="238" width="38" height="68" rx="19" fill="#bfdbfe"/>
+
+    <line x1="464" y1="186" x2="720" y2="186" stroke="#f97316" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 9"/>
+    <text x="720" y="179" fill="#c2410c" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="800" text-anchor="end">42 h max.</text>
+
+    <g font-family="Arial, Helvetica, sans-serif" font-weight="800" text-anchor="middle">
+      <text x="490" y="330" fill="#15803d" font-size="12">F</text>
+      <text x="541" y="330" fill="#1d4ed8" font-size="12">M</text>
+      <text x="592" y="330" fill="#1d4ed8" font-size="12">X</text>
+      <text x="643" y="330" fill="#1d4ed8" font-size="12">J</text>
+      <text x="694" y="330" fill="#1d4ed8" font-size="12">V</text>
+      <text x="592" y="354" fill="#0f172a" font-size="17">No hay horas por recuperar</text>
+    </g>
+  </g>
+
+  <text x="400" y="414" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" text-anchor="middle">El maximo semanal es un techo, no una obligacion de llenar horas.</text>
+</svg>

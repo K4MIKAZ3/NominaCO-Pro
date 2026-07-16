@@ -9,7 +9,7 @@ import { absoluteUrl, site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Guía de nómina personal Colombia",
   description:
-    "Artículos sobre liquidación quincenal, recargo nocturno, auxilio de transporte, reforma laboral 2026, jornada de 42 horas, contratos y derechos de empleados en Colombia.",
+    "Artículos sobre liquidación quincenal, festivos remunerados, recargo nocturno, auxilio de transporte, reforma laboral 2026, jornada de 42 horas, contratos y derechos de empleados en Colombia.",
   alternates: {
     canonical: absoluteUrl("/guia"),
     types: {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `Guía de nómina · ${site.name}`,
     description:
-      "Liquidación, recargos, auxilio de transporte y reforma laboral 2026 explicados para empleados.",
+      "Liquidación, festivos remunerados, recargos, auxilio de transporte y reforma laboral 2026 explicados para empleados.",
     images: ["/images/og-default.png"],
   },
 };

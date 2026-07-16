@@ -3,6 +3,142 @@ import { pickSources } from "./sources";
 
 export const reformaArticles: BlogArticle[] = [
   {
+    slug: "lunes-festivo-reponer-horas-colombia-42-horas",
+    title: "¿Se deben reponer las horas de un lunes festivo en Colombia?",
+    description:
+      "Con la jornada máxima de 42 horas semanales, los festivos remunerados no se recuperan en el resto de la semana. Qué dice el CST, qué pasa con el salario y cuándo sí hay recargos.",
+    keywords: [
+      "lunes festivo reponer horas Colombia",
+      "festivo remunerado jornada 42 horas",
+      "Artículo 177 CST festivos",
+      "recuperar lunes festivo trabajo",
+      "jornada laboral 42 horas festivo",
+      "descanso remunerado festivos Colombia",
+    ],
+    publishedAt: "2026-07-16",
+    updatedAt: "2026-07-16",
+    readingMinutes: 7,
+    heroImage: "/images/guia/lunes-festivo-jornada-42-horas-colombia.svg",
+    sources: pickSources("cst", "ley2101", "ley2466", "mintrabajo"),
+    relatedSlugs: [
+      "jornada-42-horas-colombia-2026",
+      "dominical-festivo-trabajo-colombia",
+      "recargos-dominicales-nocturnos-colombia-2026",
+    ],
+    faq: [
+      {
+        question: "¿Mi empleador puede obligarme a recuperar el lunes festivo?",
+        answer:
+          "No como regla general. El festivo es un descanso remunerado: no se descuenta del salario ni se convierte en una deuda de horas para martes a sábado.",
+      },
+      {
+        question: "¿Me pueden pagar menos esa semana porque trabajé menos horas efectivas?",
+        answer:
+          "No. El Artículo 177 del CST reconoce el descanso remunerado en días de fiesta civil o religiosa. La semana se paga completa, aunque por el festivo haya menos horas efectivamente laboradas.",
+      },
+      {
+        question: "¿Qué pasa si trabajo el festivo?",
+        answer:
+          "Si laboras el lunes festivo, ya no es descanso sino trabajo en día festivo. Debe liquidarse con el recargo dominical/festivo vigente y, si aplica, con recargo nocturno u horas extra.",
+      },
+      {
+        question: "¿La jornada de 42 horas cambia esta regla?",
+        answer:
+          "No. La jornada de 42 horas fija el máximo semanal ordinario desde el 15 de julio de 2026, pero no elimina el descanso remunerado en festivos ni autoriza a recuperar esas horas sin pago adicional.",
+      },
+    ],
+    sections: [
+      {
+        type: "p",
+        text: "Cuando un lunes es festivo en Colombia, muchas personas se preguntan si deben trabajar más horas entre martes y sábado para completar la jornada semanal. Con la entrada en vigor de la jornada máxima de 42 horas, la duda se volvió más frecuente. La respuesta jurídica y práctica es clara: el festivo remunerado no se repone.",
+      },
+      {
+        type: "callout",
+        text: "Respuesta corta: si el lunes era tu día ordinario de trabajo y fue festivo, esa semana tendrás menos horas efectivas de labor, pero tu salario ordinario se mantiene completo. No debes recuperar ese tiempo.",
+      },
+      {
+        type: "image",
+        src: "/images/guia/lunes-festivo-descanso-remunerado-colombia.svg",
+        alt: "Calendario laboral colombiano con lunes festivo marcado como descanso remunerado",
+        caption:
+          "El lunes festivo reduce automáticamente las horas efectivas de esa semana: no crea una deuda de tiempo.",
+      },
+      {
+        type: "h2",
+        text: "Base legal: el festivo es descanso remunerado",
+      },
+      {
+        type: "p",
+        text: "El Artículo 177 del Código Sustantivo del Trabajo establece el derecho al descanso remunerado en días de fiesta civil o religiosa. En términos sencillos: si el calendario trae un festivo y ese día hacía parte de tu jornada ordinaria, el empleador debe pagarlo como descanso. No puede tratarlo como ausencia injustificada ni como permiso recuperable.",
+      },
+      {
+        type: "h2",
+        text: "Qué pasa con el salario de esa semana",
+      },
+      {
+        type: "p",
+        text: "El salario no se toca. El trabajador recibe su pago ordinario completo por la semana o quincena, como si el festivo hubiera sido un día trabajado dentro de la jornada normal. Por eso un festivo no debe generar descuento en nómina ni reducción del básico por ausencia de horas efectivas ese día.",
+      },
+      {
+        type: "h2",
+        text: "Por qué no se recupera de martes a sábado",
+      },
+      {
+        type: "p",
+        text: "Exigir horas adicionales para «recuperar» el lunes festivo desconoce la naturaleza del descanso remunerado. Si el empleador aumenta la jornada de otros días o pide trabajar un sábado que no estaba pactado, esas horas deben analizarse como jornada adicional, horas extra o modificación de horario, no como simple compensación gratuita del festivo.",
+      },
+      {
+        type: "ul",
+        items: [
+          "No es legal descontar el lunes festivo del salario ordinario.",
+          "No es correcto convertir el festivo en una deuda de horas del trabajador.",
+          "No se pueden imponer horas extra sin reconocer los recargos de ley cuando se superan los límites aplicables.",
+          "La distribución de la jornada debe respetar lo pactado, el descanso semanal y el máximo legal vigente.",
+        ],
+      },
+      {
+        type: "h2",
+        text: "Ejemplo con jornada máxima de 42 horas",
+      },
+      {
+        type: "p",
+        text: "Supón una persona con jornada ordinaria de lunes a viernes, 42 horas semanales. Si el lunes es festivo, esa semana no queda obligada a meter las horas del lunes entre martes y viernes. Trabajará los días ordinarios restantes según su horario y recibirá el salario completo. El festivo simplemente reduce las horas efectivas trabajadas de esa semana.",
+      },
+      {
+        type: "image",
+        src: "/images/guia/semana-42-horas-festivo-colombia.svg",
+        alt: "Comparación de semana laboral con jornada de 42 horas y lunes festivo no recuperable",
+        caption:
+          "La jornada máxima semanal opera como techo. El festivo remunerado puede hacer que la semana real quede por debajo de ese máximo.",
+      },
+      {
+        type: "h2",
+        text: "Cuándo sí hay pago adicional",
+      },
+      {
+        type: "p",
+        text: "La situación cambia si trabajas el festivo. En ese caso no estás descansando: estás laborando en día de descanso obligatorio. Debe pagarse el recargo dominical/festivo vigente según la Ley 2466 y el CST. Si además trabajas de noche, después de las 7:00 p. m. y hasta las 6:00 a. m., puede sumarse el recargo nocturno del 35 %.",
+      },
+      {
+        type: "h2",
+        text: "Qué hacer si te piden recuperar el festivo",
+      },
+      {
+        type: "ul",
+        items: [
+          "Pide la instrucción por escrito y solicita que indiquen la base legal.",
+          "Revisa tu contrato, reglamento interno y desprendible de nómina.",
+          "Verifica si las horas adicionales fueron pagadas como extra o recargo cuando correspondía.",
+          "Si hay descuento o imposición de horas sin pago, consulta al Ministerio del Trabajo o a un asesor laboral.",
+        ],
+      },
+      {
+        type: "callout",
+        text: "En Nominapp puedes marcar festivos, registrar si realmente los trabajaste y comparar tu estimación con el desprendible. La app ayuda a llevar control, pero la fuente oficial sigue siendo el CST, la Ley 2101, la Ley 2466 y el Ministerio del Trabajo.",
+      },
+    ],
+  },
+  {
     slug: "jornada-42-horas-colombia-2026",
     title: "Jornada de 42 horas en Colombia 2026: todo lo que debes saber como empleado",
     description:

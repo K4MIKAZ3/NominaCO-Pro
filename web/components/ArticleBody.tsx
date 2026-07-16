@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ApkDownloadButton } from "@/components/ApkDownloadButton";
+import { ArticleShare } from "@/components/ArticleShare";
 import type { BlogArticle, BlogSection } from "@/lib/blog/articles";
 import { getArticle } from "@/lib/blog/articles";
-import { site } from "@/lib/site";
+import { absoluteUrl, site } from "@/lib/site";
 
 function renderSection(section: BlogSection, index: number) {
   switch (section.type) {
@@ -50,6 +51,7 @@ type ArticleBodyProps = {
 };
 
 export function ArticleBody({ article }: ArticleBodyProps) {
+  const articleUrl = absoluteUrl(`/guia/${article.slug}`);
   const related =
     article.relatedSlugs
       ?.map((slug) => getArticle(slug))
@@ -89,6 +91,11 @@ export function ArticleBody({ article }: ArticleBodyProps) {
         ) : null}{" "}
         · {article.readingMinutes} min de lectura
       </p>
+      <ArticleShare
+        title={article.title}
+        description={article.description}
+        url={articleUrl}
+      />
       {article.heroImage ? (
         <figure className="article-hero-image">
           <Image

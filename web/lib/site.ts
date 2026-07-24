@@ -122,6 +122,16 @@ export const productShots = [
     alt: "Pantalla Gastos: balance del mes $1.592.245 tras restar egresos",
     caption: "Gastos · neto menos egresos",
   },
+  {
+    src: "/images/real/periodos.webp",
+    alt: "Subperíodo 16–31 julio: neto $887.577 tras descuentos legales",
+    caption: "Períodos · quincena",
+  },
+  {
+    src: "/images/real/prestaciones.webp",
+    alt: "Prima, cesantías e intereses 2026 con estimación de liquidación",
+    caption: "Prestaciones · prima y cesantías",
+  },
 ] as const;
 
 export const usageModes = [
@@ -203,6 +213,7 @@ export const features = [
     title: "Períodos de cobro",
     description:
       "Semanal, quincenal, ventana de 21 días o mensual. Avances, bonos y saldo pendiente.",
+    image: "/images/feature-periods.webp",
   },
   {
     title: "Control de gastos",
@@ -214,16 +225,19 @@ export const features = [
     title: "Prestaciones estimadas",
     description:
       "Prima, cesantías e indicadores de liquidación según jornadas registradas (base CST).",
+    image: "/images/feature-benefits.webp",
   },
   {
     title: "Respaldo en la nube",
     description:
       "Cuenta con correo y contraseña. Sincroniza perfil, jornadas, egresos de nómina y gastos personales.",
+    image: "/images/feature-cloud.webp",
   },
   {
     title: "Exportar PDF",
     description:
       "Genera comprobantes de nómina y reporte de días laborados para tu archivo personal.",
+    image: "/images/feature-pdf.webp",
   },
 ] as const;
 

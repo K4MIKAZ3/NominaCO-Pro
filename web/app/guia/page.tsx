@@ -76,7 +76,7 @@ export default function GuiaIndexPage() {
                 <div className="blog-card-thumbnail">
                   <Image
                     src={article.heroImage}
-                    alt=""
+                    alt={`Portada: ${article.title}`}
                     width={400}
                     height={225}
                     className="blog-card-img"

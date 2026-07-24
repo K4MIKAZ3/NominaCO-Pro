@@ -132,6 +132,11 @@ export const productShots = [
     alt: "Prima, cesantías e intereses 2026 con estimación de liquidación",
     caption: "Prestaciones · prima y cesantías",
   },
+  {
+    src: "/images/real/pdf-export.webp",
+    alt: "PDF de liquidación julio 2026 con datos personales tapados",
+    caption: "PDF · liquidación exportada",
+  },
 ] as const;
 
 export const usageModes = [

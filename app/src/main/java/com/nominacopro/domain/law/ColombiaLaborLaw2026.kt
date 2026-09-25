@@ -124,7 +124,10 @@ object ColombiaLaborLaw2026 {
      */
     fun isNonContributoryEarningCode(code: String?): Boolean = code == "ST"
 
-    /** IBC aproximado: suma de devengados cotizables (excluye ST). */
+    /**
+     * IBC aproximado: suma de devengados cotizables (excluye ST).
+     * Base usada para aportes del trabajador (salud/pensión 4 % + 4 %).
+     */
     fun contributionBase(earnings: List<PayrollLine>): Long =
         earnings
             .filterNot { isNonContributoryEarningCode(it.code) }

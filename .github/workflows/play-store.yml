@@ -31,6 +31,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Google removió el paquete legacy `tools`; el default de la action lo pide y falla.
+          packages: platform-tools
 
       - name: Restore release keystore
         env:

@@ -189,8 +189,9 @@ export function liquidateDateRange(
   }
 
   const gross = earnings.reduce((sum, e) => sum + e.amount, 0);
-  const salud = Math.trunc(gross * Law.DESCUENTO_SALUD);
-  const pension = Math.trunc(gross * Law.DESCUENTO_PENSION);
+  const ibc = Law.contributionBase(earnings);
+  const salud = Math.trunc(ibc * Law.DESCUENTO_SALUD);
+  const pension = Math.trunc(ibc * Law.DESCUENTO_PENSION);
   const legalDeductions: PayrollLine[] = [
     { label: "Aporte salud (4%)", amount: salud, isDeduction: true, code: "SAL" },
     { label: "Aporte pensión (4%)", amount: pension, isDeduction: true, code: "PEN" },
@@ -235,9 +236,11 @@ export function applyManualEntries(
   const bonusTotal = bonuses.reduce((s, b) => s + b.amount, 0);
   const deductionTotal = deductions.reduce((s, d) => s + d.amount, 0);
 
+  const earnings = [...payroll.earnings, ...bonusLines];
   const gross = payroll.grossTotal + bonusTotal;
-  const salud = Math.trunc(gross * Law.DESCUENTO_SALUD);
-  const pension = Math.trunc(gross * Law.DESCUENTO_PENSION);
+  const ibc = Law.contributionBase(earnings);
+  const salud = Math.trunc(ibc * Law.DESCUENTO_SALUD);
+  const pension = Math.trunc(ibc * Law.DESCUENTO_PENSION);
   const legalDeductions: PayrollLine[] = [
     { label: "Aporte salud (4%)", amount: salud, isDeduction: true, code: "SAL" },
     { label: "Aporte pensión (4%)", amount: pension, isDeduction: true, code: "PEN" },
@@ -245,7 +248,7 @@ export function applyManualEntries(
 
   return {
     ...payroll,
-    earnings: [...payroll.earnings, ...bonusLines],
+    earnings,
     manualBonuses: bonusLines,
     manualDeductions: deductionLines,
     legalDeductions,

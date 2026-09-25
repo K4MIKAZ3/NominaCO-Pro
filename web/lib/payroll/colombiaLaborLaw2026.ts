@@ -105,3 +105,20 @@ export function transportSubsidyForDays(workedDays: number): number {
 export function qualifiesTransport(salary: number): boolean {
   return salary <= TOPE_SUBSIDIO_TRANSPORTE;
 }
+
+/**
+ * Códigos de devengado que no hacen parte del IBC (no cotizan salud/pensión).
+ * El auxilio de transporte (ST) se paga pero no integra la base de cotización.
+ */
+export function isNonContributoryEarningCode(code?: string): boolean {
+  return code === "ST";
+}
+
+/** IBC aproximado: suma de devengados cotizables (excluye ST). */
+export function contributionBase(
+  earnings: { amount: number; code?: string }[],
+): number {
+  return earnings
+    .filter((line) => !isNonContributoryEarningCode(line.code))
+    .reduce((sum, line) => sum + line.amount, 0);
+}

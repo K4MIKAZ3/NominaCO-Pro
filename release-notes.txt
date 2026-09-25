@@ -1,1 +1,1 @@
-Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.
+Salud y pensión ya no descuentan sobre el auxilio de transporte (IBC correcto). El auxilio sigue sumando a tu neto, pero no cotiza. Revisa tu liquidación: el neto estimado puede subir un poco frente a versiones anteriores.

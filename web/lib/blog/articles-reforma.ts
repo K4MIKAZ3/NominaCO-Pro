@@ -5,6 +5,7 @@ export const reformaArticles: BlogArticle[] = [
   {
     slug: "lunes-festivo-reponer-horas-colombia-42-horas",
     title: "¿Se deben reponer las horas de un lunes festivo en Colombia?",
+    seoTitle: "Lunes festivo: ¿hay que reponer horas?",
     description:
       "Con la jornada máxima de 42 horas semanales, los festivos remunerados no se recuperan en el resto de la semana. Qué dice el CST, qué pasa con el salario y cuándo sí hay recargos.",
     keywords: [
@@ -141,6 +142,7 @@ export const reformaArticles: BlogArticle[] = [
   {
     slug: "jornada-42-horas-colombia-2026",
     title: "Jornada de 42 horas en Colombia 2026: todo lo que debes saber como empleado",
+    seoTitle: "Jornada de 42 horas en Colombia 2026",
     description:
       "A partir del 15 de julio de 2026 la jornada máxima baja a 42 horas semanales. Qué dice la Ley 2466 y la Ley 2101, si tu salario puede bajar y cómo exigir el cumplimiento.",
     keywords: [
@@ -328,6 +330,7 @@ export const reformaArticles: BlogArticle[] = [
   {
     slug: "recargos-dominicales-nocturnos-colombia-2026",
     title: "Recargos dominicales y nocturnos en Colombia 2026: ¿te están pagando lo que te deben?",
+    seoTitle: "Recargos dominicales y nocturnos Colombia 2026",
     description:
       "Recargo dominical al 90 % desde julio 2026, jornada nocturna 7:00 p. m.–6:00 a. m. con 35 % y cómo verificar tu nómina según la Ley 2466.",
     keywords: [
@@ -339,7 +342,7 @@ export const reformaArticles: BlogArticle[] = [
       "recargo dominical 90 por ciento",
     ],
     publishedAt: "2026-06-28",
-    updatedAt: "2026-07-13",
+    updatedAt: "2026-07-24",
     readingMinutes: 11,
     heroImage: "/images/guia/recargos-dominicales-nocturnos-colombia.png",
     sources: pickSources("ley2466", "cst", "decreto1469", "decreto1470", "mintrabajo"),
@@ -479,6 +482,7 @@ export const reformaArticles: BlogArticle[] = [
   {
     slug: "contratos-derechos-empleados-colombia-2026",
     title: "Contratos de trabajo en Colombia 2026: los nuevos derechos que debes conocer",
+    seoTitle: "Contratos de trabajo en Colombia 2026",
     description:
       "Tope de 4 años en contratos fijos, debido proceso disciplinario, aprendices SENA, formalización doméstica y licencias remuneradas según la Ley 2466.",
     keywords: [
@@ -680,6 +684,7 @@ export const reformaArticles: BlogArticle[] = [
   {
     slug: "de-la-espriella-trabajo-empleados-colombia-2026",
     title: "Abelardo de la Espriella y el trabajo en Colombia: ¿qué puede cambiar para los empleados?",
+    seoTitle: "De la Espriella y el trabajo en Colombia 2026",
     description:
       "El 21 de junio de 2026 Colombia eligió a Abelardo de la Espriella como presidente (2026-2030). Qué implica para la Ley 2466 (norma vigente), la jornada de 42 horas y tus derechos laborales.",
     keywords: [

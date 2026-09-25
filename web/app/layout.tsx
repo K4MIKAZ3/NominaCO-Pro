@@ -14,7 +14,7 @@ const googleSiteVerification =
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} — Nómina personal Colombia 2026`,
+    default: `${site.name} — Nómina para empleados Colombia 2026`,
     template: `%s · ${site.name}`,
   },
   description: site.description,

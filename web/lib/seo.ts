@@ -8,21 +8,23 @@ import { absoluteUrl, faqItems, site } from "@/lib/site";
 
 export const seoKeywords = [
   "nómina personal Colombia",
+  "calculadora nómina empleados Colombia",
   "calcular liquidación nómina",
   "app nómina Android Colombia",
-  "liquidación quincenal",
-  "devengados y descuentos",
+  "liquidación quincenal empleado",
+  "devengados y descuentos nómina",
+  "neto a pagar Colombia",
   "recargo nocturno Colombia",
   "auxilio de transporte 2026",
-  "control de gastos personales",
+  "salud y pensión 4%",
   "prestaciones sociales estimadas",
   "calendario jornadas laborales",
 ] as const;
 
 export const homeMetadata: Metadata = {
-  title: "Calculadora de nómina personal Colombia 2026",
+  title: "Calculadora de nómina para empleados Colombia 2026",
   description:
-    "Descarga Nominapp gratis para Android. Registra jornadas, calcula devengados, descuentos legales, prestaciones y gastos personales según la normativa laboral colombiana.",
+    "App gratis para empleados en Colombia: registra jornadas, calcula salario, descuentos de salud y pensión, y ve tu neto estimado. Normativa 2026. No es software empresarial.",
   keywords: [...seoKeywords],
   alternates: {
     canonical: site.url,
@@ -59,7 +61,7 @@ export const homeMetadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${site.name} — Nómina personal Colombia`,
+    title: `${site.name} — Nómina para empleados Colombia`,
     description: site.description,
     images: ["/images/og-default.png"],
   },

@@ -1,8 +1,8 @@
 export const site = {
   name: "Nominapp",
-  tagline: "Liquidación de nómina personal en Colombia",
+  tagline: "Nómina personal para empleados en Colombia",
   description:
-    "App Android gratuita para registrar jornadas, calcular devengados y descuentos según la normativa laboral colombiana 2026. Uso personal.",
+    "App Android gratuita para empleados en Colombia: registra jornadas, calcula tu liquidación (devengados, salud, pensión y neto) según la normativa laboral 2026. Uso personal, no es software empresarial.",
   url: "https://www.nominapp.xyz",
   country: "Colombia",
   year: 2026,
@@ -31,10 +31,11 @@ export const site = {
   ],
 } as const;
 
+/** Señales reales de confianza (sin inventar descargas ni testimonios). */
 export const heroStats = [
   { value: "Gratis", label: "Sin suscripción" },
-  { value: "Android 8+", label: "Instalación directa" },
-  { value: "2026", label: "Parámetros legales CO" },
+  { value: "11", label: "Guías con fuentes oficiales" },
+  { value: "2026", label: "SMMLV y parámetros legales" },
 ] as const;
 
 export const howItWorks = [
@@ -46,51 +47,134 @@ export const howItWorks = [
   },
   {
     step: "2",
-    title: "Configura tu perfil",
+    title: "Configura tu perfil de empleado",
     description:
-      "Indica salario, jornada, tipo de contrato y período de cobro (quincenal, mensual, etc.).",
+      "Indica tu salario, jornada, tipo de contrato y período de cobro (quincenal, mensual, etc.).",
   },
   {
     step: "3",
-    title: "Registra y consulta",
+    title: "Registra y consulta tu neto",
     description:
       "Marca tus días trabajados, revisa la liquidación estimada y exporta PDF si lo necesitas.",
   },
 ] as const;
 
+/** Público principal: empleados. El resto son beneficios del mismo perfil. */
+export const primaryAudience = {
+  title: "Hecha para empleados, no para empresas",
+  description:
+    "Nominapp es una calculadora de nómina personal: tú registras tus jornadas y ves una estimación de tu liquidación. No es software de RR.HH. ni reemplaza la nómina oficial de tu empleador.",
+} as const;
+
 export const audiencePoints = [
   {
-    title: "Empleados con nómina quincenal o mensual",
+    title: "Tu quincena o mes, con neto estimado",
     description:
-      "Lleva el control de lo devengado, descuentos de salud y pensión, y tu neto estimado mes a mes.",
+      "Devengados, auxilio de transporte, salud 4 %, pensión 4 % y neto orientativo según lo que registres.",
   },
   {
-    title: "Trabajadores con horarios variables",
+    title: "Turnos, nocturnos y festivos",
     description:
-      "Registra entrada, salida, dominical, festivo y recargos nocturnos desde el calendario.",
+      "Si tu horario varía, marca entrada, salida, dominical y recargos desde el calendario.",
   },
   {
-    title: "Quienes quieren ordenar sus finanzas",
+    title: "Gastos contra tu nómina",
     description:
-      "Combina tu nómina con gastos fijos y variables para ver cuánto te queda realmente.",
+      "Opcional: compara egresos fijos y variables con tu neto para ver cuánto te queda.",
   },
+] as const;
+
+/** Ejemplo basado en liquidación real de prueba (julio 2026). */
+export const payrollExample = {
+  title: "Ejemplo real: jornadas → neto",
+  subtitle:
+    "Liquidación de julio 2026 con 20 días laborados. Mismos conceptos que ves en la app: SBP, auxilio, dominicales y festivos.",
+  rows: [
+    { label: "Total devengado", value: "$2.289.395", tone: "positive" as const },
+    { label: "Total deducciones", value: "− $183.150", tone: "negative" as const },
+  ],
+  details: [
+    { label: "SBP · salario base proporcional", value: "$1.633.333" },
+    { label: "ST · subsidio de transporte", value: "$166.063" },
+    { label: "DRD · dominical (4 días)", value: "$326.666" },
+    { label: "FER · festivo (2 días)", value: "$163.333" },
+  ],
+  netLabel: "Total a pagar",
+  netValue: "$2.106.245",
+  note: "Cifras de una liquidación de prueba en Nominapp. Tu resultado depende de tu salario, jornadas y descuentos. Contrasta siempre con el desprendible de tu empleador.",
+  guideHref: "/guia/calcular-liquidacion-quincenal-colombia",
+  guideLabel: "Ver el cálculo paso a paso",
+} as const;
+
+export const productShots = [
+  {
+    src: "/images/real/nomina.webp",
+    alt: "Pantalla Nómina: total a pagar $2.106.245 con desglose de devengados",
+    caption: "Nómina · neto y desglose",
+  },
+  {
+    src: "/images/real/calendario.webp",
+    alt: "Pantalla Calendario julio 2026 con 20 días trabajados y festivos",
+    caption: "Calendario · jornadas",
+  },
+  {
+    src: "/images/real/gastos.webp",
+    alt: "Pantalla Gastos: balance del mes $1.592.245 tras restar egresos",
+    caption: "Gastos · neto menos egresos",
+  },
+  {
+    src: "/images/real/periodos.webp",
+    alt: "Subperíodo 16–31 julio: neto $887.577 tras descuentos legales",
+    caption: "Períodos · quincena",
+  },
+  {
+    src: "/images/real/prestaciones.webp",
+    alt: "Prima, cesantías e intereses 2026 con estimación de liquidación",
+    caption: "Prestaciones · prima y cesantías",
+  },
+  {
+    src: "/images/real/pdf-export.webp",
+    alt: "PDF de liquidación julio 2026 con datos personales tapados",
+    caption: "PDF · liquidación exportada",
+  },
+] as const;
+
+export const usageModes = [
+  {
+    title: "Modo local",
+    description:
+      "Usa la app sin crear cuenta. Tus datos quedan en el dispositivo. Ideal para empezar ya.",
+  },
+  {
+    title: "Modo nube (opcional)",
+    description:
+      "Con correo y contraseña respaldas y sincronizas perfil, jornadas y gastos entre dispositivos.",
+  },
+] as const;
+
+/** Artículos prioritarios para enlaces internos desde la home. */
+export const featuredGuiaSlugs = [
+  "calcular-liquidacion-quincenal-colombia",
+  "descuentos-salud-pension-nomina",
+  "auxilio-transporte-salario-minimo-2026",
+  "recargo-nocturno-colombia-2026",
 ] as const;
 
 export const faqItems = [
   {
     question: "¿Nominapp reemplaza la nómina oficial de mi empleador?",
     answer:
-      "No. Nominapp es una herramienta personal de estimación. Los valores son orientativos según la información que tú registras y la normativa configurada. Para decisiones legales o contables consulta a un profesional o a tu área de nómina.",
+      "No. Nominapp es una herramienta personal de estimación para empleados. Los valores son orientativos según la información que tú registras y la normativa configurada. Para decisiones legales o contables consulta a un profesional o a tu área de nómina.",
   },
   {
     question: "¿Sirve para calcular mi liquidación en Colombia?",
     answer:
-      "Sí, está pensada para trabajadores en Colombia. Incorpora referencias como SMMLV, auxilio de transporte, recargos, salud, pensión y prestaciones estimadas según jornadas registradas, con parámetros actualizados a 2026.",
+      "Sí, está pensada para empleados y trabajadores en Colombia. Incorpora referencias como SMMLV, auxilio de transporte, recargos, salud, pensión y prestaciones estimadas según jornadas registradas, con parámetros actualizados a 2026.",
   },
   {
     question: "¿Necesito crear una cuenta para usar la app?",
     answer:
-      "No. Puedes usar Nominapp en modo local sin registrarte. La cuenta con correo y contraseña es opcional y sirve para respaldar y sincronizar tus datos entre dispositivos.",
+      "No. Puedes usar Nominapp en modo local sin registrarte. La cuenta es opcional (modo nube) para respaldar y sincronizar entre dispositivos. Lo explicamos arriba en «Modo local o nube».",
   },
   {
     question: "¿Por qué se descarga como APK y no desde Play Store?",

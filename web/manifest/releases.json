@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "versionCode": 46,
+      "versionName": "1.7.35",
+      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.35/Nominapp.apk",
+      "sha256": "6d64c5f2d6051a311aa46c4adb0739093a35e1065cc8d3ace81ab30e16ee4d22",
+      "releaseNotes": "¡Nominapp llega a Google Play!\n\nTu liquidación de nómina en Colombia, clara y al día con 2026:\n• Marca jornadas, dominicales y recargos nocturnos\n• Salud y pensión con IBC correcto (el auxilio de transporte no cotiza)\n• Quincenas, semanal o mensual — tú eliges\n• Gastos personales y neto real\n• PDF listo para guardar o compartir\n• Respaldo opcional en la nube\n\nGratis. Pensada para empleados, no para reemplazar tu desprendible oficial.",
+      "publishedAt": "2026-10-06"
+    },
+    {
       "versionCode": 45,
       "versionName": "1.7.34",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.34/Nominapp.apk",
@@ -15,14 +23,6 @@
       "sha256": "5a05aa906af593cdbb228ea103c530a58aec21b4c2cff7dd83abcb6f4f7677c8",
       "releaseNotes": "Salud y pensión ya no descuentan sobre el auxilio de transporte (IBC correcto). El auxilio sigue sumando a tu neto, pero no cotiza. Revisa tu liquidación: el neto estimado puede subir un poco frente a versiones anteriores.",
       "publishedAt": "2026-09-25"
-    },
-    {
-      "versionCode": 43,
-      "versionName": "1.7.32",
-      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.32/Nominapp.apk",
-      "sha256": "edea851a1c1d63199133cfdea1775576eb69721110f632ddebd216de49634172",
-      "releaseNotes": "Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.",
-      "publishedAt": "2026-06-28"
     }
   ]
 }

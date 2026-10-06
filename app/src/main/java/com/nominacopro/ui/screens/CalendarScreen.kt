@@ -3,6 +3,7 @@ package com.nominacopro.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,9 +64,8 @@ fun CalendarScreen(
     modifier: Modifier = Modifier,
 ) {
     val days = buildCalendarDays(yearMonth)
-    val rows = ceil((days.size) / 7.0).toInt()
-    val workedCount = marks.values.count { it.worked }
-    val pendingCount = countPendingWeekdays(yearMonth, marks)
+    val workedCount = countWorkedDays(yearMonth, marks)
+    val nonWorkedWeekdays = countNonWorkedWeekdays(yearMonth, marks)
     val monthLabel = Formatters.monthNameFull(yearMonth.monthValue).replaceFirstChar { it.titlecase() }
 
     LazyColumn(
@@ -120,7 +122,12 @@ fun CalendarScreen(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .calendarMonthSwipe(
+                        yearMonth = yearMonth,
+                        onPrev = onPrev,
+                        onNext = onNext,
+                    ),
                 shape = NominaDesign.CardShape,
                 color = NominaDesign.SurfaceElevated,
             ) {
@@ -129,39 +136,59 @@ fun CalendarScreen(
                         val gap = 4.dp
                         val rowGap = 8.dp
                         val cellSize = ((maxWidth - gap * 6) / 7).coerceIn(30.dp, 44.dp)
-                        val gridHeight = cellSize * rows + rowGap * (rows - 1).coerceAtLeast(0)
+                        val dayRows = ceil(days.size / 7.0).toInt().coerceAtLeast(1)
+                        val gridHeight = cellSize * dayRows + rowGap * (dayRows - 1).coerceAtLeast(0)
 
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(7),
-                            modifier = Modifier.height(gridHeight),
-                            verticalArrangement = Arrangement.spacedBy(rowGap),
-                            horizontalArrangement = Arrangement.spacedBy(gap),
-                            userScrollEnabled = false,
-                        ) {
-                            items(listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")) { label ->
-                                Text(
-                                    label,
-                                    modifier = Modifier.padding(4.dp),
-                                    color = NominaDesign.TextSecondary,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
+                        Column(Modifier.fillMaxWidth()) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(gap),
+                            ) {
+                                listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM").forEach { label ->
+                                    Box(
+                                        modifier = Modifier.weight(1f),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            label,
+                                            color = NominaDesign.TextSecondary,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
+                                }
                             }
-                            items(days) { cell ->
-                                if (cell == null) {
-                                    Box(Modifier.size(cellSize))
-                                } else {
-                                    MockupDayCell(cell, marks[cell], cellSize, onDayClick)
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(7),
+                                modifier = Modifier
+                                    .padding(top = 10.dp)
+                                    .height(gridHeight),
+                                verticalArrangement = Arrangement.spacedBy(rowGap),
+                                horizontalArrangement = Arrangement.spacedBy(gap),
+                                userScrollEnabled = false,
+                            ) {
+                                items(days) { cell ->
+                                    if (cell == null) {
+                                        Box(Modifier.size(cellSize))
+                                    } else {
+                                        MockupDayCell(cell, marks[cell], cellSize, onDayClick)
+                                    }
                                 }
                             }
                         }
                     }
-                    Row(
-                        Modifier.padding(top = 14.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    Column(
+                        Modifier.padding(top = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        LegendItem(NominaDesign.Green, "Día trabajado")
-                        LegendItem(NominaDesign.TextSecondary, "Día no trabajado")
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            LegendItem(NominaDesign.Green, "Día trabajado")
+                            LegendItem(NominaDesign.TextSecondary, "Día no trabajado")
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            LegendItem(NominaDesign.HolidayRed, "Festivo Colombia")
+                            LegendItem(NominaDesign.HolidayOrange, "Festivo manual")
+                        }
                     }
                 }
             }
@@ -202,7 +229,11 @@ fun CalendarScreen(
                                     .size(width = 1.dp, height = 28.dp)
                                     .background(NominaDesign.TextMuted.copy(alpha = 0.25f)),
                             )
-                            SummaryStat(pendingCount.toString(), "días pendientes", MaterialTheme.colorScheme.onSurface)
+                            SummaryStat(
+                                nonWorkedWeekdays.toString(),
+                                "días no laborados",
+                                MaterialTheme.colorScheme.onSurface,
+                            )
                         }
                     }
                 }
@@ -253,6 +284,13 @@ private fun MockupDayCell(
 ) {
     val isToday = date == LocalDate.now()
     val worked = mark?.worked == true
+    val isOfficialHoliday = mark?.officialHoliday == true
+    val isManualHoliday = mark?.manualHoliday == true
+    val holidayColor = when {
+        isOfficialHoliday -> NominaDesign.HolidayRed
+        isManualHoliday -> NominaDesign.HolidayOrange
+        else -> null
+    }
     val innerSize = (cellSize * 0.82f).coerceIn(28.dp, 40.dp)
 
     Box(
@@ -269,11 +307,11 @@ private fun MockupDayCell(
                     .background(NominaDesign.Green),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "${date.dayOfMonth}",
+                DayNumber(
+                    day = date.dayOfMonth,
                     color = Color(0xFF052E16),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
+                    underlineColor = holidayColor,
                 )
             }
         } else {
@@ -282,23 +320,45 @@ private fun MockupDayCell(
                     .size(innerSize)
                     .clip(CircleShape)
                     .then(
-                        if (isToday) {
-                            Modifier.border(2.dp, NominaDesign.Green, CircleShape)
-                        } else {
-                            Modifier
+                        when {
+                            holidayColor != null -> Modifier
+                                .background(holidayColor.copy(alpha = 0.16f))
+                                .border(1.5.dp, holidayColor, CircleShape)
+                            isToday -> Modifier.border(2.dp, NominaDesign.Green, CircleShape)
+                            else -> Modifier
                         },
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "${date.dayOfMonth}",
-                    color = if (isToday) NominaDesign.Green else NominaDesign.TextSecondary,
-                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
-                    fontSize = 14.sp,
+                DayNumber(
+                    day = date.dayOfMonth,
+                    color = when {
+                        holidayColor != null -> holidayColor
+                        isToday -> NominaDesign.Green
+                        else -> NominaDesign.TextSecondary
+                    },
+                    fontWeight = if (isToday || holidayColor != null) FontWeight.Bold else FontWeight.Medium,
+                    underlineColor = holidayColor,
                 )
             }
         }
     }
+}
+
+@Composable
+private fun DayNumber(
+    day: Int,
+    color: Color,
+    fontWeight: FontWeight,
+    underlineColor: Color?,
+) {
+    Text(
+        "$day",
+        color = color,
+        fontWeight = fontWeight,
+        fontSize = 14.sp,
+        textDecoration = if (underlineColor != null) TextDecoration.Underline else TextDecoration.None,
+    )
 }
 
 @Composable
@@ -322,19 +382,28 @@ private fun SummaryStat(value: String, label: String, valueColor: Color) {
     }
 }
 
-private fun countPendingWeekdays(ym: YearMonth, marks: Map<LocalDate, CalendarMark>): Int {
-    val today = LocalDate.now()
-    val end = if (ym == YearMonth.from(today)) today else ym.atEndOfMonth()
-    if (ym.isBefore(YearMonth.from(today))) return 0
-    var pending = 0
+private fun countWorkedDays(ym: YearMonth, marks: Map<LocalDate, CalendarMark>): Int {
+    var count = 0
     var d = ym.atDay(1)
+    val end = ym.atEndOfMonth()
+    while (!d.isAfter(end)) {
+        if (marks[d]?.worked == true) count++
+        d = d.plusDays(1)
+    }
+    return count
+}
+
+private fun countNonWorkedWeekdays(ym: YearMonth, marks: Map<LocalDate, CalendarMark>): Int {
+    var count = 0
+    var d = ym.atDay(1)
+    val end = ym.atEndOfMonth()
     while (!d.isAfter(end)) {
         if (d.dayOfWeek != DayOfWeek.SATURDAY && d.dayOfWeek != DayOfWeek.SUNDAY) {
-            if (marks[d]?.worked != true) pending++
+            if (marks[d]?.worked != true) count++
         }
         d = d.plusDays(1)
     }
-    return pending
+    return count
 }
 
 private fun buildCalendarDays(ym: YearMonth): List<LocalDate?> {
@@ -344,4 +413,27 @@ private fun buildCalendarDays(ym: YearMonth): List<LocalDate?> {
     repeat(offset) { result.add(null) }
     for (day in 1..ym.lengthOfMonth()) result.add(ym.atDay(day))
     return result
+}
+
+private fun Modifier.calendarMonthSwipe(
+    yearMonth: YearMonth,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+): Modifier {
+    val swipeThresholdFraction = 0.12f
+    return pointerInput(yearMonth) {
+        var totalDrag = 0f
+        val threshold = size.width * swipeThresholdFraction
+        detectHorizontalDragGestures(
+            onHorizontalDrag = { _, dragAmount -> totalDrag += dragAmount },
+            onDragEnd = {
+                when {
+                    totalDrag > threshold -> onPrev()
+                    totalDrag < -threshold -> onNext()
+                }
+                totalDrag = 0f
+            },
+            onDragCancel = { totalDrag = 0f },
+        )
+    }
 }

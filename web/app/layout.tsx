@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { AuthRecoveryRedirect } from "@/components/AuthRecoveryRedirect";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { site } from "@/lib/site";
+import { seoKeywords } from "@/lib/seo";
 import "./globals.css";
+
+const googleSiteVerification =
+  process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
+  "PTjFQKOuqiS3b5yJ_IUyj_7Xi-_RDgGI8c2EtXZvv4I";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -12,6 +18,23 @@ export const metadata: Metadata = {
     template: `%s · ${site.name}`,
   },
   description: site.description,
+  keywords: [...seoKeywords],
+  applicationName: site.name,
+  authors: [{ name: site.name, url: site.url }],
+  creator: site.name,
+  publisher: site.name,
+  category: "finance",
+  alternates: {
+    canonical: site.url,
+    types: {
+      "application/rss+xml": `${site.url}/feed.xml`,
+      "text/plain": `${site.url}/llms.txt`,
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: site.name,
     description: site.description,
@@ -19,11 +42,16 @@ export const metadata: Metadata = {
     siteName: site.name,
     locale: "es_CO",
     type: "website",
-    images: [{ url: "/icon.png", width: 1024, height: 1024, alt: site.name }],
+    images: [{ url: "/images/og-default.png", width: 1200, height: 630, alt: site.name }],
   },
-  icons: {
-    icon: "/icon.png",
-    apple: "/icon.png",
+  twitter: {
+    card: "summary_large_image",
+    title: `${site.name} — Nómina personal Colombia`,
+    description: site.description,
+    images: ["/images/og-default.png"],
+  },
+  verification: {
+    google: googleSiteVerification,
   },
 };
 
@@ -35,6 +63,7 @@ export default function RootLayout({
   return (
     <html lang="es-CO">
       <body>
+        <AuthRecoveryRedirect />
         <Header />
         {children}
         <Footer />

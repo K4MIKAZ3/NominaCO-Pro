@@ -15,3 +15,4 @@ keystore.properties
 release.keystore
 *.jks
 signing-setup/
+.vercel

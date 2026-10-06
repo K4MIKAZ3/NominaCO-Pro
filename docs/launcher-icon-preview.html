@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nominapp — Preview icono launcher</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #111318;
+      color: #e8eaf0;
+      padding: 2rem;
+    }
+    h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.25rem; }
+    p { color: #9ca3af; margin: 0 0 2rem; font-size: 0.95rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      max-width: 900px;
+    }
+    .card {
+      background: #151820;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .card h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 1rem 0 0.25rem;
+      color: #e8eaf0;
+    }
+    .card span {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .wallpaper {
+      background: linear-gradient(160deg, #1a1f2e 0%, #0d0f14 50%, #1c2030 100%);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 140px;
+    }
+    .icon {
+      display: block;
+      object-fit: cover;
+      background: #6dda64;
+    }
+    .icon-circle {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+    }
+    .icon-squircle {
+      width: 96px;
+      height: 96px;
+      border-radius: 22%;
+    }
+    .icon-full {
+      width: 128px;
+      height: 128px;
+      border-radius: 12%;
+    }
+    .safe-demo {
+      position: relative;
+      width: 192px;
+      height: 192px;
+      margin: 0 auto;
+    }
+    .safe-demo img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8%;
+      background: #6dda64;
+    }
+    .safe-demo svg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Preview icono Nominapp (web/public/icon.png)</h1>
+  <p>Canvas 108×108 dp · logo al 66% · fondo #6dda64 · fuente: icono web oficial</p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="wallpaper">
+        <img
+          class="icon icon-circle"
+          src="../web/public/icon.png"
+          alt="Icono Nominapp recortado en círculo"
+          width="96"
+          height="96"
+        />
+      </div>
+      <h2>Círculo (launcher típico)</h2>
+      <span>96×96 px preview</span>
+    </div>
+
+    <div class="card">
+      <div class="wallpaper">
+        <img
+          class="icon icon-squircle"
+          src="../web/public/icon.png"
+          alt="Icono Nominapp recortado en squircle"
+          width="96"
+          height="96"
+        />
+      </div>
+      <h2>Squircle (Pixel / Samsung)</h2>
+      <span>96×96 px preview</span>
+    </div>
+
+    <div class="card">
+      <div class="safe-demo">
+        <img
+          src="../web/public/icon.png"
+          alt="Icono con guías de zona segura"
+        />
+        <svg width="192" height="192" viewBox="0 0 108 108" aria-hidden="true">
+          <rect x="21" y="21" width="66" height="66" fill="none" stroke="#4ade80" stroke-width="0.8" stroke-dasharray="3 2" opacity="0.6" />
+          <circle cx="54" cy="54" r="54" fill="none" stroke="#f59e0b" stroke-width="0.6" opacity="0.35" />
+        </svg>
+      </div>
+      <h2>Guía de zona segura</h2>
+      <span>Verde = 66 dp · Naranja = máscara círculo</span>
+    </div>
+
+    <div class="card">
+      <div class="wallpaper">
+        <img
+          class="icon icon-full"
+          src="../web/public/icon.png"
+          alt="Icono Nominapp sin recorte"
+          width="128"
+          height="128"
+        />
+      </div>
+      <h2>Canvas completo 108 dp</h2>
+      <span>Sin recorte · 128 px</span>
+    </div>
+  </div>
+</body>
+</html>

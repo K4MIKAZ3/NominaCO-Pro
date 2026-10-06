@@ -134,4 +134,61 @@ class PayrollEngineTest {
         val rate = ColombiaLaborLaw2026.hourlyRate(ColombiaLaborLaw2026.SMMLV, 8)
         assertTrue(rate > 0)
     }
+
+    @Test
+    fun legalDeductions_excludeTransportSubsidyFromIbc() {
+        val minProfile = profile.copy(monthlySalary = ColombiaLaborLaw2026.SMMLV)
+        val entries = listOf(
+            WorkDayEntry(LocalDate.of(2026, 6, 2), LocalTime.of(8, 0), LocalTime.of(16, 0)),
+            WorkDayEntry(LocalDate.of(2026, 6, 3), LocalTime.of(8, 0), LocalTime.of(16, 0)),
+        )
+        val payroll = PayrollEngine.liquidateMonth(minProfile, 2026, 6, entries, emptySet())
+
+        val transport = payroll.earnings.first { it.code == "ST" }.amount
+        assertTrue(transport > 0)
+
+        val ibc = ColombiaLaborLaw2026.contributionBase(payroll.earnings)
+        assertEquals(payroll.grossTotal - transport, ibc)
+
+        val salud = payroll.legalDeductions.first { it.code == "SAL" }.amount
+        val pension = payroll.legalDeductions.first { it.code == "PEN" }.amount
+        assertEquals((ibc * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong(), salud)
+        assertEquals((ibc * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong(), pension)
+
+        // Antes se cotizaba el auxilio: ahora el neto es mayor que con IBC = gross.
+        val wrongNet = payroll.grossTotal -
+            (payroll.grossTotal * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong() -
+            (payroll.grossTotal * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
+        assertTrue(payroll.netTotal > wrongNet)
+    }
+
+    @Test
+    fun applyManualEntries_bonusEntersIbcButTransportStillExcluded() {
+        val minProfile = profile.copy(monthlySalary = ColombiaLaborLaw2026.SMMLV)
+        val base = PayrollEngine.liquidateMonth(
+            minProfile,
+            2026,
+            6,
+            listOf(WorkDayEntry(LocalDate.of(2026, 6, 2), LocalTime.of(8, 0), LocalTime.of(16, 0))),
+            emptySet(),
+        )
+        val transport = base.earnings.first { it.code == "ST" }.amount
+        val withBonus = PayrollEngine.applyManualEntries(
+            base,
+            listOf(
+                ManualDeduction(
+                    yearMonth = YearMonth.of(2026, 6),
+                    effectiveDate = LocalDate.of(2026, 6, 10),
+                    label = "Bono",
+                    amount = 100_000,
+                    entryType = com.nominacopro.domain.model.PayrollEntryType.BONUS,
+                ),
+            ),
+        )
+
+        val ibc = ColombiaLaborLaw2026.contributionBase(withBonus.earnings)
+        assertEquals(withBonus.grossTotal - transport, ibc)
+        val salud = withBonus.legalDeductions.first { it.code == "SAL" }.amount
+        assertEquals((ibc * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong(), salud)
+    }
 }

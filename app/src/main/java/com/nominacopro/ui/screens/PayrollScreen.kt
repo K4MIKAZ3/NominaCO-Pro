@@ -335,7 +335,7 @@ fun PayrollScreen(
                         fontSize = 28.sp,
                         modifier = Modifier.padding(vertical = 6.dp),
                     )
-                    Text("✓ Cálculo personal · no constituye nómina oficial", color = NominaDesign.Green, fontSize = 13.sp)
+                    Text("Cálculo personal · no constituye nómina oficial", color = NominaDesign.Green, fontSize = 13.sp)
                 }
             }
         }

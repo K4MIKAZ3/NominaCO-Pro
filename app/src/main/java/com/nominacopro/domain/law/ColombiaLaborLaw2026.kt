@@ -1,5 +1,6 @@
 package com.nominacopro.domain.law
 
+import com.nominacopro.domain.model.PayrollLine
 import java.time.LocalDate
 
 /**
@@ -116,4 +117,19 @@ object ColombiaLaborLaw2026 {
     }
 
     fun qualifiesTransport(salary: Long): Boolean = salary <= TOPE_SUBSIDIO_TRANSPORTE
+
+    /**
+     * Códigos de devengado que no hacen parte del IBC (no cotizan salud/pensión).
+     * El auxilio de transporte (ST) se paga pero no integra la base de cotización.
+     */
+    fun isNonContributoryEarningCode(code: String?): Boolean = code == "ST"
+
+    /**
+     * IBC aproximado: suma de devengados cotizables (excluye ST).
+     * Base usada para aportes del trabajador (salud/pensión 4 % + 4 %).
+     */
+    fun contributionBase(earnings: List<PayrollLine>): Long =
+        earnings
+            .filterNot { isNonContributoryEarningCode(it.code) }
+            .sumOf { it.amount }
 }

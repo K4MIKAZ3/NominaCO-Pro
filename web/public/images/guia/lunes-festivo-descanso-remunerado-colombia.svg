@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
+  <title id="title">Descanso remunerado en lunes festivo</title>
+  <desc id="desc">Calendario laboral con lunes festivo marcado como descanso remunerado y salario completo.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f0fdf4"/>
+      <stop offset="1" stop-color="#eff6ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <rect width="800" height="450" rx="0" fill="url(#bg)"/>
+  <circle cx="710" cy="62" r="74" fill="#22c55e" opacity="0.16"/>
+  <circle cx="74" cy="380" r="92" fill="#2563eb" opacity="0.12"/>
+
+  <g filter="url(#shadow)">
+    <rect x="72" y="62" width="430" height="314" rx="28" fill="#ffffff"/>
+    <rect x="72" y="62" width="430" height="72" rx="28" fill="#16a34a"/>
+    <path d="M72 104h430v42H72z" fill="#16a34a"/>
+    <text x="287" y="109" fill="#f0fdf4" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" text-anchor="middle">Lunes festivo</text>
+
+    <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle" font-weight="800">
+      <rect x="105" y="166" width="84" height="84" rx="22" fill="#dcfce7" stroke="#16a34a" stroke-width="4"/>
+      <text x="147" y="204" fill="#15803d" font-size="25">F</text>
+      <text x="147" y="228" fill="#15803d" font-size="12">DESCANSO</text>
+
+      <rect x="210" y="166" width="84" height="84" rx="22" fill="#eff6ff"/>
+      <text x="252" y="216" fill="#1d4ed8" font-size="18">Trabajo</text>
+
+      <rect x="315" y="166" width="84" height="84" rx="22" fill="#eff6ff"/>
+      <text x="357" y="216" fill="#1d4ed8" font-size="18">Trabajo</text>
+
+      <rect x="105" y="270" width="294" height="54" rx="27" fill="#fef3c7"/>
+      <text x="252" y="304" fill="#92400e" font-size="19">Salario semanal completo</text>
+    </g>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="544" y="110" width="184" height="220" rx="30" fill="#0f172a"/>
+    <rect x="563" y="136" width="146" height="168" rx="18" fill="#ffffff"/>
+    <rect x="584" y="160" width="104" height="13" rx="7" fill="#dbeafe"/>
+    <rect x="584" y="188" width="80" height="12" rx="6" fill="#e2e8f0"/>
+    <rect x="584" y="214" width="92" height="12" rx="6" fill="#e2e8f0"/>
+    <rect x="584" y="242" width="104" height="36" rx="18" fill="#dcfce7"/>
+    <text x="636" y="266" fill="#15803d" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" text-anchor="middle">$0 descuento</text>
+  </g>
+
+  <text x="400" y="414" fill="#0f172a" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" text-anchor="middle">El festivo se paga; no se recupera.</text>
+</svg>

@@ -27,14 +27,19 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.nominacopro"
+        applicationId = "com.vcprojects.nominapp"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.7.1"
+        versionCode = 44
+        versionName = "1.7.33"
 
         buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${prop("SUPABASE_ANON_KEY")}\"")
+        buildConfigField(
+            "String",
+            "UPDATE_MANIFEST_URL",
+            "\"https://www.nominapp.xyz/api/version\"",
+        )
     }
 
     signingConfigs {

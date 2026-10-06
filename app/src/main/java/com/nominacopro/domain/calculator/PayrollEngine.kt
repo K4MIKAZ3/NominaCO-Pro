@@ -144,8 +144,9 @@ object PayrollEngine {
         }
 
         val gross = earnings.sumOf { it.amount }
-        val salud = (gross * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong()
-        val pension = (gross * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
+        val ibc = ColombiaLaborLaw2026.contributionBase(earnings)
+        val salud = (ibc * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong()
+        val pension = (ibc * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
         val legalDeductions = listOf(
             PayrollLine("Aporte salud (4%)", salud, isDeduction = true, code = "SAL"),
             PayrollLine("Aporte pensión (4%)", pension, isDeduction = true, code = "PEN"),
@@ -181,16 +182,18 @@ object PayrollEngine {
         val bonusTotal = bonuses.sumOf { it.amount }
         val deductionTotal = deductions.sumOf { it.amount }
 
+        val earnings = payroll.earnings + bonusLines
         val gross = payroll.grossTotal + bonusTotal
-        val salud = (gross * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong()
-        val pension = (gross * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
+        val ibc = ColombiaLaborLaw2026.contributionBase(earnings)
+        val salud = (ibc * ColombiaLaborLaw2026.DESCUENTO_SALUD).toLong()
+        val pension = (ibc * ColombiaLaborLaw2026.DESCUENTO_PENSION).toLong()
         val legalDeductions = listOf(
             PayrollLine("Aporte salud (4%)", salud, isDeduction = true, code = "SAL"),
             PayrollLine("Aporte pensión (4%)", pension, isDeduction = true, code = "PEN"),
         )
 
         return payroll.copy(
-            earnings = payroll.earnings + bonusLines,
+            earnings = earnings,
             manualBonuses = bonusLines,
             manualDeductions = deductionLines,
             legalDeductions = legalDeductions,

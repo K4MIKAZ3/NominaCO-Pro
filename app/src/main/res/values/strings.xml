@@ -27,6 +27,14 @@
     <string name="auth_terms_open">términos y condiciones</string>
     <string name="auth_terms_required">Debes aceptar los términos y condiciones para crear tu cuenta.</string>
     <string name="auth_terms_url">https://nominapp.xyz/terminos</string>
+    <string name="auth_password_requirements_hint">Mínimo 6 caracteres con mayúscula, minúscula, número y símbolo especial (ej. Nominapp1!).</string>
+    <string name="auth_password_mismatch">Las contraseñas no coinciden.</string>
+    <string name="auth_offline_mode">Modo offline</string>
+    <string name="auth_login_subtitle">Crea tu cuenta para respaldar tu nómina en la nube.</string>
+    <string name="auth_forgot_password_intro">Ingresa el correo de tu cuenta. Si existe, te enviaremos un enlace para restablecer tu contraseña.</string>
+    <string name="auth_forgot_password_sent">Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada y la carpeta de spam.</string>
+    <string name="auth_forgot_password_send">Enviar enlace</string>
+    <string name="auth_forgot_password_done">Entendido</string>
     <string name="auth_delete_account">Eliminar cuenta</string>
     <string name="auth_delete_account_summary">Borra tu cuenta y todos los datos asociados en la nube. Esta acción es permanente.</string>
     <string name="auth_delete_account_reason_title">¿Por qué eliminas tu cuenta?</string>
@@ -43,4 +51,13 @@
     <string name="auth_delete_account_success">Cuenta eliminada correctamente.</string>
     <string name="auth_delete_account_error">No se pudo eliminar la cuenta. Inténtalo de nuevo.</string>
     <string name="sync_now">Sincronizar ahora</string>
+    <string name="backup_section_title">Respaldo en la nube</string>
+    <string name="backup_no_account_summary">Usa la app sin conexión. Inicia sesión cuando quieras respaldar tu información en la nube.</string>
+    <string name="backup_sign_in">Iniciar sesión para respaldar</string>
+    <string name="backup_create_account">Crear cuenta</string>
+    <string name="backup_offline_message">Sin conexión. El respaldo se reanudará cuando vuelvas a tener internet.</string>
+    <string name="backup_not_active">Sesión activa. Pulsa sincronizar para activar el respaldo en la nube.</string>
+    <string name="update_section_title">Actualización</string>
+    <string name="update_current_version">Versión instalada: %1$s</string>
+    <string name="update_check_button">Buscar actualización</string>
 </resources>

@@ -1,6 +1,5 @@
 package com.nominacopro.data.auth
 
-import io.github.jan.supabase.gotrue.OtpType
 import io.github.jan.supabase.gotrue.SessionStatus
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.builtin.Email
@@ -16,12 +15,15 @@ sealed interface AuthUiState {
     data object NotConfigured : AuthUiState
     data object Unauthenticated : AuthUiState
     data class Authenticated(val email: String, val userId: String) : AuthUiState
+    data class OfflineCached(val email: String, val userId: String) : AuthUiState
     data class Error(val message: String) : AuthUiState
 }
 
 class AuthRepository {
 
     private val supabase = SupabaseProvider.client
+
+    private var lastKnownUser: AuthUiState.Authenticated? = null
 
     private val _state = MutableStateFlow<AuthUiState>(
         when {
@@ -40,14 +42,26 @@ class AuthRepository {
             _state.value = when (status) {
                 is SessionStatus.Authenticated -> {
                     val user = status.session.user
-                    if (user != null) user.toAuthenticated() else AuthUiState.Unauthenticated
+                    if (user != null) {
+                        user.toAuthenticated().also { lastKnownUser = it }
+                    } else {
+                        AuthUiState.Unauthenticated
+                    }
                 }
-                is SessionStatus.NotAuthenticated -> AuthUiState.Unauthenticated
+                is SessionStatus.NotAuthenticated -> {
+                    lastKnownUser = null
+                    AuthUiState.Unauthenticated
+                }
                 SessionStatus.LoadingFromStorage -> AuthUiState.Loading
-                SessionStatus.NetworkError -> AuthUiState.Unauthenticated
+                SessionStatus.NetworkError -> {
+                    lastKnownUser?.let { AuthUiState.OfflineCached(it.email, it.userId) }
+                        ?: AuthUiState.Unauthenticated
+                }
             }
         }
     }
+
+    fun cachedAccount(): AuthUiState.Authenticated? = lastKnownUser
 
     suspend fun signIn(email: String, password: String): String? = try {
         requireClient().auth.signInWith(Email) {
@@ -75,6 +89,7 @@ class AuthRepository {
                 supabase.auth.signOut()
             }
         } finally {
+            lastKnownUser = null
             _state.value = AuthUiState.Unauthenticated
         }
     }
@@ -105,23 +120,8 @@ class AuthRepository {
     suspend fun sendPasswordResetEmail(email: String): String? = try {
         requireClient().auth.resetPasswordForEmail(
             email = email.trim(),
-            redirectUrl = "https://nominapp.xyz/restablecer-contrasena",
+            redirectUrl = "https://www.nominapp.xyz/restablecer-contrasena",
         )
-        null
-    } catch (e: Exception) {
-        friendlyAuthError(errorMessageOnly(e))
-    }
-
-    suspend fun resetPasswordWithOtp(email: String, otp: String, newPassword: String): String? = try {
-        requireClient().auth.verifyEmailOtp(
-            type = OtpType.Email.RECOVERY,
-            email = email.trim(),
-            token = otp.trim(),
-        )
-        requireClient().auth.updateUser {
-            password = newPassword
-        }
-        signOut()
         null
     } catch (e: Exception) {
         friendlyAuthError(errorMessageOnly(e))
@@ -157,12 +157,11 @@ class AuthRepository {
                 "Ya existe una cuenta con ese correo."
             lower.contains("email not confirmed") ->
                 "Confirma tu correo antes de iniciar sesión."
-            lower.contains("user not found") || lower.contains("no user") ->
-                "No hay cuenta registrada con ese correo."
-            lower.contains("otp") && lower.contains("expired") ->
-                "El código expiró. Solicita uno nuevo desde recuperar contraseña."
-            lower.contains("otp") || lower.contains("token") && lower.contains("invalid") ->
-                "Código incorrecto. Revisa el correo e inténtalo de nuevo."
+            lower.contains("password should contain") ||
+                lower.contains("abcdefghijklmnopqrstuvwxyz") ||
+                lower.contains("weak") ||
+                lower.contains("too short") ->
+                "Mínimo 6 caracteres con mayúscula, minúscula, número y símbolo especial (ej. Nominapp1!)."
             else -> msg
         }
     }

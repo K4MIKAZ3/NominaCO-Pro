@@ -3,6 +3,8 @@ package com.nominacopro.data
 import android.content.Context
 import androidx.room.Room
 import com.nominacopro.data.local.NominaDatabase
+import com.nominacopro.data.local.NominaMigrations
+import com.nominacopro.data.local.entity.ExpenseEntity
 import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
 import com.nominacopro.data.local.entity.ProfileEntity
@@ -10,12 +12,15 @@ import com.nominacopro.data.local.entity.WorkDayEntity
 import com.nominacopro.data.preferences.AppPreferencesStore
 import com.nominacopro.data.sync.CloudSyncRepository
 import com.nominacopro.domain.calculator.PayrollEngine
+import com.nominacopro.util.NetworkMonitor
 import com.nominacopro.domain.calculator.SettlementCalculator
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.ContractType
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.model.ExpenseCategory
+import com.nominacopro.domain.model.ExpenseEntry
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.model.PeriodPayrollSummary
@@ -40,12 +45,15 @@ class NominaRepository(context: Context) {
         appContext,
         NominaDatabase::class.java,
         "nomina_co_pro.db",
-    ).fallbackToDestructiveMigration().build()
+    )
+        .addMigrations(*NominaMigrations.ALL)
+        .build()
 
     private val profileDao = db.profileDao()
     private val workDayDao = db.workDayDao()
     private val holidayDao = db.manualHolidayDao()
     private val deductionDao = db.manualDeductionDao()
+    private val expenseDao = db.expenseDao()
     val preferencesStore = AppPreferencesStore(appContext)
 
     val cloudSync = CloudSyncRepository(
@@ -54,16 +62,22 @@ class NominaRepository(context: Context) {
         workDayDao = workDayDao,
         holidayDao = holidayDao,
         deductionDao = deductionDao,
+        expenseDao = expenseDao,
         preferencesStore = preferencesStore,
     )
 
     private val iso = DateTimeFormatter.ISO_LOCAL_DATE
 
+    private suspend fun maybeCloudSync(block: suspend () -> Unit) {
+        if (!NetworkMonitor.isOnline(appContext) || !cloudSync.canAutoSync()) return
+        runCatching { block() }
+    }
+
     fun observePreferences(): Flow<AppPreferences> = preferencesStore.observe()
 
     suspend fun setPreferences(prefs: AppPreferences) {
         preferencesStore.update { prefs }
-        runCatching { cloudSync.pushPreferences(prefs) }
+        maybeCloudSync { cloudSync.pushPreferences(prefs) }
     }
 
     fun observeProfile() = profileDao.observe().map { it?.toDomain() }
@@ -81,7 +95,7 @@ class NominaRepository(context: Context) {
                 pendingVacationDays = profile.pendingVacationDays,
             ),
         )
-        runCatching { cloudSync.pushProfile(profile) }
+        maybeCloudSync { cloudSync.pushProfile(profile) }
     }
 
     fun observeWorkDays(year: Int, month: Int): Flow<List<WorkDayEntry>> {
@@ -95,12 +109,12 @@ class NominaRepository(context: Context) {
 
     suspend fun saveWorkDay(entry: WorkDayEntry) {
         workDayDao.upsert(entry.toEntity())
-        runCatching { cloudSync.pushWorkDay(entry) }
+        maybeCloudSync { cloudSync.pushWorkDay(entry) }
     }
 
     suspend fun deleteWorkDay(date: LocalDate) {
         workDayDao.delete(date.format(iso))
-        runCatching { cloudSync.deleteWorkDay(date) }
+        maybeCloudSync { cloudSync.deleteWorkDay(date) }
     }
 
     fun observeManualHolidays(): Flow<Set<LocalDate>> =
@@ -110,10 +124,10 @@ class NominaRepository(context: Context) {
         val isoDate = date.format(iso)
         if (enabled) {
             holidayDao.upsert(ManualHolidayEntity(isoDate))
-            runCatching { cloudSync.pushManualHoliday(date) }
+            maybeCloudSync { cloudSync.pushManualHoliday(date) }
         } else {
             holidayDao.delete(isoDate)
-            runCatching { cloudSync.deleteManualHoliday(date) }
+            maybeCloudSync { cloudSync.deleteManualHoliday(date) }
         }
     }
 
@@ -159,13 +173,45 @@ class NominaRepository(context: Context) {
             if (row.cloudId == null) row.copy(cloudId = java.util.UUID.randomUUID().toString()) else row
         }
         deductionDao.upsert(entity)
-        runCatching { cloudSync.pushManualDeduction(entity.toDomain()) }
+        maybeCloudSync { cloudSync.pushManualDeduction(entity.toDomain()) }
     }
 
     suspend fun removeManualDeduction(id: Long) {
         val existing = deductionDao.getById(id)
         deductionDao.delete(id)
-        runCatching { cloudSync.deleteManualDeduction(existing?.cloudId) }
+        maybeCloudSync { cloudSync.deleteManualDeduction(existing?.cloudId) }
+    }
+
+    fun observeExpenses(year: Int, month: Int): Flow<List<ExpenseEntry>> {
+        val ym = YearMonth.of(year, month).toString()
+        return expenseDao.observeForMonth(ym).map { list ->
+            list.map { entity ->
+                entity.toDomain().let { entry ->
+                    if (entry.isFixed) {
+                        entry.copy(
+                            yearMonth = YearMonth.of(year, month),
+                            date = LocalDate.of(year, month, 1),
+                        )
+                    } else {
+                        entry
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun addExpense(entry: ExpenseEntry) {
+        val entity = entry.toEntity().let { row ->
+            if (row.cloudId == null) row.copy(cloudId = java.util.UUID.randomUUID().toString()) else row
+        }
+        expenseDao.upsert(entity)
+        maybeCloudSync { cloudSync.pushExpense(entity.toDomain()) }
+    }
+
+    suspend fun removeExpense(id: Long) {
+        val existing = expenseDao.getById(id)
+        expenseDao.delete(id)
+        maybeCloudSync { cloudSync.deleteExpense(existing?.cloudId) }
     }
 
     fun observeMonthlyPayroll(year: Int, month: Int): Flow<MonthlyPayroll?> =
@@ -243,9 +289,7 @@ class NominaRepository(context: Context) {
                     val official = ColombiaLaborLaw2026.isOfficialHoliday(date)
                     val manualH = manual.contains(date)
                     val sunday = ColombiaLaborLaw2026.isSunday(date)
-                    if (worked || official || manualH || sunday) {
-                        put(date, CalendarMark(worked, official, manualH, sunday))
-                    }
+                    put(date, CalendarMark(worked, official, manualH, sunday))
                 }
             }
         }
@@ -303,4 +347,26 @@ private fun ManualDeduction.toEntity() = ManualDeductionEntity(
     label = label,
     amount = amount,
     entryType = entryType.name,
+)
+
+private fun ExpenseEntity.toDomain() = ExpenseEntry(
+    id = id,
+    cloudId = cloudId,
+    yearMonth = YearMonth.parse(yearMonth),
+    date = LocalDate.parse(dateIso, DateTimeFormatter.ISO_LOCAL_DATE),
+    label = label,
+    amount = amount,
+    category = ExpenseCategory.fromStored(category.takeIf { it.isNotBlank() }),
+    isFixed = isFixed,
+)
+
+private fun ExpenseEntry.toEntity() = ExpenseEntity(
+    id = id,
+    cloudId = cloudId,
+    yearMonth = yearMonth.toString(),
+    dateIso = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+    label = label,
+    amount = amount,
+    category = category.name,
+    isFixed = isFixed,
 )

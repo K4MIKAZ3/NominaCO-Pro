@@ -3,6 +3,7 @@ package com.nominacopro.ui.screens
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -49,6 +49,7 @@ import com.nominacopro.ui.components.NominaTopBar
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
+import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.ui.Formatters
 import com.nominacopro.ui.TimeFieldState
 import com.nominacopro.ui.TimeInput
@@ -68,9 +69,18 @@ private enum class DeleteAccountStep {
 fun SettingsScreen(
     preferences: AppPreferences,
     manualHolidays: Set<LocalDate>,
+    profile: EmployeeProfile? = null,
+    onOpenProfile: () -> Unit = {},
     accountEmail: String? = null,
+    isOfflineAccount: Boolean = false,
+    authConfigured: Boolean = false,
+    cloudBackupEnabled: Boolean = false,
     syncState: SyncUiState? = null,
+    manualUpdateCheckBusy: Boolean = false,
     onSyncNow: (() -> Unit)? = null,
+    onOpenLogin: (() -> Unit)? = null,
+    onOpenRegister: (() -> Unit)? = null,
+    onCheckForUpdate: (() -> Unit)? = null,
     onSavePreferences: (AppPreferences) -> Unit,
     onRemoveHoliday: (LocalDate) -> Unit,
     onRequestNotificationPermission: () -> Unit,
@@ -129,6 +139,8 @@ fun SettingsScreen(
             reminderMinute = reminder.minute,
             darkModeEnabled = darkMode,
             biometricEnabled = biometric,
+            cloudBackupEnabled = preferences.cloudBackupEnabled,
+            offlineModeEnabled = preferences.offlineModeEnabled,
         )
     }
 
@@ -146,10 +158,10 @@ fun SettingsScreen(
         "Desactivado"
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbar) }, modifier = modifier) { padding ->
+    Box(modifier.fillMaxSize()) {
         LazyColumn(
-            Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 0.dp, end = 0.dp, bottom = 16.dp),
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item { NominaTopBar(title = "Ajustes") }
@@ -161,29 +173,118 @@ fun SettingsScreen(
                 )
             }
 
-            if (accountEmail != null || onSyncNow != null) {
+            item {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Perfil laboral", fontWeight = FontWeight.SemiBold)
+                        if (profile != null) {
+                            Text(
+                                profile.name,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Text(
+                                "${profile.jobTitle.ifBlank { "Sin cargo" }} · ${Formatters.money(profile.monthlySalary)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                            Text(
+                                "${profile.payPeriodType.label} · ${profile.dailyHours} h/día",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                        } else {
+                            Text(
+                                "Configura salario, contrato y jornada para calcular tu nómina.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                        }
+                        OutlinedButton(onClick = onOpenProfile, modifier = Modifier.fillMaxWidth()) {
+                            Text(if (profile != null) "Editar perfil" else "Configurar perfil")
+                        }
+                    }
+                }
+            }
+
+            if (authConfigured) {
                 item {
                     Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Cuenta Supabase", fontWeight = FontWeight.SemiBold)
-                            accountEmail?.let { email ->
-                                Text(email, color = MaterialTheme.colorScheme.primary)
-                            }
-                            when (syncState) {
-                                SyncUiState.Syncing -> Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(4.dp))
-                                    Text("Sincronizando…", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                stringResource(R.string.backup_section_title),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            when {
+                                accountEmail == null -> {
+                                    Text(
+                                        stringResource(R.string.backup_no_account_summary),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                    )
+                                    onOpenLogin?.let { login ->
+                                        Button(onClick = login, modifier = Modifier.fillMaxWidth()) {
+                                            Text(stringResource(R.string.backup_sign_in))
+                                        }
+                                    }
+                                    onOpenRegister?.let { register ->
+                                        OutlinedButton(onClick = register, modifier = Modifier.fillMaxWidth()) {
+                                            Text(stringResource(R.string.backup_create_account))
+                                        }
+                                    }
                                 }
-                                is SyncUiState.Success -> Text(syncState.message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                                is SyncUiState.Error -> Text(syncState.message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-                                else -> Unit
-                            }
-                            onSyncNow?.let { sync ->
-                                OutlinedButton(onClick = sync, enabled = syncState != SyncUiState.Syncing) {
-                                    Text(stringResource(R.string.sync_now))
+                                isOfflineAccount -> {
+                                    Text(
+                                        accountEmail,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                    Text(
+                                        stringResource(R.string.backup_offline_message),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                    )
+                                }
+                                else -> {
+                                    Text(
+                                        accountEmail,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                    if (!cloudBackupEnabled) {
+                                        Text(
+                                            stringResource(R.string.backup_not_active),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                        )
+                                    }
+                                    when (syncState) {
+                                        SyncUiState.Syncing -> Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(4.dp))
+                                            Text("Sincronizando…", style = MaterialTheme.typography.bodySmall)
+                                        }
+                                        is SyncUiState.Success -> Text(
+                                            syncState.message,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                        is SyncUiState.Error -> Text(
+                                            syncState.message,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                        )
+                                        else -> Unit
+                                    }
+                                    onSyncNow?.let { sync ->
+                                        OutlinedButton(
+                                            onClick = sync,
+                                            enabled = syncState != SyncUiState.Syncing,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Text(stringResource(R.string.sync_now))
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -191,7 +292,7 @@ fun SettingsScreen(
                 }
             }
 
-            onSignOut?.let {
+            if (accountEmail != null && onSignOut != null) {
                 item {
                     Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -229,6 +330,30 @@ fun SettingsScreen(
                                         color = MaterialTheme.colorScheme.error,
                                     )
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.update_section_title), fontWeight = FontWeight.SemiBold)
+                        Text(
+                            stringResource(R.string.update_current_version, BuildConfig.VERSION_NAME),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        onCheckForUpdate?.let { check ->
+                            OutlinedButton(
+                                onClick = check,
+                                enabled = !manualUpdateCheckBusy,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                if (manualUpdateCheckBusy) {
+                                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(end = 8.dp))
+                                }
+                                Text(stringResource(R.string.update_check_button))
                             }
                         }
                     }
@@ -453,6 +578,10 @@ fun SettingsScreen(
                 }
             }
         }
+        SnackbarHost(
+            hostState = snackbar,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 
     if (showDonationDialog) {

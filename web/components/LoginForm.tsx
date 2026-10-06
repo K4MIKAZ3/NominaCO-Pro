@@ -1,48 +1,58 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { Session } from "@supabase/supabase-js";
-import { MonthSummaryPanel } from "@/components/MonthSummaryPanel";
-import { fetchDashboard, type DashboardData } from "@/lib/dashboard";
+import { useRouter } from "next/navigation";
+import { PasswordField } from "@/components/PasswordField";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import {
+  isPasswordValid,
+  mapAuthPasswordError,
+  mapAuthRateLimitError,
+  PASSWORD_REQUIREMENTS_HINT,
+  passwordsMatch,
+  validatePassword,
+} from "@/lib/password";
 import { resetPasswordRedirectUrl, site } from "@/lib/site";
-import type { MonthSummary } from "@/lib/payroll/models";
 
 type AuthMode = "login" | "signup" | "reset";
 
 export function LoginForm() {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [touched, setTouched] = useState({ password: false, confirm: false });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null,
   );
-  const [session, setSession] = useState<Session | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const [dashboardLoading, setDashboardLoading] = useState(false);
-  const [dashboardError, setDashboardError] = useState<string | null>(null);
-  const [profileName, setProfileName] = useState<string | null>(null);
-  const [summaries, setSummaries] = useState<MonthSummary[]>([]);
-  const [signingOut, setSigningOut] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
 
-  const loadDashboard = useCallback(async (userId: string) => {
-    setDashboardLoading(true);
-    setDashboardError(null);
-    try {
-      const data: DashboardData = await fetchDashboard(userId);
-      setProfileName(data.profileName);
-      setSummaries(data.summaries);
-    } catch (err) {
-      const text = err instanceof Error ? err.message : "No se pudo cargar el resumen.";
-      setDashboardError(text);
-      setProfileName(null);
-      setSummaries([]);
-    } finally {
-      setDashboardLoading(false);
+  const passwordError = useMemo(() => {
+    if (mode !== "signup") return null;
+    if (!touched.password && password.length === 0) return null;
+    return validatePassword(password);
+  }, [mode, password, touched.password]);
+
+  const confirmError = useMemo(() => {
+    if (mode !== "signup") return null;
+    if (!touched.confirm && confirmPassword.length === 0) return null;
+    if (!passwordsMatch(password, confirmPassword)) {
+      return "Las contraseñas no coinciden.";
     }
-  }, []);
+    return null;
+  }, [mode, password, confirmPassword, touched.confirm]);
+
+  const canSubmitSignup =
+    isPasswordValid(password) && passwordsMatch(password, confirmPassword);
+
+  useEffect(() => {
+    setConfirmPassword("");
+    setTouched({ password: false, confirm: false });
+  }, [mode]);
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -51,30 +61,25 @@ export function LoginForm() {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session: current } }) => {
-      setSession(current);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setHasSession(!!session);
       setSessionChecked(true);
-      if (current?.user) {
-        // Evita deadlock de Supabase: no llamar a la API dentro del callback de auth.
-        window.setTimeout(() => loadDashboard(current.user.id), 0);
-      }
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      if (nextSession?.user) {
-        window.setTimeout(() => loadDashboard(nextSession.user.id), 0);
-      } else {
-        setProfileName(null);
-        setSummaries([]);
-        setDashboardError(null);
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasSession(!!session);
     });
 
     return () => subscription.unsubscribe();
-  }, [loadDashboard]);
+  }, []);
+
+  useEffect(() => {
+    if (sessionChecked && hasSession) {
+      router.replace(site.auth.homePath);
+    }
+  }, [sessionChecked, hasSession, router]);
 
   if (!isSupabaseConfigured()) {
     return (
@@ -96,6 +101,14 @@ export function LoginForm() {
     );
   }
 
+  if (!sessionChecked || hasSession) {
+    return (
+      <div className="auth-card">
+        <p className="dashboard-status">Verificando sesión…</p>
+      </div>
+    );
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -110,18 +123,26 @@ export function LoginForm() {
 
     try {
       if (mode === "login") {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        if (data.session) {
-          setSession(data.session);
-          setSessionChecked(true);
-          window.setTimeout(() => loadDashboard(data.session.user.id), 0);
-        }
+        router.replace(site.auth.homePath);
       } else if (mode === "signup") {
+        setTouched({ password: true, confirm: true });
+        const validationError = validatePassword(password);
+        if (validationError) {
+          setMessage({ type: "error", text: validationError });
+          setLoading(false);
+          return;
+        }
+        if (!passwordsMatch(password, confirmPassword)) {
+          setMessage({ type: "error", text: "Las contraseñas no coinciden." });
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${site.url}/login` },
+          options: { emailRedirectTo: `${site.url}${site.auth.homePath}` },
         });
         if (error) throw error;
         setMessage({
@@ -139,36 +160,13 @@ export function LoginForm() {
         });
       }
     } catch (err) {
-      const text = err instanceof Error ? err.message : "Ocurrió un error.";
+      const raw = err instanceof Error ? err.message : "Ocurrió un error.";
+      const text =
+        mode === "signup" ? mapAuthPasswordError(raw) : mapAuthRateLimitError(raw);
       setMessage({ type: "error", text });
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleSignOut() {
-    const supabase = getSupabase();
-    if (!supabase) return;
-    setSigningOut(true);
-    try {
-      await supabase.auth.signOut();
-      setMessage(null);
-    } finally {
-      setSigningOut(false);
-    }
-  }
-
-  if (sessionChecked && session) {
-    return (
-      <MonthSummaryPanel
-        profileName={profileName}
-        summaries={summaries}
-        loading={dashboardLoading}
-        error={dashboardError}
-        onSignOut={handleSignOut}
-        signingOut={signingOut}
-      />
-    );
   }
 
   return (
@@ -215,13 +213,19 @@ export function LoginForm() {
           />
         </div>
 
-        {mode !== "reset" && (
+        {mode === "signup" && (
+          <p className="auth-note" style={{ marginBottom: "1rem" }}>
+            {PASSWORD_REQUIREMENTS_HINT}
+          </p>
+        )}
+
+        {mode === "login" && (
           <div className="form-group">
             <label htmlFor="password">Contraseña</label>
             <input
               id="password"
               type="password"
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+              autoComplete="current-password"
               required
               minLength={6}
               value={password}
@@ -230,8 +234,37 @@ export function LoginForm() {
           </div>
         )}
 
+        {mode === "signup" && (
+          <>
+            <PasswordField
+              id="password"
+              label="Contraseña"
+              value={password}
+              onChange={(value) => {
+                setPassword(value);
+                setTouched((current) => ({ ...current, password: true }));
+              }}
+              hint={passwordError}
+            />
+            <PasswordField
+              id="confirm-password"
+              label="Confirmar contraseña"
+              value={confirmPassword}
+              onChange={(value) => {
+                setConfirmPassword(value);
+                setTouched((current) => ({ ...current, confirm: true }));
+              }}
+              hint={confirmError}
+            />
+          </>
+        )}
+
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading || (mode === "signup" && !canSubmitSignup)}
+          >
             {loading
               ? "Procesando…"
               : mode === "login"

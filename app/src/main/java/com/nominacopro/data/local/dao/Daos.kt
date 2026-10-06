@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.nominacopro.data.local.entity.ExpenseEntity
 import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
 import com.nominacopro.data.local.entity.ProfileEntity
@@ -91,5 +92,35 @@ interface ManualDeductionDao {
     suspend fun delete(id: Long)
 
     @Query("DELETE FROM manual_deductions")
+    suspend fun deleteAll()
+}
+
+@Dao
+interface ExpenseDao {
+    @Query(
+        """
+        SELECT * FROM expense_entries
+        WHERE isFixed = 1 OR yearMonth = :yearMonth
+        ORDER BY isFixed DESC, dateIso DESC, id DESC
+        """,
+    )
+    fun observeForMonth(yearMonth: String): Flow<List<ExpenseEntity>>
+
+    @Query("SELECT * FROM expense_entries ORDER BY yearMonth DESC, dateIso DESC, id DESC")
+    fun observeAll(): Flow<List<ExpenseEntity>>
+
+    @Query("SELECT * FROM expense_entries WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): ExpenseEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: ExpenseEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(entities: List<ExpenseEntity>)
+
+    @Query("DELETE FROM expense_entries WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("DELETE FROM expense_entries")
     suspend fun deleteAll()
 }

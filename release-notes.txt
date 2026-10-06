@@ -1,1 +1,1 @@
-Salud y pensión ya no descuentan sobre el auxilio de transporte (IBC correcto). El auxilio sigue sumando a tu neto, pero no cotiza. Revisa tu liquidación: el neto estimado puede subir un poco frente a versiones anteriores.
+Nuevo identificador de app para Google Play (com.vcprojects.nominapp). Si tenías una instalación anterior con el paquete viejo, desinstálala e instala esta versión (o bájala desde la web). Misma firma y datos en la nube con tu cuenta.

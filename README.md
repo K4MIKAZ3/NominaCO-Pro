@@ -95,7 +95,7 @@ Añade secrets `VERCEL_TOKEN`, `VERCEL_ORG_ID` y `VERCEL_PROJECT_ID` (desde `.ve
 
 Todas las APK de CI usan **el mismo keystore** (GitHub Secrets). Así puedes instalar una versión nueva encima de la anterior si:
 
-- El `applicationId` no cambia (`com.nominacopro`)
+- El `applicationId` de publicación es `com.vcprojects.nominapp` (debe coincidir con Play Console)
 - El `versionCode` sube en cada release
 - La APK anterior fue firmada con el mismo certificado
 

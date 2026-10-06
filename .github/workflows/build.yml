@@ -128,9 +128,11 @@ jobs:
         run: |
           if [ -f release-notes.txt ]; then
             {
-              echo "RELEASE_NOTES<<EOF"
+              echo "RELEASE_NOTES<<RELEASE_NOTES_EOF"
+              # Garantiza salto de línea final; si no, el delimitador queda pegado al texto.
               cat release-notes.txt
-              echo "EOF"
+              printf '\n'
+              echo "RELEASE_NOTES_EOF"
             } >> "$GITHUB_ENV"
           fi
           node scripts/update-releases-manifest.mjs

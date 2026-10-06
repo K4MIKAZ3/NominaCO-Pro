@@ -7,10 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.nominacopro.data.CalendarMark
+import com.nominacopro.NominaApp
 import com.nominacopro.data.NominaRepository
+import com.nominacopro.data.update.ApkInstaller
+import com.nominacopro.data.update.AppUpdateManifest
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.model.ExpenseCategory
+import com.nominacopro.domain.model.ExpenseEntry
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
@@ -24,6 +29,7 @@ import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.export.PdfExporter
 import com.nominacopro.notifications.ReminderScheduler
+import com.nominacopro.util.NetworkMonitor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,11 +40,20 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+
+data class AppUpdateUiState(
+    val manifest: AppUpdateManifest? = null,
+    val downloading: Boolean = false,
+    val progress: Float = 0f,
+    val downloadedApkPath: String? = null,
+    val awaitingInstallPermission: Boolean = false,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(
@@ -46,8 +61,18 @@ class MainViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
 
+    private val app = application as NominaApp
+
+    private var mainAppActive = false
+
+    private val _appUpdate = MutableStateFlow(AppUpdateUiState())
+    val appUpdate: StateFlow<AppUpdateUiState> = _appUpdate.asStateFlow()
+
     private val _yearMonth = MutableStateFlow(YearMonth.now())
     val yearMonth: StateFlow<YearMonth> = _yearMonth.asStateFlow()
+
+    private val _expenseYearMonth = MutableStateFlow(YearMonth.now())
+    val expenseYearMonth: StateFlow<YearMonth> = _expenseYearMonth.asStateFlow()
 
     val preferences: StateFlow<AppPreferences> = repository.observePreferences().stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), AppPreferences(),
@@ -91,6 +116,18 @@ class MainViewModel(
             repository.observeManualDeductions(ym.year, ym.monthValue)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val expenses: StateFlow<List<ExpenseEntry>> = _expenseYearMonth
+        .flatMapLatest { ym ->
+            repository.observeExpenses(ym.year, ym.monthValue)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val expensePayroll: StateFlow<MonthlyPayroll?> = _expenseYearMonth
+        .flatMapLatest { ym ->
+            repository.observeMonthlyPayroll(ym.year, ym.monthValue)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private val _selectedPeriodIndex = MutableStateFlow(0)
     val selectedPeriodIndex: StateFlow<Int> = _selectedPeriodIndex.asStateFlow()
@@ -163,6 +200,18 @@ class MainViewModel(
     fun goToday() {
         _yearMonth.value = YearMonth.now()
         resetPeriodIndexForCurrentMonth()
+    }
+
+    fun prevExpenseMonth() {
+        _expenseYearMonth.value = _expenseYearMonth.value.minusMonths(1)
+    }
+
+    fun nextExpenseMonth() {
+        _expenseYearMonth.value = _expenseYearMonth.value.plusMonths(1)
+    }
+
+    fun goExpenseToday() {
+        _expenseYearMonth.value = YearMonth.now()
     }
 
     fun selectPayPeriod(index: Int) {
@@ -257,6 +306,32 @@ class MainViewModel(
         viewModelScope.launch { repository.removeManualDeduction(id) }
     }
 
+    fun addExpense(
+        label: String,
+        amount: Long,
+        category: ExpenseCategory,
+        date: LocalDate = LocalDate.now(),
+        isFixed: Boolean = false,
+    ) {
+        val ym = YearMonth.from(date)
+        viewModelScope.launch {
+            repository.addExpense(
+                ExpenseEntry(
+                    yearMonth = ym,
+                    date = date,
+                    label = label,
+                    amount = amount,
+                    category = category,
+                    isFixed = isFixed,
+                ),
+            )
+        }
+    }
+
+    fun removeExpense(id: Long) {
+        viewModelScope.launch { repository.removeExpense(id) }
+    }
+
     fun savePreferences(prefs: AppPreferences) {
         viewModelScope.launch {
             repository.setPreferences(prefs)
@@ -274,7 +349,15 @@ class MainViewModel(
 
     fun syncNow(userId: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
-            onResult(repository.cloudSync.syncNow(userId))
+            if (!NetworkMonitor.isOnline(getApplication())) {
+                onResult("Sin conexión a internet. Conéctate para sincronizar tu respaldo.")
+                return@launch
+            }
+            val error = repository.cloudSync.syncNow(userId)
+            if (error == null) {
+                repository.preferencesStore.update { it.copy(cloudBackupEnabled = true) }
+            }
+            onResult(error)
         }
     }
 
@@ -306,6 +389,113 @@ class MainViewModel(
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
+    }
+
+    fun setPendingUpdate(manifest: AppUpdateManifest?) {
+        if (_appUpdate.value.downloading) return
+        _appUpdate.value = if (manifest == null) {
+            AppUpdateUiState()
+        } else {
+            _appUpdate.value.copy(manifest = manifest)
+        }
+    }
+
+    fun dismissPendingUpdate() {
+        if (_appUpdate.value.downloading) return
+        val manifest = _appUpdate.value.manifest
+        if (manifest != null) {
+            viewModelScope.launch {
+                repository.preferencesStore.update {
+                    it.copy(dismissedUpdateVersionCode = manifest.versionCode)
+                }
+            }
+        }
+        _appUpdate.value = AppUpdateUiState()
+    }
+
+    fun checkForUpdates(
+        force: Boolean = false,
+        onResult: ((AppUpdateManifest?) -> Unit)? = null,
+    ) {
+        viewModelScope.launch {
+            if (_appUpdate.value.downloading) {
+                onResult?.invoke(null)
+                return@launch
+            }
+            if (!mainAppActive && onResult == null) return@launch
+            if (!NetworkMonitor.isOnline(getApplication())) {
+                onResult?.invoke(null)
+                return@launch
+            }
+
+            val prefs = preferences.value
+            val now = System.currentTimeMillis()
+            if (!force && now - prefs.lastUpdateCheckAtMs < UPDATE_CHECK_INTERVAL_MS) {
+                return@launch
+            }
+
+            val update = app.appUpdateRepository.checkForUpdate()
+            repository.preferencesStore.update { it.copy(lastUpdateCheckAtMs = now) }
+            onResult?.invoke(update)
+
+            if (update == null) return@launch
+            if (force || update.versionCode > prefs.dismissedUpdateVersionCode) {
+                setPendingUpdate(update)
+            }
+        }
+    }
+
+    fun setMainAppActive(active: Boolean) {
+        mainAppActive = active
+    }
+
+    fun startUpdateDownload() {
+        val manifest = _appUpdate.value.manifest ?: return
+        if (_appUpdate.value.downloading) return
+        viewModelScope.launch {
+            _appUpdate.update { it.copy(downloading = true, progress = 0f) }
+            try {
+                val apk = app.appUpdateRepository.downloadApk(manifest) { progress ->
+                    _appUpdate.update { it.copy(progress = progress) }
+                }
+                val canInstall = ApkInstaller.canInstall(getApplication())
+                _appUpdate.update {
+                    it.copy(
+                        downloading = false,
+                        progress = 1f,
+                        downloadedApkPath = apk.absolutePath,
+                        awaitingInstallPermission = !canInstall,
+                    )
+                }
+                if (canInstall) {
+                    ApkInstaller.installApk(getApplication(), apk)
+                    _appUpdate.value = AppUpdateUiState()
+                }
+            } catch (_: Exception) {
+                _appUpdate.update { it.copy(downloading = false) }
+            }
+        }
+    }
+
+    fun resumePendingApkInstall() {
+        val path = _appUpdate.value.downloadedApkPath ?: return
+        val file = File(path)
+        if (!file.exists()) {
+            _appUpdate.update { it.copy(downloadedApkPath = null) }
+            return
+        }
+        if (ApkInstaller.canInstall(getApplication())) {
+            ApkInstaller.installApk(getApplication(), file)
+            _appUpdate.value = AppUpdateUiState()
+        }
+    }
+
+    fun dismissInstallPermissionPrompt() {
+        _appUpdate.update { it.copy(awaitingInstallPermission = false) }
+    }
+
+    companion object {
+        private const val UPDATE_CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
     }
 
     class Factory(

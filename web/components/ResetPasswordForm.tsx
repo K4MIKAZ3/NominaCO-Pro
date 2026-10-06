@@ -1,8 +1,16 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { PasswordField } from "@/components/PasswordField";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import {
+  mapAuthPasswordError,
+  PASSWORD_REQUIREMENTS_HINT,
+  passwordsMatch,
+  validatePassword,
+} from "@/lib/password";
+import { parseRecoveryHashError, resetPasswordPath } from "@/lib/auth-recovery";
 import { site } from "@/lib/site";
 
 type Phase = "loading" | "invalid" | "ready" | "success";
@@ -12,9 +20,31 @@ export function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(
     null,
   );
+  const [touched, setTouched] = useState({ password: false, confirm: false });
+
+  const passwordError = useMemo(() => {
+    if (!touched.password && password.length === 0) return null;
+    return validatePassword(password);
+  }, [password, touched.password]);
+
+  const confirmError = useMemo(() => {
+    if (!touched.confirm && confirm.length === 0) return null;
+    if (!passwordsMatch(password, confirm)) {
+      return "Las contraseñas no coinciden.";
+    }
+    return null;
+  }, [password, confirm, touched.confirm]);
+
+  const canSubmit =
+    !loading &&
+    !passwordError &&
+    !confirmError &&
+    password.length > 0 &&
+    confirm.length > 0;
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -34,6 +64,20 @@ export function ResetPasswordForm() {
     async function initRecoverySession() {
       try {
         const url = new URL(window.location.href);
+        const hashError = parseRecoveryHashError(url.hash);
+        if (hashError) {
+          if (!cancelled) {
+            setRecoveryError(hashError);
+            setPhase("invalid");
+          }
+          return;
+        }
+
+        const hashParams = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        const hashType = hashParams.get("type");
+
         const code = url.searchParams.get("code");
         const tokenHash = url.searchParams.get("token_hash");
         const type = url.searchParams.get("type");
@@ -41,14 +85,21 @@ export function ResetPasswordForm() {
         if (code) {
           const { error } = await client.auth.exchangeCodeForSession(code);
           if (error) throw error;
-          window.history.replaceState({}, document.title, url.pathname);
+          window.history.replaceState({}, document.title, resetPasswordPath());
+        } else if (accessToken && refreshToken && hashType === "recovery") {
+          const { error } = await client.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+          window.history.replaceState({}, document.title, resetPasswordPath());
         } else if (tokenHash && type === "recovery") {
           const { error } = await client.auth.verifyOtp({
             token_hash: tokenHash,
             type: "recovery",
           });
           if (error) throw error;
-          window.history.replaceState({}, document.title, url.pathname);
+          window.history.replaceState({}, document.title, resetPasswordPath());
         } else {
           await client.auth.getSession();
         }
@@ -62,8 +113,16 @@ export function ResetPasswordForm() {
         if (!cancelled) {
           setPhase(session ? "ready" : "invalid");
         }
-      } catch {
-        if (!cancelled) setPhase("invalid");
+      } catch (err) {
+        if (!cancelled) {
+          const raw = err instanceof Error ? err.message : "";
+          setRecoveryError(
+            raw.includes("expired") || raw.includes("invalid")
+              ? "El enlace expiró o ya fue usado. Solicita uno nuevo y ábrelo de inmediato."
+              : raw || "No se pudo validar el enlace de recuperación.",
+          );
+          setPhase("invalid");
+        }
       }
     }
 
@@ -85,12 +144,14 @@ export function ResetPasswordForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setTouched({ password: true, confirm: true });
 
-    if (password.length < 6) {
-      setMessage({ type: "error", text: "La contraseña debe tener al menos 6 caracteres." });
+    const validationError = validatePassword(password);
+    if (validationError) {
+      setMessage({ type: "error", text: validationError });
       return;
     }
-    if (password !== confirm) {
+    if (!passwordsMatch(password, confirm)) {
       setMessage({ type: "error", text: "Las contraseñas no coinciden." });
       return;
     }
@@ -107,9 +168,10 @@ export function ResetPasswordForm() {
       await supabase.auth.signOut();
       setPhase("success");
     } catch (err) {
+      const raw = err instanceof Error ? err.message : "";
       setMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "No se pudo actualizar la contraseña.",
+        text: mapAuthPasswordError(raw),
       });
     } finally {
       setLoading(false);
@@ -142,14 +204,18 @@ export function ResetPasswordForm() {
       <div className="auth-card">
         <h1>Enlace no válido</h1>
         <p className="subtitle">
-          El enlace expiró o ya fue usado. Solicita uno nuevo desde la pantalla de
-          recuperación.
+          {recoveryError ??
+            "El enlace expiró o ya fue usado. Solicita uno nuevo desde la pantalla de recuperación."}
         </p>
         <div className="form-actions">
           <Link href="/login" className="btn btn-primary">
             Ir a recuperar contraseña
           </Link>
         </div>
+        <p className="auth-note">
+          Consejo: abre el enlace del correo en menos de 1 hora y solo una vez. Si tu correo
+          previsualiza enlaces, solicita el correo de nuevo y usa «Abrir en el navegador».
+        </p>
         <p className="auth-note">
           <Link href="/">← Volver al inicio</Link>
         </p>
@@ -177,39 +243,33 @@ export function ResetPasswordForm() {
   return (
     <div className="auth-card">
       <h1>Nueva contraseña</h1>
-      <p className="subtitle">
-        Elige una contraseña segura para tu cuenta de {site.name}.
-      </p>
+      <p className="subtitle">{PASSWORD_REQUIREMENTS_HINT}</p>
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="password">Nueva contraseña</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+        <PasswordField
+          id="password"
+          label="Nueva contraseña"
+          value={password}
+          onChange={(value) => {
+            setPassword(value);
+            setTouched((current) => ({ ...current, password: true }));
+          }}
+          hint={passwordError}
+        />
 
-        <div className="form-group">
-          <label htmlFor="confirm">Confirmar contraseña</label>
-          <input
-            id="confirm"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={6}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-        </div>
+        <PasswordField
+          id="confirm"
+          label="Confirmar contraseña"
+          value={confirm}
+          onChange={(value) => {
+            setConfirm(value);
+            setTouched((current) => ({ ...current, confirm: true }));
+          }}
+          hint={confirmError}
+        />
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
             {loading ? "Guardando…" : "Guardar nueva contraseña"}
           </button>
         </div>

@@ -22,7 +22,7 @@ data class RemoteWorkDay(
     @SerialName("date_iso") val dateIso: String,
     @SerialName("start_time") val startTime: String,
     @SerialName("end_time") val endTime: String,
-    @SerialName("day_type") val dayType: String,
+    @SerialName("day_type") val dayType: String = "NORMAL",
     val notes: String = "",
 )
 
@@ -42,6 +42,18 @@ data class RemoteManualDeduction(
     val amount: Long,
     @SerialName("effective_date_iso") val effectiveDateIso: String? = null,
     @SerialName("entry_type") val entryType: String = "DEDUCTION",
+)
+
+@Serializable
+data class RemoteExpenseEntry(
+    val id: String,
+    @SerialName("user_id") val userId: String,
+    @SerialName("year_month") val yearMonth: String,
+    @SerialName("date_iso") val dateIso: String,
+    val label: String,
+    val amount: Long,
+    val category: String? = null,
+    @SerialName("is_fixed") val isFixed: Boolean = false,
 )
 
 @Serializable

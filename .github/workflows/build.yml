@@ -3,10 +3,21 @@ name: Build NominaCO-Pro APK
 on:
   push:
     branches: [main, master]
+    # Cambios solo de web/docs/CI no deben publicar APK ni subir versionCode (OTA falsa).
+    paths-ignore:
+      - 'web/**'
+      - 'docs/**'
+      - '.github/**'
+      - '**.md'
+      - 'app/build.gradle.kts'
+      - 'scripts/generate-dnda-description-*.py'
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -31,6 +42,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # Google removió el paquete legacy `tools`; el default de la action lo pide y falla.
+          packages: platform-tools
 
       - name: Restore release keystore
         env:
@@ -57,6 +71,35 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Check public release policy
+        run: |
+          if [ -f .github/pause-public-releases ]; then
+            echo "PUBLIC_RELEASE=false" >> "$GITHUB_ENV"
+            echo "Public releases paused (.github/pause-public-releases)."
+          else
+            echo "PUBLIC_RELEASE=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Read app version
+        run: |
+          VERSION=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | head -1 | grep -oE '[0-9]+')
+          echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "APK_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+
+      - name: Bump app version for sideload release
+        if: env.PUBLIC_RELEASE == 'true'
+        run: |
+          if echo "${{ github.event.head_commit.message }}" | grep -q 'chore: release'; then
+            echo "Version ya definida en commit chore: release."
+          else
+            node scripts/bump-version.mjs
+          fi
+          VERSION=$(grep 'versionName' app/build.gradle.kts | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | head -1 | grep -oE '[0-9]+')
+          echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "APK_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+
       - name: Build signed release APK (sideload)
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
@@ -72,10 +115,72 @@ jobs:
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME/build-tools/"* | sort -V | tail -n1)
           "$BUILD_TOOLS/apksigner" verify --verbose "$APK"
           cp "$APK" "NominaCO-Pro-v${VERSION}-signed.apk"
+          cp "$APK" "Nominapp.apk"
           echo "APK_VERSION=$VERSION" >> "$GITHUB_ENV"
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | head -1 | grep -oE '[0-9]+')
+          echo "APK_VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+
+      - name: Update web release manifests
+        if: env.PUBLIC_RELEASE == 'true'
+        env:
+          VERSION_NAME: ${{ env.APK_VERSION }}
+          VERSION_CODE: ${{ env.APK_VERSION_CODE }}
+        run: |
+          if [ -f release-notes.txt ]; then
+            {
+              echo "RELEASE_NOTES<<EOF"
+              cat release-notes.txt
+              echo "EOF"
+            } >> "$GITHUB_ENV"
+          fi
+          node scripts/update-releases-manifest.mjs
+
+      - name: Commit release version and manifests
+        if: env.PUBLIC_RELEASE == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/build.gradle.kts web/manifest/version.json web/manifest/releases.json
+          git diff --staged --quiet || git commit -m "chore: release v${{ env.APK_VERSION }} (versionCode ${{ env.APK_VERSION_CODE }})"
+          git push || true
+
+      - name: Deploy web manifests to Vercel production
+        if: env.PUBLIC_RELEASE == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        working-directory: web
+        run: |
+          if [ -n "$VERCEL_DEPLOY_HOOK_URL" ]; then
+            echo "Desplegando con Deploy Hook de Vercel..."
+            curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
+            echo "Deploy hook enviado."
+          elif [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "Desplegando con Vercel CLI..."
+            npm ci
+            npx vercel deploy --prod --yes --token "$VERCEL_TOKEN"
+          else
+            echo "::warning::Configura VERCEL_DEPLOY_HOOK_URL. El workflow deploy-web.yml intentara desplegar al actualizar version.json."
+          fi
 
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: NominaCO-Pro-installable
+          name: NominaCO-Pro-apk-${{ env.PUBLIC_RELEASE }}
           path: NominaCO-Pro-v${{ env.APK_VERSION }}-signed.apk
+
+      - name: Publish APK to GitHub Releases
+        if: env.PUBLIC_RELEASE == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.APK_VERSION }}
+          name: Nominapp v${{ env.APK_VERSION }} (Android)
+          body: |
+            APK firmado para instalación directa en Android 8+.
+            Descarga `Nominapp.apk` o el archivo con versión en el nombre.
+          files: |
+            Nominapp.apk
+            NominaCO-Pro-v${{ env.APK_VERSION }}-signed.apk
+          make_latest: true

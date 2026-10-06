@@ -74,3 +74,55 @@ export function getLastNYearMonths(
   }
   return result;
 }
+
+export function parseYearMonth(key: string): { year: number; month: number } {
+  const [yearStr, monthStr] = key.split("-");
+  return { year: Number.parseInt(yearStr, 10), month: Number.parseInt(monthStr, 10) };
+}
+
+export function shiftYearMonth(key: string, deltaMonths: number): string {
+  const { year, month } = parseYearMonth(key);
+  const d = new Date(year, month - 1 + deltaMonths, 1);
+  return yearMonthPrefix(d.getFullYear(), d.getMonth() + 1);
+}
+
+export function compareYearMonths(a: string, b: string): number {
+  return a.localeCompare(b);
+}
+
+export function enumerateYearMonths(fromKey: string, toKey: string): string[] {
+  if (compareYearMonths(fromKey, toKey) > 0) return [];
+  const result: string[] = [];
+  let current = fromKey;
+  while (compareYearMonths(current, toKey) <= 0) {
+    result.push(current);
+    current = shiftYearMonth(current, 1);
+  }
+  return result;
+}
+
+export function todayYearMonth(from: Date = new Date()): string {
+  return yearMonthPrefix(from.getFullYear(), from.getMonth() + 1);
+}
+
+/** Límites de navegación del calendario (como la app Android: sin tope en el mes actual). */
+export function navigationYearMonthBounds(
+  from: Date = new Date(),
+  pastMonths = 60,
+  futureMonths = 24,
+): { minYearMonth: string; maxYearMonth: string; todayYearMonth: string } {
+  const today = todayYearMonth(from);
+  return {
+    minYearMonth: shiftYearMonth(today, -pastMonths),
+    maxYearMonth: shiftYearMonth(today, futureMonths),
+    todayYearMonth: today,
+  };
+}
+
+export function isYearMonthInRange(
+  key: string,
+  minYearMonth: string,
+  maxYearMonth: string,
+): boolean {
+  return compareYearMonths(key, minYearMonth) >= 0 && compareYearMonths(key, maxYearMonth) <= 0;
+}

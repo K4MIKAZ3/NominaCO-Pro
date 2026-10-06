@@ -18,6 +18,7 @@ import {
   type MonthSummary,
   type MonthlyPayroll,
   type PayrollLine,
+  type PeriodPayrollSummary,
   type WorkDayEntry,
 } from "./models";
 
@@ -188,8 +189,9 @@ export function liquidateDateRange(
   }
 
   const gross = earnings.reduce((sum, e) => sum + e.amount, 0);
-  const salud = Math.trunc(gross * Law.DESCUENTO_SALUD);
-  const pension = Math.trunc(gross * Law.DESCUENTO_PENSION);
+  const ibc = Law.contributionBase(earnings);
+  const salud = Math.trunc(ibc * Law.DESCUENTO_SALUD);
+  const pension = Math.trunc(ibc * Law.DESCUENTO_PENSION);
   const legalDeductions: PayrollLine[] = [
     { label: "Aporte salud (4%)", amount: salud, isDeduction: true, code: "SAL" },
     { label: "Aporte pensión (4%)", amount: pension, isDeduction: true, code: "PEN" },
@@ -234,9 +236,11 @@ export function applyManualEntries(
   const bonusTotal = bonuses.reduce((s, b) => s + b.amount, 0);
   const deductionTotal = deductions.reduce((s, d) => s + d.amount, 0);
 
+  const earnings = [...payroll.earnings, ...bonusLines];
   const gross = payroll.grossTotal + bonusTotal;
-  const salud = Math.trunc(gross * Law.DESCUENTO_SALUD);
-  const pension = Math.trunc(gross * Law.DESCUENTO_PENSION);
+  const ibc = Law.contributionBase(earnings);
+  const salud = Math.trunc(ibc * Law.DESCUENTO_SALUD);
+  const pension = Math.trunc(ibc * Law.DESCUENTO_PENSION);
   const legalDeductions: PayrollLine[] = [
     { label: "Aporte salud (4%)", amount: salud, isDeduction: true, code: "SAL" },
     { label: "Aporte pensión (4%)", amount: pension, isDeduction: true, code: "PEN" },
@@ -244,12 +248,65 @@ export function applyManualEntries(
 
   return {
     ...payroll,
-    earnings: [...payroll.earnings, ...bonusLines],
+    earnings,
     manualBonuses: bonusLines,
     manualDeductions: deductionLines,
     legalDeductions,
     grossTotal: gross,
     netTotal: gross - salud - pension - deductionTotal,
+  };
+}
+
+export function buildPeriodSummary(
+  payroll: MonthlyPayroll,
+  periodLabel: string,
+  periodStart: LocalDate,
+  periodEnd: LocalDate,
+  manualEntries: ManualDeduction[],
+): PeriodPayrollSummary {
+  const deductions = manualEntries.filter((m) => m.entryType === "DEDUCTION");
+  const advances = manualEntries.filter((m) => m.entryType === "ADVANCE");
+  const bonuses = manualEntries.filter((m) => m.entryType === "BONUS");
+  const payrollWithEntries = applyManualEntries(payroll, [...deductions, ...bonuses]);
+  const advancesTotal = advances.reduce((s, a) => s + a.amount, 0);
+  return {
+    periodLabel,
+    periodStart,
+    periodEnd,
+    workedDays: payroll.workedDays,
+    dailyRate: payroll.dailyRate,
+    grossTotal: payrollWithEntries.grossTotal,
+    legalDeductions: payrollWithEntries.legalDeductions.reduce((s, d) => s + d.amount, 0),
+    manualDeductions: deductions.reduce((s, d) => s + d.amount, 0),
+    bonuses: bonuses.reduce((s, b) => s + b.amount, 0),
+    advances: advancesTotal,
+    netTotal: payrollWithEntries.netTotal,
+    pendingBalance: payrollWithEntries.netTotal - advancesTotal,
+  };
+}
+
+export function computeMonthSummary(
+  profile: EmployeeProfile,
+  allWorkDays: WorkDayEntry[],
+  manualHolidayDates: Set<LocalDate>,
+  allDeductions: ManualDeduction[],
+  year: number,
+  month: number,
+): MonthSummary {
+  const prefix = `${year}-${String(month).padStart(2, "0")}`;
+  const entries = allWorkDays.filter((e) => e.date.startsWith(prefix));
+  const monthEntries = allDeductions.filter((d) => d.yearMonth === prefix);
+  const payroll = applyManualEntries(
+    liquidateMonth(profile, year, month, entries, manualHolidayDates),
+    monthEntries.filter((d) => d.entryType !== "ADVANCE"),
+  );
+  return {
+    year,
+    month,
+    grossTotal: payroll.grossTotal,
+    legalDeductions: payroll.legalDeductions.reduce((s, d) => s + d.amount, 0),
+    manualDeductions: payroll.manualDeductions.reduce((s, d) => s + d.amount, 0),
+    netTotal: payroll.netTotal,
   };
 }
 
@@ -262,21 +319,7 @@ export function computeMonthSummaries(
 ): MonthSummary[] {
   const months = getLastNYearMonths(monthCount);
 
-  return months.map(({ year, month }) => {
-    const prefix = `${year}-${String(month).padStart(2, "0")}`;
-    const entries = allWorkDays.filter((e) => e.date.startsWith(prefix));
-    const monthEntries = allDeductions.filter((d) => d.yearMonth === prefix);
-    const payroll = applyManualEntries(
-      liquidateMonth(profile, year, month, entries, manualHolidayDates),
-      monthEntries.filter((d) => d.entryType !== "ADVANCE"),
-    );
-    return {
-      year,
-      month,
-      grossTotal: payroll.grossTotal,
-      legalDeductions: payroll.legalDeductions.reduce((s, d) => s + d.amount, 0),
-      manualDeductions: payroll.manualDeductions.reduce((s, d) => s + d.amount, 0),
-      netTotal: payroll.netTotal,
-    };
-  });
+  return months.map(({ year, month }) =>
+    computeMonthSummary(profile, allWorkDays, manualHolidayDates, allDeductions, year, month),
+  );
 }

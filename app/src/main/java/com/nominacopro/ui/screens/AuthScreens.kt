@@ -2,6 +2,7 @@ package com.nominacopro.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,33 +34,33 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.nominacopro.R
+import com.nominacopro.domain.auth.PasswordRules
+import com.nominacopro.ui.components.PasswordTextField
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
+import com.nominacopro.ui.theme.NominaDesign
 
 private enum class ForgotPasswordStep {
     EMAIL,
-    NEW_PASSWORD,
+    SENT,
 }
 
 @Composable
 fun LoginScreen(
     isLoading: Boolean,
     errorMessage: String?,
-    showLocalFallback: Boolean,
+    showOfflineButton: Boolean = false,
     onLogin: (email: String, password: String) -> Unit,
     onGoToRegister: () -> Unit,
-    onContinueLocal: () -> Unit,
-    onVerifyEmailForReset: (email: String, onResult: (Boolean, String?) -> Unit) -> Unit,
-    onCompletePasswordReset: (email: String, otp: String, newPassword: String, onResult: (Boolean, String?) -> Unit) -> Unit,
+    onContinueOffline: () -> Unit,
+    onRequestPasswordReset: (email: String, onResult: (Boolean, String?) -> Unit) -> Unit,
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var showForgotDialog by rememberSaveable { mutableStateOf(false) }
     var forgotEmail by rememberSaveable { mutableStateOf("") }
     var forgotStep by rememberSaveable { mutableStateOf(ForgotPasswordStep.EMAIL) }
-    var forgotOtp by rememberSaveable { mutableStateOf("") }
-    var forgotNewPassword by rememberSaveable { mutableStateOf("") }
-    var forgotConfirmPassword by rememberSaveable { mutableStateOf("") }
     var forgotMessage by remember { mutableStateOf<String?>(null) }
     var forgotIsError by remember { mutableStateOf(false) }
     var forgotBusy by remember { mutableStateOf(false) }
@@ -67,9 +68,6 @@ fun LoginScreen(
     fun resetForgotDialog() {
         showForgotDialog = false
         forgotStep = ForgotPasswordStep.EMAIL
-        forgotOtp = ""
-        forgotNewPassword = ""
-        forgotConfirmPassword = ""
         forgotMessage = null
         forgotIsError = false
         forgotBusy = false
@@ -84,7 +82,7 @@ fun LoginScreen(
                     when (forgotStep) {
                         ForgotPasswordStep.EMAIL -> {
                             Text(
-                                "Ingresa el correo de tu cuenta. Te enviaremos un código de recuperación.",
+                                stringResource(R.string.auth_forgot_password_intro),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             )
@@ -98,42 +96,11 @@ fun LoginScreen(
                                 singleLine = true,
                             )
                         }
-                        ForgotPasswordStep.NEW_PASSWORD -> {
+                        ForgotPasswordStep.SENT -> {
                             Text(
-                                "Revisa tu correo: copia el código de 6 dígitos del mensaje de recuperación. Luego elige tu nueva contraseña (mínimo 6 caracteres).",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            OutlinedTextField(
-                                value = forgotOtp,
-                                onValueChange = { value ->
-                                    forgotOtp = value.filter { it.isDigit() }.take(6)
-                                },
-                                label = { Text("Código del correo") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = forgotNewPassword,
-                                onValueChange = { forgotNewPassword = it },
-                                label = { Text("Nueva contraseña") },
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                            )
-                            Spacer(Modifier.height(8.dp))
-                            OutlinedTextField(
-                                value = forgotConfirmPassword,
-                                onValueChange = { forgotConfirmPassword = it },
-                                label = { Text("Confirmar contraseña") },
-                                visualTransformation = PasswordVisualTransformation(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
+                                stringResource(R.string.auth_forgot_password_sent),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
@@ -154,11 +121,11 @@ fun LoginScreen(
                             onClick = {
                                 forgotBusy = true
                                 forgotMessage = null
-                                onVerifyEmailForReset(forgotEmail) { ok, msg ->
+                                onRequestPasswordReset(forgotEmail) { ok, msg ->
                                     forgotBusy = false
                                     if (ok) {
-                                        forgotStep = ForgotPasswordStep.NEW_PASSWORD
-                                        forgotMessage = "Correo de recuperación enviado."
+                                        forgotStep = ForgotPasswordStep.SENT
+                                        forgotMessage = null
                                         forgotIsError = false
                                     } else {
                                         forgotMessage = msg
@@ -167,148 +134,115 @@ fun LoginScreen(
                                 }
                             },
                             enabled = forgotEmail.isNotBlank() && !forgotBusy,
-                        ) { Text("Continuar") }
+                        ) { Text(stringResource(R.string.auth_forgot_password_send)) }
                     }
-                    ForgotPasswordStep.NEW_PASSWORD -> {
+                    ForgotPasswordStep.SENT -> {
                         TextButton(
-                            onClick = {
-                                when {
-                                    forgotOtp.length != 6 -> {
-                                        forgotMessage = "Ingresa el código de 6 dígitos del correo"
-                                        forgotIsError = true
-                                    }
-                                    forgotNewPassword.length < 6 -> {
-                                        forgotMessage = "La contraseña debe tener al menos 6 caracteres"
-                                        forgotIsError = true
-                                    }
-                                    forgotNewPassword != forgotConfirmPassword -> {
-                                        forgotMessage = "Las contraseñas no coinciden"
-                                        forgotIsError = true
-                                    }
-                                    else -> {
-                                        forgotBusy = true
-                                        forgotMessage = null
-                                        onCompletePasswordReset(
-                                            forgotEmail,
-                                            forgotOtp,
-                                            forgotNewPassword,
-                                        ) { ok, msg ->
-                                            forgotBusy = false
-                                            forgotMessage = msg
-                                            forgotIsError = !ok
-                                            if (ok) resetForgotDialog()
-                                        }
-                                    }
-                                }
-                            },
-                            enabled = !forgotBusy &&
-                                forgotOtp.length == 6 &&
-                                forgotNewPassword.length >= 6 &&
-                                forgotConfirmPassword.isNotBlank(),
-                        ) { Text("Restablecer contraseña") }
+                            onClick = { resetForgotDialog() },
+                            enabled = !forgotBusy,
+                        ) { Text(stringResource(R.string.auth_forgot_password_done)) }
                     }
                 }
             },
             dismissButton = {
-                when (forgotStep) {
-                    ForgotPasswordStep.EMAIL -> {
-                        TextButton(onClick = { resetForgotDialog() }, enabled = !forgotBusy) {
-                            Text("Cancelar")
-                        }
-                    }
-                    ForgotPasswordStep.NEW_PASSWORD -> {
-                        TextButton(
-                            onClick = {
-                                forgotStep = ForgotPasswordStep.EMAIL
-                                forgotOtp = ""
-                                forgotNewPassword = ""
-                                forgotConfirmPassword = ""
-                                forgotMessage = null
-                                forgotIsError = false
-                            },
-                            enabled = !forgotBusy,
-                        ) { Text("Atrás") }
+                if (forgotStep == ForgotPasswordStep.EMAIL) {
+                    TextButton(onClick = { resetForgotDialog() }, enabled = !forgotBusy) {
+                        Text("Cancelar")
                     }
                 }
             },
         )
     }
 
-    Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        com.nominacopro.ui.components.NominaLogoMark(size = 56)
-        Text("Nominapp", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 12.dp))
-        Text(
-            "Inicia sesión para respaldar tu cuenta",
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
-        )
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Correo") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
-        Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Contraseña") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
-
-        TextButton(
-            onClick = {
-                forgotEmail = email
-                forgotStep = ForgotPasswordStep.EMAIL
-                forgotOtp = ""
-                forgotNewPassword = ""
-                forgotConfirmPassword = ""
-                forgotMessage = null
-                forgotIsError = false
-                showForgotDialog = true
-            },
-            modifier = Modifier.align(Alignment.End),
-        ) { Text("Olvidé mi contraseña") }
-
-        errorMessage?.let {
-            Text(
-                it,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 12.dp),
-            )
+    Box(Modifier.fillMaxSize()) {
+        if (showOfflineButton) {
+            OutlinedButton(
+                onClick = onContinueOffline,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+            ) {
+                Text(stringResource(R.string.auth_offline_mode))
+            }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            com.nominacopro.ui.components.NominaLogoMark(size = 56)
+            Text(
+                "Nominapp",
+                style = MaterialTheme.typography.headlineMedium,
+                color = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) {
+                    NominaDesign.Green
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                modifier = Modifier.padding(top = 12.dp),
+            )
+            Text(
+                stringResource(R.string.auth_login_subtitle),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
+            )
 
-        if (isLoading) {
-            CircularProgressIndicator()
-        } else {
-            Button(
-                onClick = { onLogin(email, password) },
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Correo") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
-                enabled = email.isNotBlank() && password.length >= 6,
-            ) { Text("Iniciar sesión") }
+                singleLine = true,
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Contraseña") },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
 
-            TextButton(onClick = onGoToRegister, modifier = Modifier.padding(top = 8.dp)) {
-                Text("Crear cuenta")
+            TextButton(
+                onClick = {
+                    forgotEmail = email
+                    forgotStep = ForgotPasswordStep.EMAIL
+                    forgotMessage = null
+                    forgotIsError = false
+                    showForgotDialog = true
+                },
+                modifier = Modifier.align(Alignment.End),
+            ) { Text("Olvidé mi contraseña") }
+
+            errorMessage?.let {
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
             }
 
-            if (showLocalFallback) {
-                OutlinedButton(
-                    onClick = onContinueLocal,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                ) { Text("Continuar sin cuenta (solo local)") }
+            Spacer(Modifier.height(24.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else {
+                Button(
+                    onClick = { onLogin(email, password) },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = email.isNotBlank() && password.length >= 6,
+                ) { Text("Iniciar sesión") }
+
+                TextButton(onClick = onGoToRegister, modifier = Modifier.padding(top = 8.dp)) {
+                    Text("Crear cuenta")
+                }
             }
         }
     }
@@ -319,8 +253,10 @@ fun RegisterScreen(
     isLoading: Boolean,
     message: String?,
     isError: Boolean,
+    showOfflineButton: Boolean = false,
     onRegister: (email: String, password: String, confirm: String) -> Unit,
     onBackToLogin: () -> Unit,
+    onContinueOffline: () -> Unit = {},
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -329,16 +265,36 @@ fun RegisterScreen(
     val context = LocalContext.current
     val termsUrl = stringResource(R.string.auth_terms_url)
 
-    Column(
-        Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Box(Modifier.fillMaxSize()) {
+        if (showOfflineButton) {
+            OutlinedButton(
+                onClick = onContinueOffline,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp),
+            ) {
+                Text(stringResource(R.string.auth_offline_mode))
+            }
+        }
+
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
         Text("Crear cuenta", style = MaterialTheme.typography.headlineMedium)
         Text(
             "Regístrate con tu correo",
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
+            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
+        )
+        Text(
+            stringResource(R.string.auth_password_requirements_hint),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(bottom = 24.dp),
         )
 
         OutlinedTextField(
@@ -350,24 +306,18 @@ fun RegisterScreen(
             singleLine = true,
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        PasswordTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Contraseña (mín. 6)") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            label = "Contraseña",
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
+        PasswordTextField(
             value = confirm,
             onValueChange = { confirm = it },
-            label = { Text("Confirmar contraseña") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation(),
+            label = "Confirmar contraseña",
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
         )
 
         Row(
@@ -421,13 +371,14 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = acceptedTerms &&
                     email.isNotBlank() &&
-                    password.length >= 6 &&
+                    PasswordRules.isValid(password) &&
                     password == confirm,
             ) { Text("Registrarme") }
 
             TextButton(onClick = onBackToLogin, modifier = Modifier.padding(top = 8.dp)) {
                 Text("Ya tengo cuenta")
             }
+        }
         }
     }
 }

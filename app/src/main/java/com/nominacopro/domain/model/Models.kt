@@ -87,6 +87,33 @@ data class ManualDeduction(
     val entryType: PayrollEntryType = PayrollEntryType.DEDUCTION,
 )
 
+enum class ExpenseCategory(val label: String) {
+    HOUSING("Vivienda"),
+    FOOD("Alimentación"),
+    TRANSPORT("Transporte"),
+    HEALTH("Salud"),
+    LEISURE("Ocio"),
+    EDUCATION("Educación"),
+    OTHER("Otros"),
+    ;
+
+    companion object {
+        fun fromStored(value: String?): ExpenseCategory =
+            entries.find { it.name == value } ?: OTHER
+    }
+}
+
+data class ExpenseEntry(
+    val id: Long = 0,
+    val cloudId: String? = null,
+    val yearMonth: YearMonth,
+    val date: LocalDate,
+    val label: String,
+    val amount: Long,
+    val category: ExpenseCategory = ExpenseCategory.OTHER,
+    val isFixed: Boolean = false,
+)
+
 data class MonthlyPayroll(
     val year: Int,
     val month: Int,
@@ -171,4 +198,8 @@ data class AppPreferences(
     val reminderMinute: Int = 0,
     val darkModeEnabled: Boolean = true,
     val biometricEnabled: Boolean = false,
+    val cloudBackupEnabled: Boolean = false,
+    val offlineModeEnabled: Boolean = false,
+    val lastUpdateCheckAtMs: Long = 0,
+    val dismissedUpdateVersionCode: Int = 0,
 )

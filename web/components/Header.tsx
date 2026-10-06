@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { ApkDownloadButton } from "@/components/ApkDownloadButton";
 import { site } from "@/lib/site";
 
 export function Header() {
@@ -12,22 +13,36 @@ export function Header() {
             alt={`${site.name} logo`}
             width={36}
             height={36}
+            sizes="36px"
             className="logo-mark"
             priority
+            unoptimized
           />
-          {site.name}
+          <span className="logo-text">{site.name}</span>
         </Link>
         <nav className="nav">
+          <Link href="/guia" className="hide-mobile">
+            Guía
+          </Link>
+          <Link href="/acerca" className="hide-mobile">
+            Acerca
+          </Link>
           <Link href="/#funciones" className="hide-mobile">
             Funciones
           </Link>
-          <Link href="/login">Cuenta</Link>
+          <Link href="/#preguntas" className="hide-mobile">
+            FAQ
+          </Link>
+          <Link href={site.auth.homePath} className="nav-account">
+            Cuenta
+          </Link>
           <Link href="/terminos" className="hide-mobile">
             Términos
           </Link>
-          <a href={site.apkDownloadUrl} className="btn btn-primary">
-            Descargar APK
-          </a>
+          <ApkDownloadButton className="btn btn-primary nav-apk-btn">
+            <span className="hide-narrow">Descargar APK</span>
+            <span className="show-narrow">APK</span>
+          </ApkDownloadButton>
         </nav>
       </div>
     </header>

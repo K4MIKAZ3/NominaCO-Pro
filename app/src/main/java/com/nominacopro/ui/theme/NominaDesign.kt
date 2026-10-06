@@ -16,6 +16,8 @@ object NominaDesign {
     val GreenDark = Color(0xFF15803D)
     val Cyan = Color(0xFF22D3EE)
     val Amber = Color(0xFFF59E0B)
+    val HolidayRed = Color(0xFFEF4444)
+    val HolidayOrange = Color(0xFFF97316)
     val GreenGlow = Color(0x334ADE80)
     val CyanGlow = Color(0x3322D3EE)
     val CardRadius = 16.dp

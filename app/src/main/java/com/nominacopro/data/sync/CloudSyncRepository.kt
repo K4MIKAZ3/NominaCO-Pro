@@ -3,10 +3,12 @@ package com.nominacopro.data.sync
 import androidx.room.withTransaction
 import com.nominacopro.data.auth.SupabaseProvider
 import com.nominacopro.data.local.NominaDatabase
+import com.nominacopro.data.local.dao.ExpenseDao
 import com.nominacopro.data.local.dao.ManualDeductionDao
 import com.nominacopro.data.local.dao.ManualHolidayDao
 import com.nominacopro.data.local.dao.ProfileDao
 import com.nominacopro.data.local.dao.WorkDayDao
+import com.nominacopro.data.local.entity.ExpenseEntity
 import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
 import com.nominacopro.data.local.entity.ProfileEntity
@@ -14,6 +16,7 @@ import com.nominacopro.data.local.entity.WorkDayEntity
 import com.nominacopro.data.preferences.AppPreferencesStore
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.EmployeeProfile
+import com.nominacopro.domain.model.ExpenseEntry
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.WorkDayEntry
 import io.github.jan.supabase.postgrest.postgrest
@@ -32,12 +35,18 @@ sealed interface SyncUiState {
     data class Error(val message: String) : SyncUiState
 }
 
+enum class BackupActivationStrategy {
+    PushLocal,
+    PullRemote,
+}
+
 class CloudSyncRepository(
     private val db: NominaDatabase,
     private val profileDao: ProfileDao,
     private val workDayDao: WorkDayDao,
     private val holidayDao: ManualHolidayDao,
     private val deductionDao: ManualDeductionDao,
+    private val expenseDao: ExpenseDao,
     private val preferencesStore: AppPreferencesStore,
 ) {
 
@@ -45,6 +54,8 @@ class CloudSyncRepository(
     private val postgrest get() = SupabaseProvider.client?.postgrest
 
     private var activeUserId: String? = null
+    var autoSyncEnabled: Boolean = false
+        private set
 
     private val _state = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
     val state: StateFlow<SyncUiState> = _state.asStateFlow()
@@ -53,9 +64,20 @@ class CloudSyncRepository(
 
     fun setActiveUser(userId: String?) {
         activeUserId = userId
+        if (userId == null) {
+            autoSyncEnabled = false
+        }
     }
 
-    suspend fun onUserAuthenticated(userId: String) {
+    fun setAutoSyncEnabled(enabled: Boolean) {
+        autoSyncEnabled = enabled && activeUserId != null
+    }
+
+    fun canAutoSync(): Boolean = autoSyncEnabled && activeUserId != null
+
+    suspend fun remoteBackupExists(userId: String): Boolean = hasRemoteData(userId)
+
+    suspend fun activateBackup(userId: String, strategy: BackupActivationStrategy) {
         if (!isAvailable) return
         val previousUser = activeUserId
         activeUserId = userId
@@ -64,16 +86,28 @@ class CloudSyncRepository(
         }
         _state.value = SyncUiState.Syncing
         try {
-            if (hasRemoteData(userId)) {
-                pullAll(userId)
-                _state.value = SyncUiState.Success("Datos descargados de la nube")
-            } else {
-                pushAll(userId)
-                _state.value = SyncUiState.Success("Datos subidos a la nube")
+            when (strategy) {
+                BackupActivationStrategy.PushLocal -> {
+                    pushAll(userId)
+                    _state.value = SyncUiState.Success("Datos subidos a la nube")
+                }
+                BackupActivationStrategy.PullRemote -> {
+                    pullAll(userId)
+                    _state.value = SyncUiState.Success("Datos descargados de la nube")
+                }
             }
+            autoSyncEnabled = true
         } catch (e: Exception) {
             _state.value = SyncUiState.Error(parseSyncError(e))
+            throw e
         }
+    }
+
+    suspend fun onUserAuthenticated(userId: String) {
+        activateBackup(
+            userId,
+            if (hasRemoteData(userId)) BackupActivationStrategy.PullRemote else BackupActivationStrategy.PushLocal,
+        )
     }
 
     suspend fun syncNow(userId: String): String? {
@@ -83,6 +117,7 @@ class CloudSyncRepository(
         return try {
             pushAll(userId)
             pullAll(userId)
+            autoSyncEnabled = true
             _state.value = SyncUiState.Success("Sincronización completada")
             null
         } catch (e: Exception) {
@@ -146,6 +181,8 @@ class CloudSyncRepository(
                 yearMonth = deduction.yearMonth.toString(),
                 label = deduction.label,
                 amount = deduction.amount,
+                effectiveDateIso = deduction.effectiveDate.format(iso),
+                entryType = deduction.entryType.name,
             ),
             onConflict = "id",
         )
@@ -156,6 +193,33 @@ class CloudSyncRepository(
         if (cloudId.isNullOrBlank()) return
         val pg = postgrest ?: return
         pg.from(TABLE_MANUAL_DEDUCTIONS).delete {
+            filter { eq("id", cloudId) }
+        }
+    }
+
+    suspend fun pushExpense(entry: ExpenseEntry) {
+        val userId = activeUserId ?: return
+        val pg = postgrest ?: return
+        val cloudId = entry.cloudId ?: UUID.randomUUID().toString()
+        pg.from(TABLE_EXPENSE_ENTRIES).upsert(
+            RemoteExpenseEntry(
+                id = cloudId,
+                userId = userId,
+                yearMonth = entry.yearMonth.toString(),
+                dateIso = entry.date.format(iso),
+                label = entry.label,
+                amount = entry.amount,
+                category = entry.category.name,
+                isFixed = entry.isFixed,
+            ),
+            onConflict = "id",
+        )
+    }
+
+    suspend fun deleteExpense(cloudId: String?) {
+        if (cloudId.isNullOrBlank()) return
+        val pg = postgrest ?: return
+        pg.from(TABLE_EXPENSE_ENTRIES).delete {
             filter { eq("id", cloudId) }
         }
     }
@@ -193,6 +257,9 @@ class CloudSyncRepository(
         val remoteDeductions = pg.from(TABLE_MANUAL_DEDUCTIONS).select {
             filter { eq("user_id", userId) }
         }.decodeList<RemoteManualDeduction>()
+        val remoteExpenses = pg.from(TABLE_EXPENSE_ENTRIES).select {
+            filter { eq("user_id", userId) }
+        }.decodeList<RemoteExpenseEntry>()
         val remotePrefs = pg.from(TABLE_APP_PREFERENCES).select {
             filter { eq("user_id", userId) }
         }.decodeList<RemoteAppPreferences>().firstOrNull()
@@ -211,6 +278,10 @@ class CloudSyncRepository(
             deductionDao.deleteAll()
             if (remoteDeductions.isNotEmpty()) {
                 deductionDao.upsertAll(remoteDeductions.map { it.toEntity() })
+            }
+            expenseDao.deleteAll()
+            if (remoteExpenses.isNotEmpty()) {
+                expenseDao.upsertAll(remoteExpenses.map { it.toEntity() })
             }
         }
         remotePrefs?.let { prefs ->
@@ -255,12 +326,25 @@ class CloudSyncRepository(
                 onConflict = "id",
             )
         }
+        val expenses = expenseDao.observeAll().first()
+        if (expenses.isNotEmpty()) {
+            val withCloudIds = expenses.map { entity ->
+                val cloudId = entity.cloudId ?: UUID.randomUUID().toString()
+                entity.copy(cloudId = cloudId)
+            }
+            expenseDao.upsertAll(withCloudIds)
+            pg.from(TABLE_EXPENSE_ENTRIES).upsert(
+                withCloudIds.map { it.toRemote(userId) },
+                onConflict = "id",
+            )
+        }
         val prefs = preferencesStore.observe().first()
         pg.from(TABLE_APP_PREFERENCES).upsert(prefs.toRemote(userId), onConflict = "user_id")
     }
 
     suspend fun clearLocalUserData() {
         activeUserId = null
+        autoSyncEnabled = false
         clearLocalData()
         _state.value = SyncUiState.Idle
     }
@@ -271,17 +355,28 @@ class CloudSyncRepository(
             workDayDao.deleteAll()
             holidayDao.deleteAll()
             deductionDao.deleteAll()
+            expenseDao.deleteAll()
         }
     }
 
-    private fun parseSyncError(e: Exception): String =
-        e.message?.substringBefore("\nURL:")?.trim() ?: "Error de sincronización"
+    private fun parseSyncError(e: Exception): String {
+        val raw = e.message?.substringBefore("\nURL:")?.trim().orEmpty()
+        return when {
+            raw.contains("expense_entries") && raw.contains("category") ->
+                "Error al subir gastos: falta la categoría. Actualiza la app e intenta de nuevo."
+            raw.contains("violates not-null constraint") ->
+                "Faltan datos obligatorios en la nube. Actualiza la app e intenta sincronizar de nuevo."
+            raw.isNotBlank() -> raw
+            else -> "Error de sincronización"
+        }
+    }
 
     private companion object {
         const val TABLE_PROFILES = "profiles"
         const val TABLE_WORK_DAYS = "work_days"
         const val TABLE_MANUAL_HOLIDAYS = "manual_holidays"
         const val TABLE_MANUAL_DEDUCTIONS = "manual_deductions"
+        const val TABLE_EXPENSE_ENTRIES = "expense_entries"
         const val TABLE_APP_PREFERENCES = "app_preferences"
     }
 }
@@ -326,8 +421,8 @@ private fun WorkDayEntry.toRemote(userId: String) = RemoteWorkDay(
     dateIso = date.format(DateTimeFormatter.ISO_LOCAL_DATE),
     startTime = start.toString(),
     endTime = end.toString(),
-    dayType = dayType.name,
-    notes = notes,
+    dayType = dayType.name.ifBlank { "NORMAL" },
+    notes = notes.orEmpty(),
 )
 
 private fun WorkDayEntity.toRemote(userId: String) = RemoteWorkDay(
@@ -335,16 +430,16 @@ private fun WorkDayEntity.toRemote(userId: String) = RemoteWorkDay(
     dateIso = dateIso,
     startTime = startTime,
     endTime = endTime,
-    dayType = dayType,
-    notes = notes,
+    dayType = dayType.ifBlank { "NORMAL" },
+    notes = notes.orEmpty(),
 )
 
 private fun RemoteWorkDay.toEntity() = WorkDayEntity(
     dateIso = dateIso,
     startTime = startTime,
     endTime = endTime,
-    dayType = dayType,
-    notes = notes,
+    dayType = dayType.ifBlank { "NORMAL" },
+    notes = notes.orEmpty(),
 )
 
 private fun ManualHolidayEntity.toRemote(userId: String) = RemoteManualHoliday(
@@ -364,21 +459,50 @@ private fun ManualDeductionEntity.toRemote(userId: String): RemoteManualDeductio
         id = cloudId,
         userId = userId,
         yearMonth = yearMonth,
-        effectiveDateIso = effectiveDateIso,
+        effectiveDateIso = effectiveDateIso.ifBlank { null },
         label = label,
         amount = amount,
-        entryType = entryType,
+        entryType = entryType.ifBlank { "DEDUCTION" },
     )
 }
 
 private fun RemoteManualDeduction.toEntity() = ManualDeductionEntity(
     cloudId = id,
     yearMonth = yearMonth,
-    effectiveDateIso = effectiveDateIso ?: "${yearMonth}-01",
+    effectiveDateIso = effectiveDateIso?.takeIf { it.isNotBlank() } ?: "${yearMonth}-01",
     label = label,
     amount = amount,
-    entryType = entryType,
+    entryType = entryType.ifBlank { "DEDUCTION" },
 )
+
+private fun ExpenseEntity.toRemote(userId: String): RemoteExpenseEntry {
+    val cloudId = cloudId ?: UUID.randomUUID().toString()
+    return RemoteExpenseEntry(
+        id = cloudId,
+        userId = userId,
+        yearMonth = yearMonth,
+        dateIso = dateIso,
+        label = label,
+        amount = amount,
+        category = category.normalizeExpenseCategory(),
+        isFixed = isFixed,
+    )
+}
+
+private fun RemoteExpenseEntry.toEntity() = ExpenseEntity(
+    cloudId = id,
+    yearMonth = yearMonth,
+    dateIso = dateIso,
+    label = label,
+    amount = amount,
+    category = category.normalizeExpenseCategory(),
+    isFixed = isFixed,
+)
+
+private fun String?.normalizeExpenseCategory(): String {
+    val value = this?.trim().orEmpty()
+    return if (value.isBlank()) "OTHER" else value
+}
 
 private fun AppPreferences.toRemote(userId: String) = RemoteAppPreferences(
     userId = userId,

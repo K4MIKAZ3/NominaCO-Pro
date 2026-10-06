@@ -13,9 +13,10 @@ Los cambios de Play Store se desarrollan y prueban en `play-store`. `main` sigue
 
 ## Misma app Android
 
-- **applicationId:** `com.nominacopro` (no cambiar).
+- **applicationId (package name):** `com.vcprojects.nominapp`.
 - **Keystore:** el mismo `release.keystore` / secrets de GitHub que usa `build.yml`.
 - Un repo nuevo **no** crea otra app en Play: la identidad la define el `applicationId` y la firma, no el repositorio Git.
+- Cambiar el `applicationId` otra vez crea una app distinta en Play y en el dispositivo (no actualiza instalaciones previas).
 
 ## Qué SÍ rompe instalaciones existentes
 

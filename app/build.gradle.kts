@@ -27,7 +27,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.nominacopro"
+        applicationId = "com.vcprojects.nominapp"
         minSdk = 26
         targetSdk = 34
         versionCode = 44

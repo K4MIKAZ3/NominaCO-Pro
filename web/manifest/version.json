@@ -1,7 +1,7 @@
 {
-  "versionCode": 44,
-  "versionName": "1.7.33",
-  "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.33/Nominapp.apk",
-  "sha256": "5a05aa906af593cdbb228ea103c530a58aec21b4c2cff7dd83abcb6f4f7677c8",
-  "releaseNotes": "Salud y pensión ya no descuentan sobre el auxilio de transporte (IBC correcto). El auxilio sigue sumando a tu neto, pero no cotiza. Revisa tu liquidación: el neto estimado puede subir un poco frente a versiones anteriores."
+  "versionCode": 45,
+  "versionName": "1.7.34",
+  "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.34/Nominapp.apk",
+  "sha256": "03370a42280355b6984b64d826999dfdb4b0ab6316f2221f0ad7b37f4b43dbd1",
+  "releaseNotes": "Nuevo identificador de app para Google Play (com.vcprojects.nominapp). Si tenías una instalación anterior con el paquete viejo, desinstálala e instala esta versión (o bájala desde la web). Misma firma y datos en la nube con tu cuenta."
 }

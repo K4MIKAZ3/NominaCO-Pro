@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "versionCode": 45,
+      "versionName": "1.7.34",
+      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.34/Nominapp.apk",
+      "sha256": "03370a42280355b6984b64d826999dfdb4b0ab6316f2221f0ad7b37f4b43dbd1",
+      "releaseNotes": "Nuevo identificador de app para Google Play (com.vcprojects.nominapp). Si tenías una instalación anterior con el paquete viejo, desinstálala e instala esta versión (o bájala desde la web). Misma firma y datos en la nube con tu cuenta.",
+      "publishedAt": "2026-10-06"
+    },
+    {
       "versionCode": 44,
       "versionName": "1.7.33",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.33/Nominapp.apk",
@@ -13,14 +21,6 @@
       "versionName": "1.7.32",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.32/Nominapp.apk",
       "sha256": "edea851a1c1d63199133cfdea1775576eb69721110f632ddebd216de49634172",
-      "releaseNotes": "Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.",
-      "publishedAt": "2026-06-28"
-    },
-    {
-      "versionCode": 42,
-      "versionName": "1.7.31",
-      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.31/Nominapp.apk",
-      "sha256": "f4f111f286f4e847e774470b5d6c0bd6b7669b8de7c37e0b2a1b6b366a572f51",
       "releaseNotes": "Control de gastos personales: registra movimientos, define gastos fijos que se repiten cada mes (arriendo, alimentación…) y consulta tu balance neto menos gastos. Perfil laboral en Ajustes, calendario con deslizamiento, icono renovado y resumen de gastos al iniciar sesión en la web.",
       "publishedAt": "2026-06-28"
     }

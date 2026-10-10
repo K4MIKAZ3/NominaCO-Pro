@@ -17,7 +17,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,20 +26,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nominacopro.NominaApp
 import com.nominacopro.data.auth.AuthUiState
 import com.nominacopro.data.auth.SupabaseProvider
 import com.nominacopro.data.sync.BackupActivationStrategy
-import com.nominacopro.data.update.ApkInstaller
 import com.nominacopro.domain.auth.PasswordRules
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
@@ -51,9 +45,7 @@ import com.nominacopro.ui.auth.AuthViewModel
 import com.nominacopro.ui.auth.BiometricGate
 import com.nominacopro.ui.auth.promptLocalBiometric
 import com.nominacopro.ui.components.BackupActivationDialog
-import com.nominacopro.ui.components.InstallPermissionDialog
 import com.nominacopro.ui.components.NominaBottomBar
-import com.nominacopro.ui.components.UpdateAvailableDialog
 import com.nominacopro.ui.navigation.NominaTab
 import com.nominacopro.ui.screens.CalendarScreen
 import com.nominacopro.ui.screens.DayEditorDialog
@@ -66,8 +58,6 @@ import com.nominacopro.ui.screens.ProfileScreen
 import com.nominacopro.ui.screens.RegisterScreen
 import com.nominacopro.ui.screens.SettingsScreen
 import com.nominacopro.ui.theme.NominaTheme
-import com.nominacopro.util.NetworkMonitor
-import android.widget.Toast
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
@@ -98,15 +88,12 @@ private fun canUseMainApp(authState: AuthUiState, offlineModeEnabled: Boolean): 
 
 @Composable
 fun NominaAppRoot(app: NominaApp) {
-    val context = LocalContext.current
     val preferences by app.repository.observePreferences()
         .collectAsState(initial = AppPreferences())
     val authVm: AuthViewModel = viewModel(factory = AuthViewModel.Factory(app.authRepository))
     val vm: MainViewModel = viewModel(factory = MainViewModel.Factory(app.repository, app))
-    val appUpdate by vm.appUpdate.collectAsState()
     val authState by authVm.authState.collectAsState()
     val rootScope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     var authOverlay by rememberSaveable { mutableStateOf(AuthOverlay.None) }
     var showStartupRegister by rememberSaveable { mutableStateOf(false) }
@@ -117,19 +104,6 @@ fun NominaAppRoot(app: NominaApp) {
     var backupPromptUserId by remember { mutableStateOf<String?>(null) }
     var backupHasRemote by remember { mutableStateOf(false) }
     var backupBusy by remember { mutableStateOf(false) }
-
-    var manualUpdateCheckBusy by remember { mutableStateOf(false) }
-
-    DisposableEffect(lifecycleOwner, vm) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                vm.resumePendingApkInstall()
-                vm.checkForUpdates()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
 
     val accountInfo = when (val state = authState) {
         is AuthUiState.Authenticated -> AccountInfo(state.email, state.userId, isOffline = false)
@@ -193,8 +167,6 @@ fun NominaAppRoot(app: NominaApp) {
     NominaTheme(darkTheme = preferences.darkModeEnabled) {
         val inMainApp = authState !is AuthUiState.Loading &&
             canUseMainApp(authState, preferences.offlineModeEnabled)
-
-        SideEffect { vm.setMainAppActive(inMainApp) }
 
         when {
             authState is AuthUiState.Loading -> {
@@ -272,7 +244,6 @@ fun NominaAppRoot(app: NominaApp) {
                     isOfflineAccount = accountInfo?.isOffline == true,
                     authConfigured = SupabaseProvider.isConfigured,
                     cloudBackupEnabled = preferences.cloudBackupEnabled,
-                    manualUpdateCheckBusy = manualUpdateCheckBusy,
                     onOpenLogin = { authOverlay = AuthOverlay.Login },
                     onOpenRegister = { authOverlay = AuthOverlay.Register },
                     onSignOut = accountInfo?.let {
@@ -301,30 +272,6 @@ fun NominaAppRoot(app: NominaApp) {
                                     }
                                 }
                                 onResult(ok, msg)
-                            }
-                        }
-                    },
-                    onCheckForUpdate = {
-                        if (manualUpdateCheckBusy) return@MainNominaScaffold
-                        manualUpdateCheckBusy = true
-                        vm.checkForUpdates(force = true) { update ->
-                            manualUpdateCheckBusy = false
-                            if (!NetworkMonitor.isOnline(context)) {
-                                Toast.makeText(
-                                    context,
-                                    "Sin conexión. Conéctate para buscar actualizaciones.",
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    if (update != null) {
-                                        "Nueva versión ${update.versionName} disponible."
-                                    } else {
-                                        "Ya tienes la última versión instalada."
-                                    },
-                                    Toast.LENGTH_SHORT,
-                                ).show()
                             }
                         }
                     },
@@ -407,25 +354,6 @@ fun NominaAppRoot(app: NominaApp) {
                 onPullRemote = { finishBackupActivation(userId, BackupActivationStrategy.PullRemote) },
             )
         }
-
-        if (appUpdate.manifest != null && (!appUpdate.awaitingInstallPermission || appUpdate.downloading)) {
-            UpdateAvailableDialog(
-                manifest = appUpdate.manifest!!,
-                downloading = appUpdate.downloading,
-                downloadProgress = appUpdate.progress,
-                onDismiss = { vm.dismissPendingUpdate() },
-                onUpdate = { vm.startUpdateDownload() },
-            )
-        }
-
-        if (appUpdate.awaitingInstallPermission) {
-            InstallPermissionDialog(
-                onDismiss = { vm.dismissInstallPermissionPrompt() },
-                onOpenSettings = {
-                    ApkInstaller.openInstallPermissionSettings(context)
-                },
-            )
-        }
     }
 }
 
@@ -458,12 +386,10 @@ private fun MainNominaScaffold(
     isOfflineAccount: Boolean = false,
     authConfigured: Boolean = false,
     cloudBackupEnabled: Boolean = false,
-    manualUpdateCheckBusy: Boolean = false,
     onOpenLogin: () -> Unit,
     onOpenRegister: () -> Unit,
     onSignOut: (() -> Unit)?,
     onDeleteAccount: ((reason: String, onResult: (Boolean, String?) -> Unit) -> Unit)? = null,
-    onCheckForUpdate: () -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -602,7 +528,6 @@ private fun MainNominaScaffold(
                     authConfigured = authConfigured,
                     cloudBackupEnabled = cloudBackupEnabled,
                     syncState = syncState,
-                    manualUpdateCheckBusy = manualUpdateCheckBusy,
                     onSyncNow = accountUserId?.let { userId ->
                         {
                             vm.syncNow(userId) { error ->
@@ -616,7 +541,6 @@ private fun MainNominaScaffold(
                     },
                     onOpenLogin = onOpenLogin,
                     onOpenRegister = onOpenRegister,
-                    onCheckForUpdate = onCheckForUpdate,
                     onSavePreferences = vm::savePreferences,
                     onRemoveHoliday = vm::removeManualHoliday,
                     onRequestNotificationPermission = ::requestNotificationPermission,

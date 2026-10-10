@@ -34,6 +34,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.3,
     },
+    {
+      url: absoluteUrl("/privacidad"),
+      lastModified: new Date("2026-10-10"),
+      changeFrequency: "yearly",
+      priority: 0.4,
+    },
   ];
 
   const articlePages: MetadataRoute.Sitemap = articles.map((article) => ({

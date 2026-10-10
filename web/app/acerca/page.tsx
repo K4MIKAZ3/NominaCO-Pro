@@ -186,7 +186,9 @@ export default function AcercaPage() {
             </a>
           </li>
           <li>
-            <Link href="/terminos">Términos y privacidad</Link>
+            <Link href="/terminos">Términos</Link>
+            {" · "}
+            <Link href="/privacidad">Privacidad</Link>
           </li>
           <li>
             Brief para sistemas de IA:{" "}

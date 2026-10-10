@@ -14,7 +14,8 @@ export function Footer() {
           <Link href="/acerca">Qué es Nominapp</Link>
           <Link href="/#funciones">Funciones</Link>
           <Link href="/#preguntas">Preguntas frecuentes</Link>
-          <Link href="/terminos">Términos y privacidad</Link>
+          <Link href="/terminos">Términos</Link>
+          <Link href="/privacidad">Privacidad</Link>
           <a href="/llms.txt">Para IA / LLM</a>
           <Link href="/login">Iniciar sesión</Link>
           <ContactDialog />

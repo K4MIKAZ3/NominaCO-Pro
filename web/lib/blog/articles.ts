@@ -14,6 +14,8 @@ export type BlogFaqItem = { question: string; answer: string };
 export type BlogArticle = {
   slug: string;
   title: string;
+  /** Título corto para meta title cuando el H1 es largo (Bing: total < 70 con " · Nominapp"). */
+  seoTitle?: string;
   description: string;
   keywords: string[];
   publishedAt: string;
@@ -29,6 +31,11 @@ export type BlogArticle = {
 
 export function getArticleModifiedAt(article: BlogArticle): string {
   return article.updatedAt ?? article.publishedAt;
+}
+
+/** Título usado en meta title y redes; prioriza seoTitle si existe. */
+export function getArticleSeoTitle(article: BlogArticle): string {
+  return article.seoTitle?.trim() || article.title;
 }
 
 export function estimateArticleWordCount(article: BlogArticle): number {

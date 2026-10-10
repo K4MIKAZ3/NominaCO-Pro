@@ -57,7 +57,7 @@
     <string name="backup_create_account">Crear cuenta</string>
     <string name="backup_offline_message">Sin conexión. El respaldo se reanudará cuando vuelvas a tener internet.</string>
     <string name="backup_not_active">Sesión activa. Pulsa sincronizar para activar el respaldo en la nube.</string>
-    <string name="update_section_title">Actualización</string>
+    <string name="update_section_title">Versión</string>
     <string name="update_current_version">Versión instalada: %1$s</string>
-    <string name="update_check_button">Buscar actualización</string>
+    <string name="update_play_managed">Las actualizaciones se gestionan automáticamente desde Google Play.</string>
 </resources>

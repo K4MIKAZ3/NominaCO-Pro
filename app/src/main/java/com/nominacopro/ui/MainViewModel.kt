@@ -9,8 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.nominacopro.data.CalendarMark
 import com.nominacopro.NominaApp
 import com.nominacopro.data.NominaRepository
-import com.nominacopro.data.update.ApkInstaller
-import com.nominacopro.data.update.AppUpdateManifest
 import com.nominacopro.domain.model.AppPreferences
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
@@ -40,20 +38,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
-
-data class AppUpdateUiState(
-    val manifest: AppUpdateManifest? = null,
-    val downloading: Boolean = false,
-    val progress: Float = 0f,
-    val downloadedApkPath: String? = null,
-    val awaitingInstallPermission: Boolean = false,
-)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(
@@ -62,11 +51,6 @@ class MainViewModel(
 ) : AndroidViewModel(application) {
 
     private val app = application as NominaApp
-
-    private var mainAppActive = false
-
-    private val _appUpdate = MutableStateFlow(AppUpdateUiState())
-    val appUpdate: StateFlow<AppUpdateUiState> = _appUpdate.asStateFlow()
 
     private val _yearMonth = MutableStateFlow(YearMonth.now())
     val yearMonth: StateFlow<YearMonth> = _yearMonth.asStateFlow()
@@ -389,113 +373,6 @@ class MainViewModel(
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-    }
-
-    fun setPendingUpdate(manifest: AppUpdateManifest?) {
-        if (_appUpdate.value.downloading) return
-        _appUpdate.value = if (manifest == null) {
-            AppUpdateUiState()
-        } else {
-            _appUpdate.value.copy(manifest = manifest)
-        }
-    }
-
-    fun dismissPendingUpdate() {
-        if (_appUpdate.value.downloading) return
-        val manifest = _appUpdate.value.manifest
-        if (manifest != null) {
-            viewModelScope.launch {
-                repository.preferencesStore.update {
-                    it.copy(dismissedUpdateVersionCode = manifest.versionCode)
-                }
-            }
-        }
-        _appUpdate.value = AppUpdateUiState()
-    }
-
-    fun checkForUpdates(
-        force: Boolean = false,
-        onResult: ((AppUpdateManifest?) -> Unit)? = null,
-    ) {
-        viewModelScope.launch {
-            if (_appUpdate.value.downloading) {
-                onResult?.invoke(null)
-                return@launch
-            }
-            if (!mainAppActive && onResult == null) return@launch
-            if (!NetworkMonitor.isOnline(getApplication())) {
-                onResult?.invoke(null)
-                return@launch
-            }
-
-            val prefs = preferences.value
-            val now = System.currentTimeMillis()
-            if (!force && now - prefs.lastUpdateCheckAtMs < UPDATE_CHECK_INTERVAL_MS) {
-                return@launch
-            }
-
-            val update = app.appUpdateRepository.checkForUpdate()
-            repository.preferencesStore.update { it.copy(lastUpdateCheckAtMs = now) }
-            onResult?.invoke(update)
-
-            if (update == null) return@launch
-            if (force || update.versionCode > prefs.dismissedUpdateVersionCode) {
-                setPendingUpdate(update)
-            }
-        }
-    }
-
-    fun setMainAppActive(active: Boolean) {
-        mainAppActive = active
-    }
-
-    fun startUpdateDownload() {
-        val manifest = _appUpdate.value.manifest ?: return
-        if (_appUpdate.value.downloading) return
-        viewModelScope.launch {
-            _appUpdate.update { it.copy(downloading = true, progress = 0f) }
-            try {
-                val apk = app.appUpdateRepository.downloadApk(manifest) { progress ->
-                    _appUpdate.update { it.copy(progress = progress) }
-                }
-                val canInstall = ApkInstaller.canInstall(getApplication())
-                _appUpdate.update {
-                    it.copy(
-                        downloading = false,
-                        progress = 1f,
-                        downloadedApkPath = apk.absolutePath,
-                        awaitingInstallPermission = !canInstall,
-                    )
-                }
-                if (canInstall) {
-                    ApkInstaller.installApk(getApplication(), apk)
-                    _appUpdate.value = AppUpdateUiState()
-                }
-            } catch (_: Exception) {
-                _appUpdate.update { it.copy(downloading = false) }
-            }
-        }
-    }
-
-    fun resumePendingApkInstall() {
-        val path = _appUpdate.value.downloadedApkPath ?: return
-        val file = File(path)
-        if (!file.exists()) {
-            _appUpdate.update { it.copy(downloadedApkPath = null) }
-            return
-        }
-        if (ApkInstaller.canInstall(getApplication())) {
-            ApkInstaller.installApk(getApplication(), file)
-            _appUpdate.value = AppUpdateUiState()
-        }
-    }
-
-    fun dismissInstallPermissionPrompt() {
-        _appUpdate.update { it.copy(awaitingInstallPermission = false) }
-    }
-
-    companion object {
-        private const val UPDATE_CHECK_INTERVAL_MS = 24L * 60 * 60 * 1000
     }
 
     class Factory(

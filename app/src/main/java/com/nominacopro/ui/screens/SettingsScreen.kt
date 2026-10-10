@@ -76,11 +76,9 @@ fun SettingsScreen(
     authConfigured: Boolean = false,
     cloudBackupEnabled: Boolean = false,
     syncState: SyncUiState? = null,
-    manualUpdateCheckBusy: Boolean = false,
     onSyncNow: (() -> Unit)? = null,
     onOpenLogin: (() -> Unit)? = null,
     onOpenRegister: (() -> Unit)? = null,
-    onCheckForUpdate: (() -> Unit)? = null,
     onSavePreferences: (AppPreferences) -> Unit,
     onRemoveHoliday: (LocalDate) -> Unit,
     onRequestNotificationPermission: () -> Unit,
@@ -344,18 +342,10 @@ fun SettingsScreen(
                             stringResource(R.string.update_current_version, BuildConfig.VERSION_NAME),
                             color = MaterialTheme.colorScheme.primary,
                         )
-                        onCheckForUpdate?.let { check ->
-                            OutlinedButton(
-                                onClick = check,
-                                enabled = !manualUpdateCheckBusy,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                if (manualUpdateCheckBusy) {
-                                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(end = 8.dp))
-                                }
-                                Text(stringResource(R.string.update_check_button))
-                            }
-                        }
+                        Text(
+                            stringResource(R.string.update_play_managed),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        )
                     }
                 }
             }

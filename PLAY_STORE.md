@@ -45,6 +45,8 @@ Estos cambios solo afectan **nuevas builds**; los APK ya instalados siguen funci
 
 Nota: la advertencia de «archivo de desofuscación» es normal si `isMinifyEnabled = false` (no usamos R8/Proguard). No bloquea la publicación.
 
+La build de `play-store` **no** incluye `REQUEST_INSTALL_PACKAGES` ni actualización OTA por APK: las actualizaciones las gestiona Google Play.
+
 ## Trabajo local en paralelo (opcional)
 
 Sin segundo remoto ni segundo repo:

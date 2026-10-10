@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { AuthRecoveryRedirect } from "@/components/AuthRecoveryRedirect";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { SiteChrome } from "@/components/SiteChrome";
 import { site } from "@/lib/site";
 import { seoKeywords } from "@/lib/seo";
 import "./globals.css";
@@ -64,9 +63,7 @@ export default function RootLayout({
     <html lang="es-CO">
       <body>
         <AuthRecoveryRedirect />
-        <Header />
-        {children}
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
         <Analytics />
       </body>
     </html>

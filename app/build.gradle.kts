@@ -30,8 +30,8 @@ android {
         applicationId = "com.vcprojects.nominapp"
         minSdk = 26
         targetSdk = 34
-        versionCode = 47
-        versionName = "1.7.36"
+        versionCode = 48
+        versionName = "1.7.37"
 
         buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
         buildConfigField("String", "SUPABASE_ANON_KEY", "\"${prop("SUPABASE_ANON_KEY")}\"")

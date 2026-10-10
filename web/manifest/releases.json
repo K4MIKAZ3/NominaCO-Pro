@@ -1,6 +1,14 @@
 {
   "releases": [
     {
+      "versionCode": 48,
+      "versionName": "1.7.37",
+      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.37/Nominapp.apk",
+      "sha256": "5090daded29655fc09bd166d019388c32cdfbdb12782a7ea57a967c2aa9ee447",
+      "releaseNotes": "¡Nominapp llega a Google Play!\n\nTu liquidación de nómina en Colombia, clara y al día con 2026:\n• Marca jornadas, dominicales y recargos nocturnos\n• Salud y pensión con IBC correcto (el auxilio de transporte no cotiza)\n• Quincenas, semanal o mensual — tú eliges\n• Gastos personales y neto real\n• PDF listo para guardar o compartir\n• Respaldo opcional en la nube\n\nGratis. Pensada para empleados, no para reemplazar tu desprendible oficial.",
+      "publishedAt": "2026-10-10"
+    },
+    {
       "versionCode": 47,
       "versionName": "1.7.36",
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.36/Nominapp.apk",
@@ -14,14 +22,6 @@
       "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.35/Nominapp.apk",
       "sha256": "6d64c5f2d6051a311aa46c4adb0739093a35e1065cc8d3ace81ab30e16ee4d22",
       "releaseNotes": "¡Nominapp llega a Google Play!\n\nTu liquidación de nómina en Colombia, clara y al día con 2026:\n• Marca jornadas, dominicales y recargos nocturnos\n• Salud y pensión con IBC correcto (el auxilio de transporte no cotiza)\n• Quincenas, semanal o mensual — tú eliges\n• Gastos personales y neto real\n• PDF listo para guardar o compartir\n• Respaldo opcional en la nube\n\nGratis. Pensada para empleados, no para reemplazar tu desprendible oficial.",
-      "publishedAt": "2026-10-06"
-    },
-    {
-      "versionCode": 45,
-      "versionName": "1.7.34",
-      "apkUrl": "https://github.com/K4MIKAZ3/NominaCO-Pro/releases/download/v1.7.34/Nominapp.apk",
-      "sha256": "03370a42280355b6984b64d826999dfdb4b0ab6316f2221f0ad7b37f4b43dbd1",
-      "releaseNotes": "Nuevo identificador de app para Google Play (com.vcprojects.nominapp). Si tenías una instalación anterior con el paquete viejo, desinstálala e instala esta versión (o bájala desde la web). Misma firma y datos en la nube con tu cuenta.",
       "publishedAt": "2026-10-06"
     }
   ]

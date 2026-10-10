@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { site, absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -158,8 +159,12 @@ export default function TerminosPage() {
 
         <h2>7. Política de privacidad y tratamiento de datos personales</h2>
         <p>
-          En cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y demás
-          normas aplicables en Colombia, el Titular informa lo siguiente:
+          El detalle completo sobre recopilación, uso, almacenamiento y
+          compartición de datos personales está en la{" "}
+          <Link href="/privacidad">Política de privacidad</Link> publicada en{" "}
+          {site.url}/privacidad. En cumplimiento de la Ley 1581 de 2012, el
+          Decreto 1377 de 2013 y demás normas aplicables en Colombia, el Titular
+          informa de forma resumida lo siguiente:
         </p>
 
         <h2>7.1. Responsable del tratamiento</h2>

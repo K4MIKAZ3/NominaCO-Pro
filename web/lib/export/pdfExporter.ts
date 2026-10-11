@@ -1,6 +1,5 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { SMMLV } from "@/lib/payroll/colombiaLaborLaw2026";
 import { formatMoney, formatMonthName, formatTime } from "@/lib/format";
 import { totalHourBreakdown } from "@/lib/payroll/models";
 import type { EmployeeProfile, MonthlyPayroll, WorkDayEntry } from "@/lib/payroll/models";
@@ -49,7 +48,7 @@ function drawFooter(doc: jsPDF) {
   doc.setTextColor(MUTED.r, MUTED.g, MUTED.b);
   doc.setFont("helvetica", "normal");
   doc.text(
-    `Ley 2466/2025 · SMMLV ${formatMoney(SMMLV)} · Uso personal · No constituye nómina oficial`,
+    "Uso personal · No representa al Gobierno · No es nómina oficial",
     MARGIN,
     FOOTER_Y,
   );

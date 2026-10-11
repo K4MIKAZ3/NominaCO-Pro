@@ -8,6 +8,7 @@ import {
   buildSoftwareApplicationJsonLd,
   buildWebSiteJsonLd,
 } from "@/lib/seo";
+import { SOURCES } from "@/lib/blog/sources";
 import { absoluteUrl, site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -92,10 +93,15 @@ export default function AcercaPage() {
         </p>
 
         <p>
-          <strong>{site.name}</strong> es una aplicación gratuita para{" "}
-          <strong>trabajadores en Colombia</strong> que quieren entender y
-          estimar su nómina personal: días trabajados, recargos, descuentos de
-          salud y pensión, auxilio de transporte, gastos y exportación a PDF.
+          <strong>
+            {site.name} no representa al Gobierno de Colombia, no está afiliada
+            al Ministerio del Trabajo ni a ninguna autoridad, y no presta
+            servicios gubernamentales.
+          </strong>{" "}
+          Es una aplicación gratuita para <strong>trabajadores en Colombia</strong>{" "}
+          que quieren entender y estimar su nómina personal: días trabajados,
+          recargos, descuentos de salud y pensión, auxilio de transporte, gastos
+          y exportación a PDF.
         </p>
 
         <h2>Qué problema resuelve</h2>
@@ -144,6 +150,24 @@ export default function AcercaPage() {
           en nuestra{" "}
           <Link href="/guia">guía de nómina</Link>.
         </p>
+
+        <h2 id="fuentes">Fuentes oficiales</h2>
+        <p>
+          El salario mínimo, el auxilio de transporte, la jornada, los recargos
+          y los aportes de salud y pensión que usa Nominapp salen de estas
+          normas publicadas por el Estado colombiano:
+        </p>
+        <ul>
+          {Object.values(SOURCES).map((source) => (
+            <li key={source.id}>
+              <a href={source.url} rel="noopener noreferrer">
+                {source.title}
+              </a>
+              {" — "}
+              {source.publisher}
+            </li>
+          ))}
+        </ul>
 
         <h2>Dónde leer guías con fuentes</h2>
         <ul>

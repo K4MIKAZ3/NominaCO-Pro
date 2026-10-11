@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.nominacopro.BuildConfig
 import com.nominacopro.R
 import com.nominacopro.ui.components.NominaTopBar
+import com.nominacopro.ui.components.OfficialSourcesCard
 import com.nominacopro.data.sync.SyncUiState
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
@@ -553,6 +554,14 @@ fun SettingsScreen(
                 }
             }
 
+            item {
+                Text(
+                    "Aviso y fuentes",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
+                )
+            }
+            item { OfficialSourcesCard(Modifier.padding(horizontal = 16.dp)) }
             item { Text(stringResource(R.string.credits_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp)) }
             item {
                 Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {

@@ -12,14 +12,14 @@ export const SOURCES = {
     id: "decreto-1469-2025",
     title: "Decreto 1469 de 2025 — Salario mínimo legal mensual 2026",
     publisher: "Presidencia / MinTrabajo (Diario Oficial)",
-    url: "https://cancilleria.gov.co/normograma/compilacion/docs/decreto_1469_2025.htm",
+    url: "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_1469_2025.htm",
     note: "Fija el SMMLV 2026 en $1.750.905 a partir del 1 de enero de 2026.",
   },
   decreto1470: {
     id: "decreto-1470-2025",
     title: "Decreto 1470 de 2025 — Auxilio de transporte 2026",
     publisher: "Presidencia / MinTrabajo (Diario Oficial)",
-    url: "https://cancilleria.gov.co/normograma/compilacion/docs/decreto_1470_2025.htm",
+    url: "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_1470_2025.htm",
     note: "Fija el auxilio de transporte 2026 en $249.095 para quien devenga hasta 2 SMMLV.",
   },
   decreto159: {
@@ -33,7 +33,7 @@ export const SOURCES = {
     id: "ley-2101-2021",
     title: "Ley 2101 de 2021 — Reducción de la jornada laboral semanal",
     publisher: "Congreso de la República",
-    url: "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=167997",
+    url: "https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=166506",
     note: "Cronograma de reducción gradual de la jornada máxima semanal.",
   },
   ley2466: {

@@ -47,7 +47,8 @@ export default function HomePage() {
                 ))}
               </ul>
               <p className="hero-note">
-                Uso personal · No sustituye asesoría contable ni legal oficial ·
+                Uso personal · Nominapp no representa al Gobierno de Colombia ·
+                No sustituye asesoría contable ni legal oficial ·
                 Descarga solo desde {site.url} ·{" "}
                 <Link href="/acerca">Qué es Nominapp</Link>
               </p>

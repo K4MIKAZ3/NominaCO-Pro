@@ -69,6 +69,7 @@ import com.nominacopro.ui.components.NominaHeroCard
 import com.nominacopro.ui.components.NominaStatCard
 import com.nominacopro.ui.components.NominaStatusBadge
 import com.nominacopro.ui.components.NominaTopBar
+import com.nominacopro.ui.components.OfficialSourcesCard
 import com.nominacopro.ui.theme.NominaDesign
 import com.nominacopro.ui.Formatters
 
@@ -335,7 +336,11 @@ fun PayrollScreen(
                         fontSize = 28.sp,
                         modifier = Modifier.padding(vertical = 6.dp),
                     )
-                    Text("Cálculo personal · no constituye nómina oficial", color = NominaDesign.Green, fontSize = 13.sp)
+                    Text(
+                        "Estimación personal. Nominapp no representa al Gobierno de Colombia.",
+                        color = NominaDesign.Green,
+                        fontSize = 13.sp,
+                    )
                 }
             }
         }
@@ -474,12 +479,7 @@ fun PayrollScreen(
         }
 
         item {
-            Text(
-                "Base legal: CST · Ley 2466/2025 · prima/cesantías sobre 360 días · uso personal",
-                style = MaterialTheme.typography.bodySmall,
-                color = NominaDesign.TextMuted,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
+            OfficialSourcesCard(Modifier.padding(horizontal = 16.dp))
         }
     }
 }

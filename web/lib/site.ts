@@ -78,6 +78,11 @@ export const audiencePoints = [
 
 export const faqItems = [
   {
+    question: "¿Nominapp es una app del Gobierno o del Ministerio del Trabajo?",
+    answer:
+      "No. Nominapp no representa al Gobierno de Colombia, no está afiliada al Ministerio del Trabajo ni a ninguna autoridad, y no presta servicios gubernamentales. El salario mínimo, el auxilio de transporte, los recargos y los aportes de salud y pensión son estimaciones tomadas de normas públicas. Las fuentes oficiales están en la página Qué es Nominapp.",
+  },
+  {
     question: "¿Nominapp reemplaza la nómina oficial de mi empleador?",
     answer:
       "No. Nominapp es una herramienta personal de estimación. Los valores son orientativos según la información que tú registras y la normativa configurada. Para decisiones legales o contables consulta a un profesional o a tu área de nómina.",

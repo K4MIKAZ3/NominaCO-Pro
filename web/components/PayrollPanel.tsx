@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { PayrollEntryDialog } from "@/components/PayrollEntryDialog";
 import {
@@ -424,7 +425,11 @@ export function PayrollPanel({
       <div className="summary-card">
         <p className="summary-month">Neto a pagar</p>
         <p className="hero-card-amount">{formatMoney(payroll.netTotal)}</p>
-        <p className="editor-hint">Cálculo personal · no constituye nómina oficial</p>
+        <p className="editor-hint">
+          Estimación personal. Nominapp no representa al Gobierno de Colombia y no
+          constituye nómina oficial.{" "}
+          <Link href="/acerca#fuentes">Fuentes oficiales</Link>
+        </p>
       </div>
 
       <div className="btn-row">

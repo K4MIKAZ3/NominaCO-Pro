@@ -94,7 +94,7 @@ function MarkCard({
 
   return (
     <form
-      className="nx-card nx-mark"
+      className="nx-card nx-markcard"
       onSubmit={(event) => {
         event.preventDefault();
         if (!clockIn || !clockOut) {

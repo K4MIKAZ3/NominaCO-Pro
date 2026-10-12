@@ -1,8 +1,8 @@
 "use client";
 
 import { formatDay, formatStamp } from "@/lib/empresas/format";
-import { WORKERS } from "@/lib/empresas/seed";
 import { useEmpresas } from "@/lib/empresas/store";
+import { employeeName } from "@/lib/empresas/types";
 
 export function BandejaView() {
   const { state, markAllRead } = useEmpresas();
@@ -33,7 +33,7 @@ export function BandejaView() {
       ) : (
         <ul className="nx-inbox">
           {notices.map((notice) => {
-            const worker = WORKERS.find((item) => item.id === notice.workerId);
+            const worker = state.employees.find((item) => item.id === notice.workerId);
             return (
               <li key={notice.id} className={notice.read ? "" : "is-new"}>
                 <article className="nx-phone">
@@ -44,7 +44,7 @@ export function BandejaView() {
                   <h3>{notice.title}</h3>
                   <p>{notice.body}</p>
                   <footer>
-                    {worker?.name} · {formatDay(notice.date)}
+                    {worker ? employeeName(worker) : "Trabajador"} · {formatDay(notice.date)}
                   </footer>
                 </article>
               </li>

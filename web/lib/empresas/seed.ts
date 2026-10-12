@@ -1,14 +1,33 @@
-import type { Assignment, ClockRecord, EmpresasState, Worker } from "./types";
+import { nitDv } from "./law";
+import type { Assignment, ClockRecord, Company, Employee, EmpresasState } from "./types";
 
 export const DEMO_YEAR = 2026;
 export const DEMO_MONTH = 10;
 export const DEMO_DAYS = 31;
 export const DEMO_TODAY = "2026-10-10";
 
-export const COMPANY = {
+const EXAMPLE_NIT = "901482331";
+
+export const EXAMPLE_COMPANY: Company = {
   name: "Panadería La Aurora",
-  nit: "901.482.331-6",
+  nit: EXAMPLE_NIT,
+  dv: nitDv(EXAMPLE_NIT),
   city: "Bogotá",
+  departmentCode: "11",
+  cityCode: "001",
+  address: "Calle 72 10 34",
+  phone: "6015550101",
+  email: "nomina@laaurora.com",
+  ciiu: "1081",
+  arlCode: "14-23",
+  exonerated: true,
+  personType: "J",
+};
+
+export const COMPANY = {
+  name: EXAMPLE_COMPANY.name,
+  nit: `${EXAMPLE_COMPANY.nit}-${EXAMPLE_COMPANY.dv}`,
+  city: EXAMPLE_COMPANY.city,
 };
 
 export const STAFF = {
@@ -17,13 +36,44 @@ export const STAFF = {
   administrador: { name: "Elena Vargas", title: "Liquida la nómina" },
 } as const;
 
-export const WORKERS: Worker[] = [
-  { id: "w-laura", name: "Laura Méndez", documentId: "CC 52.334.901", jobTitle: "Panadera", monthlySalary: 1_750_905, dailyHours: 8 },
-  { id: "w-camilo", name: "Camilo Rojas", documentId: "CC 80.221.445", jobTitle: "Hornero", monthlySalary: 1_900_000, dailyHours: 8 },
-  { id: "w-sara", name: "Sara Ortiz", documentId: "CC 1.015.442.903", jobTitle: "Cajera", monthlySalary: 1_750_905, dailyHours: 8 },
-  { id: "w-andres", name: "Andrés Gil", documentId: "CC 1.022.883.110", jobTitle: "Repartidor", monthlySalary: 1_820_000, dailyHours: 8 },
-  { id: "w-marina", name: "Marina Peña", documentId: "CC 39.552.018", jobTitle: "Auxiliar de mostrador", monthlySalary: 1_750_905, dailyHours: 8 },
-  { id: "w-julian", name: "Julián Vargas", documentId: "CC 79.440.221", jobTitle: "Jefe de punto", monthlySalary: 3_800_000, dailyHours: 8 },
+function person(
+  id: string,
+  firstName: string,
+  firstSurname: string,
+  documentNumber: string,
+  jobTitle: string,
+  monthlySalary: number,
+  riskClass: 1 | 2 | 3 | 4 | 5,
+): Employee {
+  return {
+    id,
+    docType: "CC",
+    documentNumber,
+    firstSurname,
+    secondSurname: "",
+    firstName,
+    secondName: "",
+    jobTitle,
+    monthlySalary,
+    dailyHours: 8,
+    hireDate: "2024-03-01",
+    contractType: "INDEFINIDO",
+    salaryMode: "mensual",
+    riskClass,
+    epsCode: "EPS037",
+    afpCode: "230301",
+    ccfCode: "CCF24",
+    active: true,
+  };
+}
+
+export const EXAMPLE_EMPLOYEES: Employee[] = [
+  person("w-laura", "Laura", "Méndez", "52334901", "Panadera", 1_750_905, 1),
+  person("w-camilo", "Camilo", "Rojas", "80221445", "Hornero", 1_900_000, 3),
+  person("w-sara", "Sara", "Ortiz", "1015442903", "Cajera", 1_750_905, 1),
+  person("w-andres", "Andrés", "Gil", "1022883110", "Repartidor", 1_820_000, 2),
+  person("w-marina", "Marina", "Peña", "39552018", "Auxiliar de mostrador", 1_750_905, 1),
+  person("w-julian", "Julián", "Vargas", "79440221", "Jefe de punto", 3_800_000, 1),
 ];
 
 const MADRUGADA = { start: "04:00", end: "12:00" };
@@ -87,12 +137,31 @@ export function createSeedState(): EmpresasState {
   }
 
   return {
-    role: "programador",
+    company: EXAMPLE_COMPANY,
+    employees: EXAMPLE_EMPLOYEES,
+    period: { year: DEMO_YEAR, month: DEMO_MONTH },
+    role: "administrador",
     workerId: "w-laura",
     assignments,
     clocks,
     notifications: [],
     pendingRemovals: [],
+    novedades: [],
+  };
+}
+
+export function createEmptyState(): EmpresasState {
+  return {
+    company: null,
+    employees: [],
+    period: { year: DEMO_YEAR, month: DEMO_MONTH },
+    role: "administrador",
+    workerId: "",
+    assignments: [],
+    clocks: [],
+    notifications: [],
+    pendingRemovals: [],
+    novedades: [],
   };
 }
 

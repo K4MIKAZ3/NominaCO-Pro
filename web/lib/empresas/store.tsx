@@ -2,21 +2,28 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { COMPANY, STAFF, WORKERS, createSeedState } from "./seed";
+import { STAFF, createEmptyState, createSeedState } from "./seed";
+import { employeeName } from "./types";
 import { formatDay } from "./format";
-import type { EmpresasState, Role, ShiftRow, WorkerNotification } from "./types";
+import type { Company, Employee, EmpresasState, Novelty, Period, Role, ShiftRow, WorkerNotification } from "./types";
 
-const STORAGE_KEY = "nominapp-empresas-demo:v1";
+const STORAGE_KEY = "nominapp-empresas:v2";
 
 type EmpresasStore = {
   state: EmpresasState;
   setRole: (role: Role) => void;
   setWorkerId: (workerId: string) => void;
+  setPeriod: (period: Period) => void;
+  saveCompany: (company: Company) => void;
+  saveEmployee: (employee: Employee) => void;
+  addNovelty: (novelty: Novelty) => void;
+  removeNovelty: (id: string) => void;
   saveDay: (date: string, rows: ShiftRow[]) => void;
   publishDay: (date: string, rows: ShiftRow[]) => WorkerNotification[];
   markTime: (assignmentId: string, clockIn: string, clockOut: string) => void;
   markAllRead: (workerId: string) => void;
-  reset: () => void;
+  loadExample: () => void;
+  startBlank: () => void;
 };
 
 const EmpresasContext = createContext<EmpresasStore | null>(null);
@@ -25,12 +32,15 @@ function isState(value: unknown): value is EmpresasState {
   if (!value || typeof value !== "object") return false;
   const candidate = value as EmpresasState;
   return (
+    Array.isArray(candidate.employees) &&
     Array.isArray(candidate.assignments) &&
     Array.isArray(candidate.clocks) &&
     Array.isArray(candidate.notifications) &&
     Array.isArray(candidate.pendingRemovals) &&
+    Array.isArray(candidate.novedades) &&
     typeof candidate.role === "string" &&
-    typeof candidate.workerId === "string"
+    typeof candidate.workerId === "string" &&
+    Boolean(candidate.period)
   );
 }
 
@@ -45,11 +55,17 @@ function loadState(): EmpresasState | null {
   }
 }
 
-function actorName(role: Role, workerId: string): string {
-  if (role === "trabajador") {
-    return WORKERS.find((worker) => worker.id === workerId)?.name ?? "Trabajador";
+function actorName(current: EmpresasState): string {
+  if (current.role === "trabajador") {
+    const employee = current.employees.find((worker) => worker.id === current.workerId);
+    return employee ? employeeName(employee) : "Trabajador";
   }
-  return STAFF[role].name;
+  return STAFF[current.role].name;
+}
+
+function workerFirstName(current: EmpresasState, workerId: string): string {
+  const employee = current.employees.find((worker) => worker.id === workerId);
+  return employee?.firstName ?? "Hola";
 }
 
 function noticesForPublish(current: EmpresasState, date: string, now: string): WorkerNotification[] {
@@ -59,25 +75,24 @@ function noticesForPublish(current: EmpresasState, date: string, now: string): W
   const removals = current.pendingRemovals.filter((item) => item.date === date);
   const created: WorkerNotification[] = [];
   for (const assignment of drafts) {
-    const worker = WORKERS.find((item) => item.id === assignment.workerId);
+    const companyName = current.company?.name ?? "la empresa";
     created.push({
       id: `n-${now}-${assignment.workerId}`,
       workerId: assignment.workerId,
       date,
       title: "Turno publicado",
-      body: `${worker?.name.split(" ")[0] ?? "Hola"}, tu turno del ${formatDay(date)} en ${COMPANY.name} quedó publicado: entras a las ${assignment.plannedStart} y sales a las ${assignment.plannedEnd}.`,
+      body: `${workerFirstName(current, assignment.workerId)}, tu turno del ${formatDay(date)} en ${companyName} quedó publicado: entras a las ${assignment.plannedStart} y sales a las ${assignment.plannedEnd}.`,
       createdAt: now,
       read: false,
     });
   }
   for (const removal of removals) {
-    const worker = WORKERS.find((item) => item.id === removal.workerId);
     created.push({
       id: `n-${now}-out-${removal.workerId}`,
       workerId: removal.workerId,
       date,
       title: "Turno retirado",
-      body: `${worker?.name.split(" ")[0] ?? "Hola"}, tu turno del ${formatDay(date)} (${removal.plannedStart}–${removal.plannedEnd}) se retiró de la programación.`,
+      body: `${workerFirstName(current, removal.workerId)}, tu turno del ${formatDay(date)} (${removal.plannedStart}–${removal.plannedEnd}) se retiró de la programación.`,
       createdAt: now,
       read: false,
     });
@@ -127,7 +142,7 @@ function withDay(current: EmpresasState, date: string, rows: ShiftRow[]): Empres
 }
 
 export function EmpresasProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<EmpresasState>(() => loadState() ?? createSeedState());
+  const [state, setState] = useState<EmpresasState>(() => loadState() ?? createEmptyState());
 
   useEffect(() => {
     try {
@@ -142,6 +157,23 @@ export function EmpresasProvider({ children }: { children: ReactNode }) {
       state,
       setRole: (role) => setState((current) => ({ ...current, role })),
       setWorkerId: (workerId) => setState((current) => ({ ...current, workerId })),
+      setPeriod: (period) => setState((current) => ({ ...current, period })),
+      saveCompany: (company) => setState((current) => ({ ...current, company })),
+      saveEmployee: (employee) =>
+        setState((current) => {
+          const exists = current.employees.some((item) => item.id === employee.id);
+          const employees = exists
+            ? current.employees.map((item) => (item.id === employee.id ? employee : item))
+            : [...current.employees, employee];
+          return {
+            ...current,
+            employees,
+            workerId: current.workerId || employee.id,
+          };
+        }),
+      addNovelty: (novelty) => setState((current) => ({ ...current, novedades: [novelty, ...current.novedades] })),
+      removeNovelty: (id) =>
+        setState((current) => ({ ...current, novedades: current.novedades.filter((item) => item.id !== id) })),
       saveDay: (date, rows) => setState((current) => withDay(current, date, rows)),
       publishDay: (date, rows) => {
         const now = new Date().toISOString();
@@ -162,7 +194,7 @@ export function EmpresasProvider({ children }: { children: ReactNode }) {
       },
       markTime: (assignmentId, clockIn, clockOut) => {
         setState((current) => {
-          const markedBy = actorName(current.role, current.workerId);
+          const markedBy = actorName(current);
           const next = {
             assignmentId,
             clockIn,
@@ -187,7 +219,8 @@ export function EmpresasProvider({ children }: { children: ReactNode }) {
           ),
         }));
       },
-      reset: () => setState(createSeedState()),
+      loadExample: () => setState(createSeedState()),
+      startBlank: () => setState(createEmptyState()),
     };
   }, [state]);
 

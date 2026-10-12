@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { formatDay } from "@/lib/empresas/format";
-import { isRestDay } from "@/lib/empresas/payroll";
-import { DEMO_DAYS, DEMO_TODAY, WORKERS } from "@/lib/empresas/seed";
+import { daysInMonth, isRestDay, monthPrefix } from "@/lib/empresas/law";
 import { useEmpresas } from "@/lib/empresas/store";
-import type { Assignment, ShiftRow, WorkerNotification } from "@/lib/empresas/types";
+import { employeeName } from "@/lib/empresas/types";
+import type { Assignment, Employee, ShiftRow, WorkerNotification } from "@/lib/empresas/types";
 
 const PRESETS = [
   { id: "madrugada", label: "Madrugada", start: "04:00", end: "12:00" },
@@ -25,8 +25,8 @@ type ProgramacionViewProps = {
   onPublished: (notices: WorkerNotification[]) => void;
 };
 
-function isoDay(day: number): string {
-  return `2026-10-${String(day).padStart(2, "0")}`;
+function isoDay(prefix: string, day: number): string {
+  return `${prefix}-${String(day).padStart(2, "0")}`;
 }
 
 function weekdayOffset(iso: string): number {
@@ -35,8 +35,8 @@ function weekdayOffset(iso: string): number {
   return js === 0 ? 6 : js - 1;
 }
 
-function buildRows(date: string, assignments: Assignment[]): EditorRow[] {
-  return WORKERS.map((worker) => {
+function buildRows(date: string, assignments: Assignment[], employees: Employee[]): EditorRow[] {
+  return employees.map((worker) => {
     const existing = assignments.find((assignment) => assignment.date === date && assignment.workerId === worker.id);
     return {
       workerId: worker.id,
@@ -76,8 +76,11 @@ function needsPublish(date: string, rows: EditorRow[], assignments: Assignment[]
 
 export function ProgramacionView({ readOnly, onPublished }: ProgramacionViewProps) {
   const { state } = useEmpresas();
-  const [selected, setSelected] = useState(DEMO_TODAY);
-  const visibleWorkers = readOnly ? WORKERS.filter((worker) => worker.id === state.workerId) : WORKERS;
+  const prefix = monthPrefix(state.period.year, state.period.month);
+  const days = daysInMonth(state.period.year, state.period.month);
+  const employees = state.employees.filter((employee) => employee.active);
+  const [selected, setSelected] = useState(isoDay(prefix, Math.min(10, days)));
+  const visibleWorkers = readOnly ? employees.filter((worker) => worker.id === state.workerId) : employees;
   const signature = state.assignments
     .filter((assignment) => assignment.date === selected)
     .map((assignment) => `${assignment.workerId}:${assignment.plannedStart}:${assignment.plannedEnd}:${assignment.status}`)
@@ -86,11 +89,11 @@ export function ProgramacionView({ readOnly, onPublished }: ProgramacionViewProp
   return (
     <div className="nx-split">
       <section className="nx-card">
-        <h2>{readOnly ? "Mi horario de octubre" : "Octubre 2026"}</h2>
+        <h2>{readOnly ? "Mi horario" : "Programación del mes"}</h2>
         <p className="nx-muted">
           {readOnly
             ? "Estos son los días que te publicaron. El aviso llega en cuanto el turno se publica."
-            : "El 1 al 9 ya está publicado. El 10 está libre para armar un turno nuevo."}
+            : "Elige el día, marca las personas y publica. El aviso sale en ese momento."}
         </p>
         <div className="nx-weekdays" aria-hidden="true">
           {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((label) => (
@@ -98,11 +101,11 @@ export function ProgramacionView({ readOnly, onPublished }: ProgramacionViewProp
           ))}
         </div>
         <div className="nx-cal" role="grid" aria-label="Calendario de octubre 2026">
-          {Array.from({ length: weekdayOffset("2026-10-01") }, (_, index) => (
+          {Array.from({ length: weekdayOffset(isoDay(prefix, 1)) }, (_, index) => (
             <span key={`blank-${index}`} />
           ))}
-          {Array.from({ length: DEMO_DAYS }, (_, index) => {
-            const date = isoDay(index + 1);
+          {Array.from({ length: days }, (_, index) => {
+            const date = isoDay(prefix, index + 1);
             const dayAssignments = state.assignments.filter(
               (assignment) => assignment.date === date && (!readOnly || assignment.workerId === state.workerId),
             );
@@ -188,11 +191,11 @@ function DayEditor({
   date: string;
   assignments: Assignment[];
   pendingDates: string[];
-  workers: typeof WORKERS;
+  workers: Employee[];
   onPublished: (notices: WorkerNotification[]) => void;
 }) {
   const { saveDay, publishDay } = useEmpresas();
-  const [rows, setRows] = useState<EditorRow[]>(() => buildRows(date, assignments));
+  const [rows, setRows] = useState<EditorRow[]>(() => buildRows(date, assignments, workers));
   const [savedNote, setSavedNote] = useState("");
   const dirty = differsFromStored(date, rows, assignments);
   const canPublish = needsPublish(date, rows, assignments, pendingDates);
@@ -242,7 +245,7 @@ function DayEditor({
               <label>
                 <input type="checkbox" checked={row.checked} onChange={() => toggle(worker.id)} />
                 <span>
-                  <strong>{worker.name}</strong>
+                  <strong>{employeeName(worker)}</strong>
                   <small>{worker.jobTitle}</small>
                 </span>
               </label>

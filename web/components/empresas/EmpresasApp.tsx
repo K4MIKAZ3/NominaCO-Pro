@@ -2,16 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { BandejaView } from "@/components/empresas/BandejaView";
+import { EmpleadosView } from "@/components/empresas/EmpleadosView";
+import { EmpresaView } from "@/components/empresas/EmpresaView";
 import { MarcacionView } from "@/components/empresas/MarcacionView";
 import { NominaView } from "@/components/empresas/NominaView";
+import { PilaView } from "@/components/empresas/PilaView";
+import { PrestacionesView } from "@/components/empresas/PrestacionesView";
 import { ProgramacionView } from "@/components/empresas/ProgramacionView";
 import { PropuestaView } from "@/components/empresas/PropuestaView";
 import { formatDay } from "@/lib/empresas/format";
-import { COMPANY, STAFF, WORKERS } from "@/lib/empresas/seed";
+import { STAFF } from "@/lib/empresas/seed";
 import { EmpresasProvider, useEmpresas } from "@/lib/empresas/store";
+import { employeeName } from "@/lib/empresas/types";
 import type { Role, WorkerNotification } from "@/lib/empresas/types";
 
-type EmpresasView = "propuesta" | "programacion" | "marcacion" | "nomina" | "bandeja";
+type EmpresasView = "empresa" | "empleados" | "propuesta" | "programacion" | "marcacion" | "nomina" | "pila" | "prestaciones" | "bandeja";
 
 const ROLE_LABEL: Record<Role, string> = {
   programador: "Programador",
@@ -21,17 +26,21 @@ const ROLE_LABEL: Record<Role, string> = {
 };
 
 function viewsFor(role: Role): EmpresasView[] {
-  if (role === "programador") return ["propuesta", "programacion"];
-  if (role === "marcador") return ["propuesta", "marcacion"];
-  if (role === "trabajador") return ["propuesta", "bandeja", "programacion", "nomina"];
-  return ["propuesta", "programacion", "marcacion", "nomina", "bandeja"];
+  if (role === "programador") return ["programacion"];
+  if (role === "marcador") return ["marcacion"];
+  if (role === "trabajador") return ["bandeja", "programacion", "nomina"];
+  return ["empresa", "empleados", "programacion", "marcacion", "nomina", "pila", "prestaciones", "bandeja", "propuesta"];
 }
 
 function viewLabel(view: EmpresasView, role: Role): string {
-  if (view === "propuesta") return "Propuesta";
+  if (view === "empresa") return "Empresa";
+  if (view === "empleados") return "Trabajadores";
+  if (view === "propuesta") return "Guía";
   if (view === "programacion") return role === "trabajador" ? "Mi horario" : "Programación";
   if (view === "marcacion") return "Marcación";
   if (view === "nomina") return "Nómina";
+  if (view === "pila") return "PILA";
+  if (view === "prestaciones") return "Prestaciones";
   return "Avisos";
 }
 
@@ -44,15 +53,15 @@ export default function EmpresasApp() {
 }
 
 function Shell() {
-  const { state, setRole, setWorkerId, reset } = useEmpresas();
-  const [view, setView] = useState<EmpresasView>("propuesta");
+  const { state, setRole, setWorkerId, setPeriod, loadExample } = useEmpresas();
+  const [view, setView] = useState<EmpresasView>(state.company ? "nomina" : "empresa");
   const [receipt, setReceipt] = useState<WorkerNotification[] | null>(null);
   const allowed = viewsFor(state.role);
-  const activeView = allowed.includes(view) ? view : "propuesta";
+  const activeView = state.company || view === "empresa" ? (allowed.includes(view) ? view : allowed[0]) : "empresa";
   const unread = state.notifications.filter((notice) => notice.workerId === state.workerId && !notice.read).length;
   const actor =
     state.role === "trabajador"
-      ? WORKERS.find((worker) => worker.id === state.workerId)
+      ? state.employees.find((worker) => worker.id === state.workerId)
       : null;
 
   function changeRole(role: Role) {
@@ -69,7 +78,7 @@ function Shell() {
           <div>
             <strong>Nominapp Empresas</strong>
             <small>
-              {COMPANY.name} · {COMPANY.city}
+              {state.company ? `${state.company.name} · ${state.company.city}` : "Sin empresa"}
             </small>
           </div>
         </div>
@@ -85,9 +94,9 @@ function Shell() {
             <label className="nx-worker-pick">
               Ver como
               <select value={state.workerId} onChange={(event) => setWorkerId(event.target.value)}>
-                {WORKERS.map((worker) => (
+                {state.employees.map((worker) => (
                   <option key={worker.id} value={worker.id}>
-                    {worker.name}
+                    {employeeName(worker)}
                   </option>
                 ))}
               </select>
@@ -99,8 +108,19 @@ function Shell() {
             </p>
           )}
         </div>
-        <button type="button" className="nx-btn nx-btn-ghost" onClick={reset}>
-          Restaurar demo
+        <label className="nx-worker-pick">
+          Período
+          <input
+            type="month"
+            value={`${state.period.year}-${String(state.period.month).padStart(2, "0")}`}
+            onChange={(event) => {
+              const [year, month] = event.target.value.split("-").map(Number);
+              if (year && month) setPeriod({ year, month });
+            }}
+          />
+        </label>
+        <button type="button" className="nx-btn nx-btn-ghost" onClick={loadExample}>
+          Ejemplo
         </button>
       </header>
       <div className="nx-body">
@@ -118,6 +138,8 @@ function Shell() {
           ))}
         </nav>
         <main className="nx-main">
+          {activeView === "empresa" ? <EmpresaView key={state.company?.nit ?? "nueva"} /> : null}
+          {activeView === "empleados" ? <EmpleadosView /> : null}
           {activeView === "propuesta" ? (
             <PropuestaView
               onStart={() => {
@@ -128,14 +150,17 @@ function Shell() {
           ) : null}
           {activeView === "programacion" ? (
             <ProgramacionView
+              key={`${state.period.year}-${state.period.month}`}
               readOnly={state.role === "trabajador"}
               onPublished={(notices) => {
                 setReceipt(notices);
               }}
             />
           ) : null}
-          {activeView === "marcacion" ? <MarcacionView /> : null}
+          {activeView === "marcacion" ? <MarcacionView key={`${state.period.year}-${state.period.month}`} /> : null}
           {activeView === "nomina" ? <NominaView /> : null}
+          {activeView === "pila" ? <PilaView /> : null}
+          {activeView === "prestaciones" ? <PrestacionesView /> : null}
           {activeView === "bandeja" ? <BandejaView /> : null}
         </main>
       </div>
@@ -153,7 +178,7 @@ function Shell() {
       ) : null}
       <p className="nx-sr">
         {state.role === "trabajador"
-          ? `Viendo la cuenta de ${actor?.name ?? "un trabajador"}`
+          ? `Viendo la cuenta de ${actor ? employeeName(actor) : "un trabajador"}`
           : `Sesión de ${STAFF[state.role].name}`}
       </p>
     </div>
@@ -177,6 +202,7 @@ function PublishReceipt({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  const { state } = useEmpresas();
   const first = notices[0];
   return (
     <div className="nx-modal" role="presentation" onClick={onClose}>
@@ -194,7 +220,7 @@ function PublishReceipt({
         <p>La notificación queda en la bandeja del trabajador en el momento de publicar. No hay que esperar al corte del mes.</p>
         <div className="nx-phones">
           {notices.slice(0, 3).map((notice) => {
-            const worker = WORKERS.find((item) => item.id === notice.workerId);
+            const worker = state.employees.find((item) => item.id === notice.workerId);
             return (
               <article className="nx-phone" key={notice.id}>
                 <header>
@@ -204,7 +230,7 @@ function PublishReceipt({
                 <h3>{notice.title}</h3>
                 <p>{notice.body}</p>
                 <footer>
-                  {worker?.name} · {formatDay(notice.date)}
+                  {worker ? employeeName(worker) : "Trabajador"} · {formatDay(notice.date)}
                 </footer>
               </article>
             );

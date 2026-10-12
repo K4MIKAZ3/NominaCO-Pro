@@ -2,23 +2,26 @@
 
 import { useState } from "react";
 import { formatDay, formatHours, formatStamp } from "@/lib/empresas/format";
+import { daysInMonth, monthPrefix } from "@/lib/empresas/law";
 import { classifyHours, extraHoursOf, isRestDay, toMinutes } from "@/lib/empresas/payroll";
-import { DEMO_TODAY, WORKERS } from "@/lib/empresas/seed";
 import { useEmpresas } from "@/lib/empresas/store";
+import { employeeName } from "@/lib/empresas/types";
 import type { Assignment, ClockRecord } from "@/lib/empresas/types";
 
-function shiftDate(iso: string, delta: number): string {
+function shiftDate(iso: string, delta: number, prefix: string, days: number): string {
   const [year, month, day] = iso.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
   date.setUTCDate(date.getUTCDate() + delta);
   const next = date.toISOString().slice(0, 10);
-  if (next < "2026-10-01" || next > "2026-10-31") return iso;
+  if (!next.startsWith(prefix) || Number(next.slice(-2)) > days) return iso;
   return next;
 }
 
 export function MarcacionView() {
   const { state, markTime } = useEmpresas();
-  const [date, setDate] = useState(DEMO_TODAY);
+  const prefix = monthPrefix(state.period.year, state.period.month);
+  const days = daysInMonth(state.period.year, state.period.month);
+  const [date, setDate] = useState(`${prefix}-${String(Math.min(10, days)).padStart(2, "0")}`);
   const published = state.assignments
     .filter((assignment) => assignment.date === date && assignment.status === "publicado")
     .sort((a, b) => a.plannedStart.localeCompare(b.plannedStart));
@@ -32,23 +35,23 @@ export function MarcacionView() {
           planeada.
         </p>
         <div className="nx-datebar">
-          <button type="button" className="nx-btn nx-btn-ghost" onClick={() => setDate((current) => shiftDate(current, -1))}>
+          <button type="button" className="nx-btn nx-btn-ghost" onClick={() => setDate((current) => shiftDate(current, -1, prefix, days))}>
             Día anterior
           </button>
           <label>
             Fecha
             <input
               type="date"
-              min="2026-10-01"
-              max="2026-10-31"
-              value={date}
+              min={`${prefix}-01`}
+              max={`${prefix}-${String(days).padStart(2, "0")}`}
+              value={date.startsWith(prefix) ? date : `${prefix}-01`}
               onChange={(event) => {
                 const value = event.target.value;
-                if (value >= "2026-10-01" && value <= "2026-10-31") setDate(value);
+                if (value.startsWith(prefix)) setDate(value);
               }}
             />
           </label>
-          <button type="button" className="nx-btn nx-btn-ghost" onClick={() => setDate((current) => shiftDate(current, 1))}>
+          <button type="button" className="nx-btn nx-btn-ghost" onClick={() => setDate((current) => shiftDate(current, 1, prefix, days))}>
             Día siguiente
           </button>
         </div>
@@ -82,7 +85,8 @@ function MarkCard({
   clock: ClockRecord | undefined;
   onSave: (clockIn: string, clockOut: string) => void;
 }) {
-  const worker = WORKERS.find((item) => item.id === assignment.workerId);
+  const { state } = useEmpresas();
+  const worker = state.employees.find((item) => item.id === assignment.workerId);
   const [clockIn, setClockIn] = useState(clock?.clockIn || assignment.plannedStart);
   const [clockOut, setClockOut] = useState(clock?.clockOut || "");
   const [message, setMessage] = useState("");
@@ -106,7 +110,7 @@ function MarkCard({
       }}
     >
       <div>
-        <h2>{worker?.name}</h2>
+        <h2>{worker ? employeeName(worker) : "Trabajador"}</h2>
         <p className="nx-muted">
           {worker?.jobTitle} · programado {assignment.plannedStart}–{assignment.plannedEnd}
         </p>

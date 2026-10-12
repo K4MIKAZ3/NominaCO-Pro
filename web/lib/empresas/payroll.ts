@@ -1,36 +1,24 @@
 import { formatDay } from "./format";
-import type { Assignment, ClockRecord, Worker } from "./types";
+import {
+  ARL_RATE,
+  DIAS_MES,
+  SMMLV,
+  SUBSIDIO_TRANSPORTE,
+  clampIbc,
+  dominicalFactor,
+  fondoSolidaridad,
+  isExonerated,
+  isRestDay,
+  qualifiesTransport,
+  weeklyHourLimit,
+} from "./law";
+import type { Assignment, ClockRecord, Company, Employee, Novelty } from "./types";
 
-/** Parámetros Colombia 2026 usados por el demo. El mes comercial de nómina tiene 30 días. */
-export const SMMLV = 1_750_905;
-export const SUBSIDIO_TRANSPORTE = 249_095;
-export const TOPE_TRANSPORTE = SMMLV * 2;
-export const DIAS_MES = 30;
+export { SMMLV, SUBSIDIO_TRANSPORTE, DIAS_MES, dominicalFactor, isRestDay };
 
 const MINUTES_DAY = 24 * 60;
 const LUNCH_START = 12 * 60;
 const LUNCH_END = 13 * 60;
-
-export const HOLIDAYS_2026 = new Set([
-  "2026-01-01",
-  "2026-01-12",
-  "2026-03-23",
-  "2026-04-02",
-  "2026-04-03",
-  "2026-05-01",
-  "2026-05-18",
-  "2026-06-08",
-  "2026-06-15",
-  "2026-06-29",
-  "2026-07-20",
-  "2026-08-07",
-  "2026-08-17",
-  "2026-10-12",
-  "2026-11-02",
-  "2026-11-16",
-  "2026-12-08",
-  "2026-12-25",
-]);
 
 export type HourBreakdown = {
   normalDiurna: number;
@@ -50,6 +38,45 @@ export type PayLine = {
   deduction?: boolean;
 };
 
+export type EmployerCost = {
+  health: number;
+  pension: number;
+  arl: number;
+  ccf: number;
+  sena: number;
+  icbf: number;
+  cesantias: number;
+  interesesCesantias: number;
+  prima: number;
+  vacaciones: number;
+  total: number;
+};
+
+export type PilaSlice = {
+  days: number;
+  salaryBasic: number;
+  integral: boolean;
+  exonerated: boolean;
+  ibc: number;
+  hours: number;
+  pensionRate: number;
+  pensionPay: number;
+  healthRate: number;
+  healthPay: number;
+  arlRate: number;
+  arlPay: number;
+  ccfRate: number;
+  ccfPay: number;
+  senaRate: number;
+  senaPay: number;
+  icbfRate: number;
+  icbfPay: number;
+  fspSolidaridad: number;
+  fspSubsistencia: number;
+  ing: boolean;
+  ret: boolean;
+};
+
 export type WorkerPayroll = {
   workerId: string;
   workedDays: number;
@@ -61,23 +88,9 @@ export type WorkerPayroll = {
   deductions: number;
   net: number;
   warnings: string[];
+  employer: EmployerCost;
+  pila: PilaSlice;
 };
-
-export function isSunday(iso: string): boolean {
-  const [year, month, day] = iso.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day)).getUTCDay() === 0;
-}
-
-export function isRestDay(iso: string): boolean {
-  return isSunday(iso) || HOLIDAYS_2026.has(iso);
-}
-
-/** +80 % hasta el 30 jun 2026, +90 % desde el 1 jul 2026 (Ley 2466). */
-export function dominicalFactor(iso: string): number {
-  if (iso < "2026-07-01") return 1.8;
-  if (iso < "2027-07-01") return 1.9;
-  return 2;
-}
 
 export function toMinutes(hhmm: string): number {
   const [hour, minute] = hhmm.split(":").map(Number);
@@ -214,18 +227,60 @@ function weekKey(iso: string): string {
   return date.toISOString().slice(0, 10);
 }
 
+function covers(novelty: Novelty, iso: string): boolean {
+  return iso >= novelty.start && iso <= novelty.end;
+}
+
+function emptyEmployer(): EmployerCost {
+  return { health: 0, pension: 0, arl: 0, ccf: 0, sena: 0, icbf: 0, cesantias: 0, interesesCesantias: 0, prima: 0, vacaciones: 0, total: 0 };
+}
+
+function emptyPila(salary: number, integral: boolean): PilaSlice {
+  return {
+    days: 0,
+    salaryBasic: salary,
+    integral,
+    exonerated: false,
+    ibc: 0,
+    hours: 0,
+    pensionRate: 0.16,
+    pensionPay: 0,
+    healthRate: 0.125,
+    healthPay: 0,
+    arlRate: 0,
+    arlPay: 0,
+    ccfRate: 0.04,
+    ccfPay: 0,
+    senaRate: 0.02,
+    senaPay: 0,
+    icbfRate: 0.03,
+    icbfPay: 0,
+    fspSolidaridad: 0,
+    fspSubsistencia: 0,
+    ing: false,
+    ret: false,
+  };
+}
+
 export function liquidateWorker(
-  worker: Worker,
+  worker: Employee,
   assignments: Assignment[],
   clocks: ClockRecord[],
+  company: Company | null,
+  novedades: Novelty[] = [],
+  periodEnd = "",
 ): WorkerPayroll {
+  const integral = worker.salaryMode === "integral";
   const hourly = worker.monthlySalary / DIAS_MES / worker.dailyHours;
+  const ownNovelties = novedades.filter((novelty) => novelty.workerId === worker.id);
   const lines: PayLine[] = [];
   let workedDays = 0;
   let absences = 0;
   let incomplete = 0;
   let extraHours = 0;
+  let ordinaryHours = 0;
   const extraByWeek = new Map<string, number>();
+  const ordinaryByWeek = new Map<string, number>();
   const warnings: string[] = [];
 
   const own = assignments
@@ -233,6 +288,13 @@ export function liquidateWorker(
     .sort((a, b) => a.date.localeCompare(b.date));
 
   for (const assignment of own) {
+    const novelty = ownNovelties.find((item) => covers(item, assignment.date));
+    if (novelty && novelty.kind !== "VAC") {
+      if (novelty.kind === "AUS" || novelty.kind === "SLN") absences += 1;
+      continue;
+    }
+    if (novelty?.kind === "VAC") continue;
+
     const clock = clocks.find((item) => item.assignmentId === assignment.id);
     if (!clock || !clock.clockIn || !clock.clockOut) {
       if (clock?.clockIn || clock?.clockOut) incomplete += 1;
@@ -244,8 +306,13 @@ export function liquidateWorker(
     const breakdown = classifyHours(clock.clockIn, clock.clockOut, worker.dailyHours, restDay);
     const factor = dominicalFactor(assignment.date);
     const dayExtra = extraHoursOf(breakdown);
+    const dayOrdinary = round2(
+      breakdown.normalDiurna + breakdown.nocturnaOrdinaria + breakdown.dominicalDiurna + breakdown.dominicalNocturna,
+    );
     extraHours = round2(extraHours + dayExtra);
+    ordinaryHours = round2(ordinaryHours + dayOrdinary);
     extraByWeek.set(weekKey(assignment.date), round2((extraByWeek.get(weekKey(assignment.date)) ?? 0) + dayExtra));
+    ordinaryByWeek.set(weekKey(assignment.date), round2((ordinaryByWeek.get(weekKey(assignment.date)) ?? 0) + dayOrdinary));
     if (dayExtra > 2) {
       warnings.push(`El ${formatDay(assignment.date)} supera 2 horas extra en el día.`);
     }
@@ -270,8 +337,23 @@ export function liquidateWorker(
   for (const [week, hours] of Array.from(extraByWeek.entries())) {
     if (hours > 12) warnings.push(`La semana del ${formatDay(week)} suma ${hours} h extra (máximo legal 12).`);
   }
+  for (const [week, hours] of Array.from(ordinaryByWeek.entries())) {
+    const limit = weeklyHourLimit(week);
+    if (hours > limit) warnings.push(`La semana del ${formatDay(week)} suma ${hours} h ordinarias (máximo ${limit}).`);
+  }
 
-  if (worker.monthlySalary <= TOPE_TRANSPORTE && workedDays > 0) {
+  const periodPrefix = periodEnd.slice(0, 7);
+  const vacationDays = ownNovelties
+    .filter((novelty) => novelty.kind === "VAC")
+    .reduce((sum, novelty) => sum + daysInPrefix(novelty.start, novelty.end, periodPrefix), 0);
+  if (vacationDays > 0) {
+    lines.push({
+      label: "Vacaciones",
+      amount: Math.round((worker.monthlySalary / DIAS_MES) * vacationDays),
+    });
+  }
+
+  if (qualifiesTransport(worker.monthlySalary, integral) && workedDays > 0) {
     lines.push({
       label: "Auxilio de transporte",
       amount: Math.round((SUBSIDIO_TRANSPORTE * workedDays) / DIAS_MES),
@@ -280,13 +362,82 @@ export function liquidateWorker(
 
   const gross = lines.reduce((sum, line) => sum + line.amount, 0);
   const transport = lines.find((line) => line.label === "Auxilio de transporte")?.amount ?? 0;
-  const ibc = Math.max(0, gross - transport);
-  const salud = Math.round(ibc * 0.04);
-  const pension = Math.round(ibc * 0.04);
-  if (salud > 0) lines.push({ label: "Salud (4%)", amount: salud, deduction: true });
-  if (pension > 0) lines.push({ label: "Pensión (4%)", amount: pension, deduction: true });
+  const contributory = Math.max(0, gross - transport);
+  const pilaDays = Math.min(DIAS_MES, workedDays + vacationDays);
+  const ibcBase = integral ? Math.round(contributory * 0.7) : contributory;
+  const ibc = clampIbc(ibcBase, pilaDays);
+  const exonerated = isExonerated(Boolean(company?.exonerated), worker.monthlySalary);
+  const fsp = fondoSolidaridad(ibc);
+  const employeeHealth = Math.round(ibc * 0.04);
+  const employeePension = Math.round(ibc * 0.04);
+  const employerHealth = exonerated ? 0 : Math.round(ibc * 0.085);
+  const employerPension = Math.round(ibc * 0.12);
+  const arlRate = ARL_RATE[worker.riskClass];
+  const employerArl = Math.round(ibc * arlRate);
+  const employerCcf = Math.round(ibc * 0.04);
+  const employerSena = exonerated ? 0 : Math.round(ibc * 0.02);
+  const employerIcbf = exonerated ? 0 : Math.round(ibc * 0.03);
 
-  const deductions = salud + pension;
+  if (employeeHealth > 0) lines.push({ label: "Salud (4%)", amount: employeeHealth, deduction: true });
+  if (employeePension > 0) lines.push({ label: "Pensión (4%)", amount: employeePension, deduction: true });
+  if (fsp.solidaridad > 0) lines.push({ label: "Fondo de solidaridad", amount: fsp.solidaridad, deduction: true });
+  if (fsp.subsistencia > 0) lines.push({ label: "Fondo de subsistencia", amount: fsp.subsistencia, deduction: true });
+
+  const prestacionalBase = worker.monthlySalary + (qualifiesTransport(worker.monthlySalary, integral) ? SUBSIDIO_TRANSPORTE : 0);
+  const vacationBase = integral ? Math.round(worker.monthlySalary * 0.7) : worker.monthlySalary;
+  const monthFactor = pilaDays / DIAS_MES;
+  const cesantias = integral ? 0 : Math.round(prestacionalBase * 0.0833 * monthFactor);
+  const interesesCesantias = integral ? 0 : Math.round(cesantias * 0.12 * monthFactor);
+  const prima = integral ? 0 : Math.round(prestacionalBase * 0.0833 * monthFactor);
+  const vacaciones = Math.round(vacationBase * 0.0417 * monthFactor);
+  const employer: EmployerCost = {
+    health: employerHealth,
+    pension: employerPension,
+    arl: employerArl,
+    ccf: employerCcf,
+    sena: employerSena,
+    icbf: employerIcbf,
+    cesantias,
+    interesesCesantias,
+    prima,
+    vacaciones,
+    total: employerHealth + employerPension + employerArl + employerCcf + employerSena + employerIcbf + cesantias + interesesCesantias + prima + vacaciones,
+  };
+
+  const deductions = employeeHealth + employeePension + fsp.solidaridad + fsp.subsistencia;
+  const hireInPeriod = periodPrefix.length === 7 && worker.hireDate.slice(0, 7) === periodPrefix;
+  const pila: PilaSlice = {
+    days: pilaDays,
+    salaryBasic: worker.monthlySalary,
+    integral,
+    exonerated,
+    ibc,
+    hours: Math.round(ordinaryHours + extraHours),
+    pensionRate: 0.16,
+    pensionPay: employeePension + employerPension,
+    healthRate: exonerated ? 0.04 : 0.125,
+    healthPay: employeeHealth + employerHealth,
+    arlRate,
+    arlPay: employerArl,
+    ccfRate: 0.04,
+    ccfPay: employerCcf,
+    senaRate: exonerated ? 0 : 0.02,
+    senaPay: employerSena,
+    icbfRate: exonerated ? 0 : 0.03,
+    icbfPay: employerIcbf,
+    fspSolidaridad: fsp.solidaridad,
+    fspSubsistencia: fsp.subsistencia,
+    ing: hireInPeriod,
+    ret: false,
+  };
+
+  if (worker.monthlySalary < SMMLV && !integral) {
+    warnings.push("El salario mensual está por debajo del mínimo de 2026.");
+  }
+  if (integral && worker.monthlySalary < SMMLV * 13) {
+    warnings.push("El salario integral debe ser de al menos 13 SMMLV.");
+  }
+
   return {
     workerId: worker.id,
     workedDays,
@@ -298,9 +449,33 @@ export function liquidateWorker(
     deductions,
     net: gross - deductions,
     warnings,
+    employer,
+    pila,
   };
 }
 
-export function liquidatePeriod(workers: Worker[], assignments: Assignment[], clocks: ClockRecord[]): WorkerPayroll[] {
-  return workers.map((worker) => liquidateWorker(worker, assignments, clocks));
+function daysInPrefix(start: string, end: string, prefix: string): number {
+  if (prefix.length !== 7) return 0;
+  let days = 0;
+  let cursor = start < `${prefix}-01` ? `${prefix}-01` : start;
+  while (cursor <= end && cursor.startsWith(prefix) && days < 31) {
+    const [year, month, day] = cursor.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (Number.isNaN(date.getTime())) break;
+    days += 1;
+    date.setUTCDate(date.getUTCDate() + 1);
+    cursor = date.toISOString().slice(0, 10);
+  }
+  return days;
+}
+
+export function liquidatePeriod(
+  workers: Employee[],
+  assignments: Assignment[],
+  clocks: ClockRecord[],
+  company: Company | null,
+  novedades: Novelty[] = [],
+  periodEnd = "",
+): WorkerPayroll[] {
+  return workers.map((worker) => liquidateWorker(worker, assignments, clocks, company, novedades, periodEnd));
 }

@@ -6,6 +6,7 @@ import {
   getAllSlugs,
   getArticle,
   getArticleModifiedAt,
+  getArticleSeoTitle,
 } from "@/lib/blog/articles";
 import {
   buildArticleFaqJsonLd,
@@ -28,12 +29,13 @@ export function generateMetadata({ params }: PageProps): Metadata {
 
   const url = absoluteUrl(`/guia/${article.slug}`);
   const modified = getArticleModifiedAt(article);
+  const seoTitle = getArticleSeoTitle(article);
   const ogImages = [
     {
       url: absoluteUrl("/images/og-default.png"),
       width: 1200,
       height: 630,
-      alt: article.title,
+      alt: seoTitle,
     },
     ...(article.heroImage
       ? [
@@ -41,20 +43,20 @@ export function generateMetadata({ params }: PageProps): Metadata {
             url: absoluteUrl(article.heroImage),
             width: 960,
             height: 540,
-            alt: article.title,
+            alt: seoTitle,
           },
         ]
       : []),
   ];
 
   return {
-    title: article.title,
+    title: seoTitle,
     description: article.description,
     keywords: article.keywords,
     authors: [{ name: site.contentAuthor, url: site.url }],
     alternates: { canonical: url },
     openGraph: {
-      title: article.title,
+      title: seoTitle,
       description: article.description,
       url,
       type: "article",
@@ -66,7 +68,7 @@ export function generateMetadata({ params }: PageProps): Metadata {
     },
     twitter: {
       card: "summary_large_image",
-      title: article.title,
+      title: seoTitle,
       description: article.description,
       images: [absoluteUrl("/images/og-default.png")],
     },

@@ -102,7 +102,7 @@ export function ArticleBody({ article }: ArticleBodyProps) {
         <figure className="article-hero-image">
           <Image
             src={article.heroImage}
-            alt=""
+            alt={`Ilustración del artículo: ${article.title}`}
             width={960}
             height={540}
             priority

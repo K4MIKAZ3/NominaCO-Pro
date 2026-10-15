@@ -176,6 +176,14 @@ fun NominaAppRoot(app: NominaApp) {
         }
     }
 
+    fun exitOfflineMode() {
+        authOverlay = AuthOverlay.None
+        authMessage = null
+        rootScope.launch {
+            app.repository.preferencesStore.update { it.copy(offlineModeEnabled = false) }
+        }
+    }
+
     fun onAuthSuccess() {
         authOverlay = AuthOverlay.None
         showStartupRegister = false
@@ -275,6 +283,7 @@ fun NominaAppRoot(app: NominaApp) {
                     manualUpdateCheckBusy = manualUpdateCheckBusy,
                     onOpenLogin = { authOverlay = AuthOverlay.Login },
                     onOpenRegister = { authOverlay = AuthOverlay.Register },
+                    onGoOnline = ::exitOfflineMode,
                     onSignOut = accountInfo?.let {
                         {
                             app.repository.cloudSync.setActiveUser(null)
@@ -461,6 +470,7 @@ private fun MainNominaScaffold(
     manualUpdateCheckBusy: Boolean = false,
     onOpenLogin: () -> Unit,
     onOpenRegister: () -> Unit,
+    onGoOnline: () -> Unit,
     onSignOut: (() -> Unit)?,
     onDeleteAccount: ((reason: String, onResult: (Boolean, String?) -> Unit) -> Unit)? = null,
     onCheckForUpdate: () -> Unit,
@@ -616,6 +626,7 @@ private fun MainNominaScaffold(
                     },
                     onOpenLogin = onOpenLogin,
                     onOpenRegister = onOpenRegister,
+                    onGoOnline = onGoOnline,
                     onCheckForUpdate = onCheckForUpdate,
                     onSavePreferences = vm::savePreferences,
                     onRemoveHoliday = vm::removeManualHoliday,

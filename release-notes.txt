@@ -1,1 +1,11 @@
+<<<<<<< HEAD
 Nuevo identificador de app para Google Play (com.vcprojects.nominapp). Si tenías una instalación anterior con el paquete viejo, desinstálala e instala esta versión (o bájala desde la web). Misma firma y datos en la nube con tu cuenta.
+=======
+Novedades Nominapp 1.7.39
+
+• Modo online desde Ajustes: sal del modo offline cuando quieras iniciar sesión o crear cuenta
+• Centro de notificaciones: avisos de jornada sin registrar y mensajes de la app (campana)
+• Recordatorio diario local para marcar tu jornada (sin costo de push)
+
+Sigue gratis, sin anuncios y pensada para empleados.
+>>>>>>> 4721018 (Add in-app notification center and bump to 1.7.39)

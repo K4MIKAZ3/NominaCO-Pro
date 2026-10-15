@@ -59,6 +59,8 @@ fun ExpensesScreen(
     onToday: () -> Unit,
     onAdd: () -> Unit,
     onRemove: (Long) -> Unit,
+    unreadNotificationCount: Int = 0,
+    onNotificationsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val monthLabel = Formatters.monthNameFull(yearMonth.monthValue).replaceFirstChar { it.titlecase() }
@@ -89,7 +91,14 @@ fun ExpensesScreen(
             contentPadding = PaddingValues(bottom = 88.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            item { NominaTopBar(title = "Gastos", subtitle = monthLabel) }
+            item {
+                NominaTopBar(
+                    title = "Gastos",
+                    subtitle = monthLabel,
+                    unreadNotificationCount = unreadNotificationCount,
+                    onNotificationsClick = onNotificationsClick,
+                )
+            }
 
             item {
                 Row(

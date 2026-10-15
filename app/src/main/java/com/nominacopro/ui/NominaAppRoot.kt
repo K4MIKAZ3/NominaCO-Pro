@@ -38,6 +38,7 @@ import com.nominacopro.data.sync.BackupActivationStrategy
 import com.nominacopro.domain.auth.PasswordRules
 import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.AppPreferences
+import com.nominacopro.domain.model.InboxNotificationAction
 import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.payperiod.PayPeriodType
 import com.nominacopro.notifications.ReminderScheduler
@@ -52,6 +53,7 @@ import com.nominacopro.ui.screens.DayEditorDialog
 import com.nominacopro.ui.screens.ExpenseEntryDialog
 import com.nominacopro.ui.screens.ExpensesScreen
 import com.nominacopro.ui.screens.LoginScreen
+import com.nominacopro.ui.screens.NotificationsScreen
 import com.nominacopro.ui.screens.PayrollEntryDialog
 import com.nominacopro.ui.screens.PayrollScreen
 import com.nominacopro.ui.screens.ProfileScreen
@@ -426,14 +428,19 @@ private fun MainNominaScaffold(
     val expenseYearMonth by vm.expenseYearMonth.collectAsState()
     val expenses by vm.expenses.collectAsState()
     val expensePayroll by vm.expensePayroll.collectAsState()
+    val inboxNotifications by vm.inboxNotifications.collectAsState()
+    val unreadNotificationCount by vm.unreadNotificationCount.collectAsState()
 
     var tab by remember { mutableStateOf(NominaTab.Calendar) }
     var selectedDay by remember { mutableStateOf<LocalDate?>(null) }
     var showProfile by rememberSaveable { mutableStateOf(false) }
+    var showNotifications by rememberSaveable { mutableStateOf(false) }
     var showExpenseDialog by remember { mutableStateOf(false) }
     var showDeductionDialog by remember { mutableStateOf(false) }
     var showAdvanceDialog by remember { mutableStateOf(false) }
     var showBonusDialog by remember { mutableStateOf(false) }
+
+    val openNotifications = { showNotifications = true }
 
     val notificationPermission = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -472,6 +479,8 @@ private fun MainNominaScaffold(
                     onNext = vm::nextMonth,
                     onToday = vm::goToday,
                     onDayClick = { selectedDay = it },
+                    unreadNotificationCount = unreadNotificationCount,
+                    onNotificationsClick = openNotifications,
                     modifier = Modifier.padding(padding),
                 )
                 NominaTab.Payroll -> {
@@ -512,6 +521,8 @@ private fun MainNominaScaffold(
                                     scope.launch { snackbar.showSnackbar("PDF de días laborados generado") }
                                 }
                             },
+                            unreadNotificationCount = unreadNotificationCount,
+                            onNotificationsClick = openNotifications,
                             modifier = Modifier.padding(padding),
                         )
                     }
@@ -526,6 +537,8 @@ private fun MainNominaScaffold(
                     onToday = vm::goExpenseToday,
                     onAdd = { showExpenseDialog = true },
                     onRemove = vm::removeExpense,
+                    unreadNotificationCount = unreadNotificationCount,
+                    onNotificationsClick = openNotifications,
                     modifier = Modifier.padding(padding),
                 )
                 NominaTab.Settings -> SettingsScreen(
@@ -560,6 +573,8 @@ private fun MainNominaScaffold(
                     },
                     onSignOut = onSignOut,
                     onDeleteAccount = onDeleteAccount,
+                    unreadNotificationCount = unreadNotificationCount,
+                    onNotificationsClick = openNotifications,
                     modifier = Modifier.padding(padding),
                 )
             }
@@ -571,6 +586,32 @@ private fun MainNominaScaffold(
                         profile = profile,
                         onSave = vm::saveProfile,
                         onBack = { showProfile = false },
+                    )
+                }
+            }
+
+            if (showNotifications) {
+                Surface(Modifier.fillMaxSize()) {
+                    NotificationsScreen(
+                        notifications = inboxNotifications,
+                        onBack = { showNotifications = false },
+                        onMarkAllRead = vm::markAllInboxNotificationsRead,
+                        onOpenNotification = { item ->
+                            vm.markInboxNotificationRead(item.id)
+                            when (item.action) {
+                                InboxNotificationAction.OPEN_TODAY -> {
+                                    showNotifications = false
+                                    vm.goToday()
+                                    tab = NominaTab.Calendar
+                                    selectedDay = LocalDate.now()
+                                }
+                                InboxNotificationAction.OPEN_SETTINGS -> {
+                                    showNotifications = false
+                                    tab = NominaTab.Settings
+                                }
+                                InboxNotificationAction.NONE -> Unit
+                            }
+                        },
                     )
                 }
             }

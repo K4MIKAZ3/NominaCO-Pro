@@ -98,6 +98,8 @@ fun PayrollScreen(
     onRemoveManualEntry: (Long) -> Unit,
     onExportPayrollPdf: () -> Unit,
     onExportWorkDaysPdf: () -> Unit,
+    unreadNotificationCount: Int = 0,
+    onNotificationsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     if (profileMissing) {
@@ -144,7 +146,13 @@ fun PayrollScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(bottom = 24.dp),
     ) {
-        item { NominaTopBar(title = "Nómina") }
+        item {
+            NominaTopBar(
+                title = "Nómina",
+                unreadNotificationCount = unreadNotificationCount,
+                onNotificationsClick = onNotificationsClick,
+            )
+        }
 
         item {
             Surface(

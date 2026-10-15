@@ -14,6 +14,7 @@ import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.ExpenseCategory
 import com.nominacopro.domain.model.ExpenseEntry
+import com.nominacopro.domain.model.InboxNotification
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.MonthSummary
 import com.nominacopro.domain.model.MonthlyPayroll
@@ -166,6 +167,25 @@ class MainViewModel(
     val dashboard: StateFlow<List<MonthSummary>> = repository.observeDashboard(3).stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
     )
+
+    val inboxNotifications: StateFlow<List<InboxNotification>> =
+        repository.observeInboxNotifications().stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList(),
+        )
+
+    val unreadNotificationCount: StateFlow<Int> = inboxNotifications
+        .map { list -> list.count { !it.read } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    fun markInboxNotificationRead(id: String) {
+        viewModelScope.launch { repository.markInboxNotificationRead(id) }
+    }
+
+    fun markAllInboxNotificationsRead() {
+        viewModelScope.launch {
+            repository.markAllInboxNotificationsRead(inboxNotifications.value.map { it.id })
+        }
+    }
 
     val syncState: StateFlow<SyncUiState> = repository.cloudSync.state.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), SyncUiState.Idle,

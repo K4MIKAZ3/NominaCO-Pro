@@ -9,6 +9,9 @@ import com.nominacopro.data.local.entity.ManualDeductionEntity
 import com.nominacopro.data.local.entity.ManualHolidayEntity
 import com.nominacopro.data.local.entity.ProfileEntity
 import com.nominacopro.data.local.entity.WorkDayEntity
+import com.nominacopro.BuildConfig
+import com.nominacopro.data.notifications.NotificationInboxBuilder
+import com.nominacopro.data.notifications.NotificationInboxStore
 import com.nominacopro.data.preferences.AppPreferencesStore
 import com.nominacopro.data.sync.CloudSyncRepository
 import com.nominacopro.domain.calculator.PayrollEngine
@@ -21,6 +24,7 @@ import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.ExpenseCategory
 import com.nominacopro.domain.model.ExpenseEntry
+import com.nominacopro.domain.model.InboxNotification
 import com.nominacopro.domain.model.ManualDeduction
 import com.nominacopro.domain.model.PayrollEntryType
 import com.nominacopro.domain.model.PeriodPayrollSummary
@@ -55,6 +59,7 @@ class NominaRepository(context: Context) {
     private val deductionDao = db.manualDeductionDao()
     private val expenseDao = db.expenseDao()
     val preferencesStore = AppPreferencesStore(appContext)
+    private val notificationInboxStore = NotificationInboxStore(appContext)
 
     val cloudSync = CloudSyncRepository(
         db = db,
@@ -78,6 +83,32 @@ class NominaRepository(context: Context) {
     suspend fun setPreferences(prefs: AppPreferences) {
         preferencesStore.update { prefs }
         maybeCloudSync { cloudSync.pushPreferences(prefs) }
+    }
+
+    fun observeInboxNotifications(today: LocalDate = LocalDate.now()): Flow<List<InboxNotification>> =
+        combine(
+            workDayDao.observeRange(today.format(iso), today.format(iso)),
+            observeManualHolidays(),
+            observePreferences(),
+            notificationInboxStore.observeReadIds(),
+        ) { workDays, holidays, prefs, readIds ->
+            NotificationInboxBuilder.build(
+                today = today,
+                hasWorkDayToday = workDays.isNotEmpty(),
+                manualHolidays = holidays,
+                reminderEnabled = prefs.reminderEnabled,
+                versionCode = BuildConfig.VERSION_CODE,
+                versionName = BuildConfig.VERSION_NAME,
+                readIds = readIds,
+            )
+        }
+
+    suspend fun markInboxNotificationRead(id: String) {
+        notificationInboxStore.markRead(id)
+    }
+
+    suspend fun markAllInboxNotificationsRead(ids: Collection<String>) {
+        notificationInboxStore.markAllRead(ids)
     }
 
     fun observeProfile() = profileDao.observe().map { it?.toDomain() }

@@ -97,6 +97,8 @@ fun NominaLogoMark(size: Int = 32) {
 fun NominaTopBar(
     title: String,
     subtitle: String? = null,
+    unreadNotificationCount: Int = 0,
+    onNotificationsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -125,19 +127,34 @@ fun NominaTopBar(
                 )
             }
         }
-        Box {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .then(
+                    if (onNotificationsClick != null) {
+                        Modifier.clickable(onClick = onNotificationsClick)
+                    } else {
+                        Modifier
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
             Icon(
                 Icons.Default.Notifications,
-                contentDescription = null,
+                contentDescription = "Notificaciones",
                 tint = NominaDesign.TextMuted,
             )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(NominaDesign.Green),
-            )
+            if (unreadNotificationCount > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 6.dp, end = 6.dp)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(NominaDesign.Green),
+                )
+            }
         }
     }
     subtitle?.let {

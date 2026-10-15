@@ -88,6 +88,8 @@ fun SettingsScreen(
     onRequestBiometricEnable: ((onSuccess: () -> Unit) -> Unit)? = null,
     onSignOut: (() -> Unit)? = null,
     onDeleteAccount: ((reason: String, onResult: (Boolean, String?) -> Unit) -> Unit)? = null,
+    unreadNotificationCount: Int = 0,
+    onNotificationsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val snackbar = remember { SnackbarHostState() }
@@ -165,7 +167,13 @@ fun SettingsScreen(
             contentPadding = PaddingValues(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item { NominaTopBar(title = "Ajustes") }
+            item {
+                NominaTopBar(
+                    title = "Ajustes",
+                    unreadNotificationCount = unreadNotificationCount,
+                    onNotificationsClick = onNotificationsClick,
+                )
+            }
             item {
                 Text(
                     "Apariencia, horario, recordatorio y seguridad local.",

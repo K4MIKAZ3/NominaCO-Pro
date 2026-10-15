@@ -7,13 +7,19 @@ Firmado con el keystore de producción (GitHub Secrets).
 
 ## Archivo actual
 
-`NominaCO-Pro-v1.7.36-play.aab` — **versionCode 47**  
+`NominaCO-Pro-v1.7.39-play.aab` — **versionCode 50**  
 Generado por el workflow **Build Play Store AAB** (`rama play-store`).
+
+## Novedades de esta versión
+
+- Modo online desde Ajustes (salir del modo offline)
+- Centro de notificaciones in-app (jornada + mensajes)
+- Recordatorio diario local
 
 ## Cómo subir a Play Console
 
 1. Play Console → app con package name `com.vcprojects.nominapp`.
-2. Prueba interna → Crear versión → subir este `.aab` (código **47**).
+2. Prueba interna → Crear versión → subir este `.aab` (código **50**).
 3. Advertencia de desofuscación: ignórala (no usamos R8/Proguard).
 4. Política de privacidad: `https://www.nominapp.xyz/privacidad`
 

@@ -61,6 +61,8 @@ fun CalendarScreen(
     onNext: () -> Unit,
     onToday: () -> Unit,
     onDayClick: (LocalDate) -> Unit,
+    unreadNotificationCount: Int = 0,
+    onNotificationsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val days = buildCalendarDays(yearMonth)
@@ -77,6 +79,8 @@ fun CalendarScreen(
             NominaTopBar(
                 title = "Calendario",
                 subtitle = monthLabel,
+                unreadNotificationCount = unreadNotificationCount,
+                onNotificationsClick = onNotificationsClick,
             )
         }
 

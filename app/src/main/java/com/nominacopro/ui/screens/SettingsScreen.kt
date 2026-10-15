@@ -80,6 +80,7 @@ fun SettingsScreen(
     onSyncNow: (() -> Unit)? = null,
     onOpenLogin: (() -> Unit)? = null,
     onOpenRegister: (() -> Unit)? = null,
+    onGoOnline: (() -> Unit)? = null,
     onCheckForUpdate: (() -> Unit)? = null,
     onSavePreferences: (AppPreferences) -> Unit,
     onRemoveHoliday: (LocalDate) -> Unit,
@@ -87,6 +88,8 @@ fun SettingsScreen(
     onRequestBiometricEnable: ((onSuccess: () -> Unit) -> Unit)? = null,
     onSignOut: (() -> Unit)? = null,
     onDeleteAccount: ((reason: String, onResult: (Boolean, String?) -> Unit) -> Unit)? = null,
+    unreadNotificationCount: Int = 0,
+    onNotificationsClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val snackbar = remember { SnackbarHostState() }
@@ -164,7 +167,13 @@ fun SettingsScreen(
             contentPadding = PaddingValues(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item { NominaTopBar(title = "Ajustes") }
+            item {
+                NominaTopBar(
+                    title = "Ajustes",
+                    unreadNotificationCount = unreadNotificationCount,
+                    onNotificationsClick = onNotificationsClick,
+                )
+            }
             item {
                 Text(
                     "Apariencia, horario, recordatorio y seguridad local.",
@@ -207,7 +216,34 @@ fun SettingsScreen(
                 }
             }
 
-            if (authConfigured) {
+            if (authConfigured && preferences.offlineModeEnabled && accountEmail == null && onGoOnline != null) {
+                item {
+                    Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                stringResource(R.string.offline_mode_section_title),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                stringResource(R.string.offline_mode_active_badge),
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Text(
+                                stringResource(R.string.auth_online_mode_summary),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            )
+                            Button(onClick = onGoOnline, modifier = Modifier.fillMaxWidth()) {
+                                Text(stringResource(R.string.auth_online_mode))
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (authConfigured && !(preferences.offlineModeEnabled && accountEmail == null)) {
                 item {
                     Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

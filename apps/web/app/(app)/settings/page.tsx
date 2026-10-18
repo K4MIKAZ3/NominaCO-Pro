@@ -1,6 +1,11 @@
 import { AppShell } from "@/components/layout/AppShell";
-import { getActiveCompany, listCompanies, requireUser } from "@/lib/supabase/data";
-import { siteUrl, supabaseUrl } from "@/lib/supabase/env";
+import {
+  countActiveEmployees,
+  getActiveCompany,
+  listCompanies,
+  listPayrollPeriods,
+  requireUser,
+} from "@/lib/supabase/data";
 
 export const metadata = { title: "Ajustes" };
 export const dynamic = "force-dynamic";
@@ -9,32 +14,48 @@ export default async function SettingsPage() {
   const { user } = await requireUser();
   const companies = await listCompanies();
   const company = await getActiveCompany();
+  const [employeeCount, periods] = company
+    ? await Promise.all([
+        countActiveEmployees(company.id),
+        listPayrollPeriods(company.id),
+      ])
+    : [0, []];
 
   return (
-    <AppShell active="/settings" company={company} companies={companies}>
-      <div className="stack">
-        <header>
-          <p className="eyebrow">Cuenta</p>
-          <h1 className="page-title">Ajustes</h1>
-          <p className="page-lead">Sesión y entorno conectados a producción.</p>
-        </header>
+    <AppShell
+      active="/settings"
+      company={company}
+      companies={companies}
+      counts={{ employees: employeeCount, periods: periods.length }}
+    >
+      <header className="page-head">
+        <div>
+          <div className="crumb">Ajustes</div>
+          <h1>Cuenta</h1>
+          <p className="page-lead">Datos de tu sesión y empresa activa.</p>
+        </div>
+      </header>
 
+      <div className="content-pad">
         <section className="panel stack">
           <div className="field">
-            <label>Usuario</label>
-            <input value={user.email ?? user.id} readOnly />
-          </div>
-          <div className="field">
-            <label>Supabase</label>
-            <input value={supabaseUrl} readOnly />
-          </div>
-          <div className="field">
-            <label>Site URL</label>
-            <input value={siteUrl} readOnly />
+            <label>Correo</label>
+            <input value={user.email ?? ""} readOnly />
           </div>
           <div className="field">
             <label>Empresa activa</label>
-            <input value={company ? `${company.name} (${company.nit})` : "Ninguna"} readOnly />
+            <input
+              value={company ? `${company.name} · ${company.nit}` : "Ninguna"}
+              readOnly
+            />
+          </div>
+          <div className="field">
+            <label>Idioma</label>
+            <input value="Español (Colombia)" readOnly />
+          </div>
+          <div className="field">
+            <label>Zona horaria</label>
+            <input value="America/Bogota" readOnly />
           </div>
         </section>
       </div>

@@ -7,31 +7,17 @@ export const metadata = {
 export default function LoginPage() {
   return (
     <div className="auth-wrap">
-      <div className="auth-panel anim-rise">
-        <p className="eyebrow">Nominapp Empresas</p>
-        <h1 className="page-title">Entrar al panel</h1>
-        <p className="page-lead">
-          Acceso para dueños y contadores. Auth vía Supabase del proyecto{" "}
-          <code>kmkrxyrorksrwmdomfuy</code>.
+      <div className="auth-panel">
+        <div className="brand" style={{ color: "var(--ink)", padding: 0 }}>
+          <div className="brand-mark" aria-hidden />
+          nominapp
+        </div>
+        <h1>Entrar</h1>
+        <p className="muted" style={{ margin: "0 0 1.25rem", lineHeight: 1.5 }}>
+          Accede a tu panel de nómina multi-empresa.
         </p>
         <LoginForm />
       </div>
-      <style>{`
-        .auth-wrap {
-          min-height: 100vh;
-          display: grid;
-          place-items: center;
-          padding: 1.5rem;
-        }
-        .auth-panel {
-          width: min(420px, 100%);
-          padding: 1.75rem;
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: var(--radius);
-          box-shadow: var(--shadow-soft);
-        }
-      `}</style>
     </div>
   );
 }

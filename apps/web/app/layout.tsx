@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { IBM_Plex_Mono, Schibsted_Grotesk } from "next/font/google";
 import "@/styles/globals.css";
 
-const dmSans = DM_Sans({
+const sans = Schibsted_Grotesk({
   subsets: ["latin"],
-  variable: "--font-ui-loaded",
+  variable: "--font-sans",
   display: "swap",
 });
 
-const fraunces = Fraunces({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
-  variable: "--font-brand-loaded",
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -19,23 +20,14 @@ export const metadata: Metadata = {
     default: "Nominapp Empresas",
     template: "%s · Nominapp Empresas",
   },
-  description: "Nómina multi-empresa para Colombia. Panel empleador con motor legal versionado.",
+  description: "Nómina multi-empresa para Colombia.",
   metadataBase: new URL("https://empresas.nominapp.xyz"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-CO" className={`${dmSans.variable} ${fraunces.variable}`}>
-      <body
-        style={
-          {
-            ["--font-ui" as string]: "var(--font-ui-loaded), 'Helvetica Neue', sans-serif",
-            ["--font-brand" as string]: "var(--font-brand-loaded), Georgia, serif",
-          } as React.CSSProperties
-        }
-      >
-        {children}
-      </body>
+    <html lang="es-CO" className={`${sans.variable} ${mono.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

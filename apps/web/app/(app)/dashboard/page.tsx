@@ -9,7 +9,7 @@ import {
   listPayrollPeriods,
 } from "@/lib/supabase/data";
 
-export const metadata = { title: "Panel" };
+export const metadata = { title: "Resumen" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
@@ -19,19 +19,21 @@ export default async function DashboardPage() {
   if (!company) {
     return (
       <AppShell active="/dashboard" company={null} companies={companies}>
-        <div className="stack">
-          <header>
-            <p className="eyebrow">Bienvenido</p>
-            <h1 className="page-title">Crea tu primera empresa</h1>
+        <header className="page-head">
+          <div>
+            <div className="crumb">Resumen</div>
+            <h1>Crea tu primera empresa</h1>
             <p className="page-lead">
-              El panel multi-empresa arranca con una razón social y NIT. Luego agregas
-              empleados y períodos de nómina.
+              Empieza con la razón social y el NIT. Después agregas empleados y cierras
+              períodos.
             </p>
-          </header>
-          <Link href="/companies" className="btn btn-primary" style={{ justifySelf: "start" }}>
-            Ir a Empresas
-          </Link>
-        </div>
+          </div>
+          <div className="actions">
+            <Link href="/companies" className="btn btn-primary">
+              Nueva empresa
+            </Link>
+          </div>
+        </header>
       </AppShell>
     );
   }
@@ -42,61 +44,90 @@ export default async function DashboardPage() {
     listPayrollPeriods(company.id),
   ]);
   const openRun = periods.find((p) => p.status !== "closed") ?? periods[0];
+  const salarySum = employees.reduce((s, e) => s + e.monthly_salary, 0);
 
   return (
-    <AppShell active="/dashboard" company={company} companies={companies}>
-      <div className="stack">
-        <header>
-          <p className="eyebrow">Hoy</p>
-          <h1 className="page-title">Panel de {company.name}</h1>
-          <p className="page-lead">Resumen operativo de la empresa activa (datos en Supabase).</p>
-        </header>
+    <AppShell
+      active="/dashboard"
+      company={company}
+      companies={companies}
+      counts={{ employees: employeeCount, periods: periods.length }}
+    >
+      <header className="page-head">
+        <div>
+          <div className="crumb">Resumen</div>
+          <h1>{company.name}</h1>
+          <p className="page-lead">Vista general de la empresa activa.</p>
+        </div>
+        <div className="actions">
+          <Link href="/employees" className="btn">
+            Empleados
+          </Link>
+          <Link href="/payroll" className="btn btn-primary">
+            Ir a nómina
+          </Link>
+        </div>
+      </header>
 
-        <section className="grid-3">
-          <div className="panel anim-rise">
-            <p className="eyebrow">Empleados</p>
-            <p style={{ fontSize: "2rem", margin: "0.4rem 0 0", fontFamily: "var(--font-brand)" }}>
-              {employeeCount}
-            </p>
-            <p className="muted">activos en nómina</p>
-          </div>
-          <div className="panel anim-rise delay-1">
-            <p className="eyebrow">Período</p>
-            <p style={{ fontSize: "1.35rem", margin: "0.55rem 0 0.2rem", fontWeight: 600 }}>
-              {openRun?.label ?? "Sin períodos"}
-            </p>
-            {openRun ? <span className="badge">{openRun.status}</span> : null}
-          </div>
-          <div className="panel anim-rise delay-2">
-            <p className="eyebrow">Ciudad</p>
-            <p style={{ fontSize: "1.45rem", margin: "0.55rem 0 0", fontFamily: "var(--font-brand)" }}>
-              {company.city ?? "—"}
-            </p>
-          </div>
-        </section>
+      <section className="stats">
+        <div className="stat">
+          <span>Empleados activos</span>
+          <b className="m">{employeeCount}</b>
+        </div>
+        <div className="stat">
+          <span>Período</span>
+          <b className="m" style={{ fontSize: "1.1rem" }}>
+            {openRun?.label ?? "Sin períodos"}
+          </b>
+        </div>
+        <div className="stat strong">
+          <span>Nómina mensual est.</span>
+          <b className="m">{formatCop(salarySum)}</b>
+        </div>
+        <div className="stat">
+          <span>Estado</span>
+          <b className="m" style={{ fontSize: "1rem" }}>
+            {openRun ? (
+              <span className={openRun.status === "closed" ? "chip chip-ok" : "chip chip-warn"}>
+                {openRun.status === "closed" ? "Cerrado" : "Abierto"}
+              </span>
+            ) : (
+              "—"
+            )}
+          </b>
+        </div>
+      </section>
 
+      <div className="content-pad stack">
         <section className="panel">
           <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: "1.2rem" }}>Próximo paso</h2>
-              <p className="muted" style={{ margin: "0.35rem 0 0" }}>
+              <div className="label-caps">Siguiente paso</div>
+              <p style={{ margin: "6px 0 0" }}>
                 {employees.length === 0
-                  ? "Agrega empleados para liquidar con el motor."
-                  : "Revisa períodos y liquida con @nominapp/payroll-engine."}
+                  ? "Agrega empleados para empezar a liquidar."
+                  : "Revisa o crea un período de nómina."}
               </p>
             </div>
-            <Link href={employees.length === 0 ? "/employees" : "/payroll"} className="btn btn-accent">
-              {employees.length === 0 ? "Agregar empleados" : "Ir a nómina"}
+            <Link
+              href={employees.length === 0 ? "/employees" : "/payroll"}
+              className="btn btn-accent"
+            >
+              {employees.length === 0 ? "Agregar empleados" : "Abrir nómina"}
             </Link>
           </div>
         </section>
 
         <section className="panel">
-          <h2 style={{ margin: "0 0 0.75rem", fontSize: "1.15rem" }}>Empleados</h2>
+          <div className="label-caps" style={{ marginBottom: 8 }}>
+            Empleados
+          </div>
           {employees.length === 0 ? (
-            <p className="muted">Aún no hay empleados en esta empresa.</p>
+            <p className="muted" style={{ margin: 0 }}>
+              Aún no hay empleados.
+            </p>
           ) : (
-            <table className="table">
+            <table className="table-html">
               <thead>
                 <tr>
                   <th>Nombre</th>
@@ -105,11 +136,13 @@ export default async function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {employees.slice(0, 5).map((e) => (
+                {employees.slice(0, 6).map((e) => (
                   <tr key={e.id}>
-                    <td>{e.full_name}</td>
-                    <td>{e.job_title}</td>
-                    <td>{formatCop(e.monthly_salary)}</td>
+                    <td>
+                      <b>{e.full_name}</b>
+                    </td>
+                    <td>{e.job_title || "—"}</td>
+                    <td className="m">{formatCop(e.monthly_salary)}</td>
                   </tr>
                 ))}
               </tbody>

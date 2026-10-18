@@ -12,20 +12,12 @@ export function CompanySwitcher({
 }) {
   if (companies.length <= 1) return null;
   return (
-    <form action={setActiveCompanyAction} style={{ marginTop: "0.55rem" }}>
+    <form action={setActiveCompanyAction}>
       <select
+        className="side-select"
         name="companyId"
         defaultValue={activeId}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        style={{
-          width: "100%",
-          minHeight: "2.1rem",
-          borderRadius: 8,
-          border: "1px solid rgba(247,243,235,0.2)",
-          background: "rgba(0,0,0,0.2)",
-          color: "var(--sand-50)",
-          padding: "0.25rem 0.4rem",
-        }}
       >
         {companies.map((c) => (
           <option key={c.id} value={c.id}>

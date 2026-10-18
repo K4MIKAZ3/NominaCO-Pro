@@ -39,12 +39,12 @@ export function LoginForm() {
           router.push("/dashboard");
           router.refresh();
         } else {
-          setInfo("Revisa tu correo para confirmar la cuenta, luego inicia sesión.");
+          setInfo("Te enviamos un correo para confirmar tu cuenta.");
           setMode("signin");
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo autenticar");
+      setError(err instanceof Error ? err.message : "No se pudo iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -80,20 +80,24 @@ export function LoginForm() {
         />
       </div>
       {error ? (
-        <p style={{ color: "var(--danger)", margin: 0, fontSize: "0.9rem" }}>{error}</p>
+        <p style={{ color: "#8b1e1e", margin: 0, fontSize: "0.9rem" }}>{error}</p>
       ) : null}
-      {info ? <p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>{info}</p> : null}
+      {info ? (
+        <p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>
+          {info}
+        </p>
+      ) : null}
       <button type="submit" className="btn btn-primary" disabled={loading}>
-        {loading ? "Espera…" : mode === "signin" ? "Continuar" : "Crear cuenta"}
+        {loading ? "Un momento…" : mode === "signin" ? "Continuar" : "Crear cuenta"}
       </button>
       <button
         type="button"
-        className="btn btn-ghost"
+        className="btn"
         onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
       >
         {mode === "signin" ? "Crear cuenta" : "Ya tengo cuenta"}
       </button>
-      <p className="muted" style={{ margin: 0 }}>
+      <p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>
         <Link href="/">Volver al inicio</Link>
       </p>
     </form>

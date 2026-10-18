@@ -1,7 +1,12 @@
 import { createEmployeeAction } from "@/app/actions";
 import { AppShell } from "@/components/layout/AppShell";
 import { formatCop } from "@/lib/format";
-import { getActiveCompany, listCompanies, listEmployees } from "@/lib/supabase/data";
+import {
+  getActiveCompany,
+  listCompanies,
+  listEmployees,
+  listPayrollPeriods,
+} from "@/lib/supabase/data";
 
 export const metadata = { title: "Empleados" };
 export const dynamic = "force-dynamic";
@@ -10,25 +15,34 @@ export default async function EmployeesPage() {
   const companies = await listCompanies();
   const company = await getActiveCompany();
   const employees = company ? await listEmployees(company.id) : [];
+  const periods = company ? await listPayrollPeriods(company.id) : [];
 
   return (
-    <AppShell active="/employees" company={company} companies={companies}>
-      <div className="stack">
-        <header>
-          <p className="eyebrow">Talento</p>
-          <h1 className="page-title">Empleados</h1>
+    <AppShell
+      active="/employees"
+      company={company}
+      companies={companies}
+      counts={{ employees: employees.length, periods: periods.length }}
+    >
+      <header className="page-head">
+        <div>
+          <div className="crumb">Empleados</div>
+          <h1>Empleados</h1>
           <p className="page-lead">
-            Perfiles contractuales usados por el motor: salario, jornada diaria, tipo de contrato
-            y período de pago.
+            Contratos, salarios y jornadas que alimentan cada liquidación.
           </p>
-        </header>
+        </div>
+      </header>
 
+      <div className="content-pad stack">
         {!company ? (
           <p className="muted">Crea una empresa antes de agregar empleados.</p>
         ) : (
           <>
             <section className="panel">
-              <h2 style={{ margin: "0 0 0.85rem", fontSize: "1.15rem" }}>Agregar empleado</h2>
+              <div className="label-caps" style={{ marginBottom: 12 }}>
+                Agregar empleado
+              </div>
               <form action={createEmployeeAction} className="stack">
                 <input type="hidden" name="companyId" value={company.id} />
                 <div className="grid-2">
@@ -44,10 +58,10 @@ export default async function EmployeesPage() {
                 <div className="grid-2">
                   <div className="field">
                     <label htmlFor="job_title">Cargo</label>
-                    <input id="job_title" name="job_title" placeholder="Operario" />
+                    <input id="job_title" name="job_title" placeholder="Mesero" />
                   </div>
                   <div className="field">
-                    <label htmlFor="monthly_salary">Salario mensual (COP)</label>
+                    <label htmlFor="monthly_salary">Salario mensual</label>
                     <input
                       id="monthly_salary"
                       name="monthly_salary"
@@ -67,34 +81,36 @@ export default async function EmployeesPage() {
                     <label htmlFor="contract_type">Contrato</label>
                     <select id="contract_type" name="contract_type" defaultValue="INDEFINIDO">
                       <option value="INDEFINIDO">Indefinido</option>
-                      <option value="TERMINO_DEFINIDO">Término definido</option>
+                      <option value="TERMINO_DEFINIDO">Término fijo</option>
                       <option value="OBRA_LABOR">Obra o labor</option>
                     </select>
                   </div>
                   <div className="field">
                     <label htmlFor="pay_period_type">Pago</label>
-                    <select id="pay_period_type" name="pay_period_type" defaultValue="MONTHLY">
-                      <option value="MONTHLY">Mensual</option>
+                    <select id="pay_period_type" name="pay_period_type" defaultValue="BIWEEKLY">
                       <option value="BIWEEKLY">Quincenal</option>
+                      <option value="MONTHLY">Mensual</option>
                       <option value="WEEKLY">Semanal</option>
-                      <option value="VENTEEN">Por catorcena</option>
+                      <option value="VENTEEN">Catorcena</option>
                     </select>
                   </div>
                 </div>
                 <button type="submit" className="btn btn-primary" style={{ justifySelf: "start" }}>
-                  Guardar empleado
+                  Guardar
                 </button>
               </form>
             </section>
 
             <section className="panel">
               {employees.length === 0 ? (
-                <p className="muted">Sin empleados aún.</p>
+                <p className="muted" style={{ margin: 0 }}>
+                  Sin empleados aún.
+                </p>
               ) : (
-                <table className="table">
+                <table className="table-html">
                   <thead>
                     <tr>
-                      <th>Nombre</th>
+                      <th>Empleado</th>
                       <th>Documento</th>
                       <th>Cargo</th>
                       <th>Contrato</th>
@@ -106,14 +122,16 @@ export default async function EmployeesPage() {
                     {employees.map((e) => (
                       <tr key={e.id}>
                         <td>
-                          <strong>{e.full_name}</strong>
+                          <b>{e.full_name}</b>
                         </td>
-                        <td>{e.document_id}</td>
+                        <td className="m">{e.document_id}</td>
                         <td>{e.job_title || "—"}</td>
                         <td>{e.contract_type.replaceAll("_", " ")}</td>
-                        <td>{formatCop(e.monthly_salary)}</td>
+                        <td className="m">{formatCop(e.monthly_salary)}</td>
                         <td>
-                          <span className="badge">{e.active ? "Activo" : "Inactivo"}</span>
+                          <span className={e.active ? "chip chip-ok" : "chip chip-warn"}>
+                            {e.active ? "Activo" : "Inactivo"}
+                          </span>
                         </td>
                       </tr>
                     ))}

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LoginForm } from "./login-form";
 
 export const metadata = {
   title: "Entrar",
@@ -11,27 +11,10 @@ export default function LoginPage() {
         <p className="eyebrow">Nominapp Empresas</p>
         <h1 className="page-title">Entrar al panel</h1>
         <p className="page-lead">
-          Acceso para dueños y contadores. La autenticación Supabase se conectará en la
-          siguiente fase; por ahora puedes explorar el panel demo.
+          Acceso para dueños y contadores. Auth vía Supabase del proyecto{" "}
+          <code>kmkrxyrorksrwmdomfuy</code>.
         </p>
-        <form className="stack" action="/dashboard">
-          <div className="field">
-            <label htmlFor="email">Correo</label>
-            <input id="email" name="email" type="email" placeholder="tu@empresa.com" required />
-          </div>
-          <div className="field">
-            <label htmlFor="password">Contraseña</label>
-            <input id="password" name="password" type="password" placeholder="••••••••" required />
-          </div>
-          <button type="submit" className="btn btn-primary">
-            Continuar
-          </button>
-        </form>
-        <p className="muted" style={{ marginTop: "1.25rem" }}>
-          <Link href="/">Volver al inicio</Link>
-          {" · "}
-          <Link href="/dashboard">Entrar en demo</Link>
-        </p>
+        <LoginForm />
       </div>
       <style>{`
         .auth-wrap {

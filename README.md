@@ -40,8 +40,9 @@ pnpm --filter @nominapp/web dev
 - [x] Motor TS: snapshots, horas, descanso, liquidación, IBC sin ST, prestaciones
 - [x] Migraciones: `legal_parameters` + companies/members/employees/RLS
 - [x] Panel web: landing, login, dashboard, empresas, empleados, nómina, legal, ajustes
-- [ ] Credenciales Supabase + auth real
-- [ ] DNS `empresas.nominapp.xyz`
+- [x] Cliente Supabase + middleware (`kmkrxyrorksrwmdomfuy`)
+- [ ] Aplicar migraciones en SQL Editor + keys en Vercel
+- [ ] Deploy Vercel + DNS `empresas.nominapp.xyz`
 - [ ] App Android más allá del stub
 
-Ver también `docs/ARCHITECTURE.md` y `docs/PRODUCT.md`.
+Deploy: `docs/DEPLOY.md` · Arquitectura: `docs/ARCHITECTURE.md` · Producto: `docs/PRODUCT.md`.

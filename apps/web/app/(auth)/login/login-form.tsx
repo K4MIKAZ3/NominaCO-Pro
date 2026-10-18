@@ -11,18 +11,13 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const hasKey = Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-
-    if (!hasKey) {
-      router.push("/dashboard");
-      return;
-    }
-
+    setInfo(null);
     setLoading(true);
     try {
       const supabase = createClient();
@@ -32,15 +27,22 @@ export function LoginForm() {
           password,
         });
         if (signError) throw signError;
+        router.push("/dashboard");
+        router.refresh();
       } else {
-        const { error: signError } = await supabase.auth.signUp({
+        const { data, error: signError } = await supabase.auth.signUp({
           email,
           password,
         });
         if (signError) throw signError;
+        if (data.session) {
+          router.push("/dashboard");
+          router.refresh();
+        } else {
+          setInfo("Revisa tu correo para confirmar la cuenta, luego inicia sesión.");
+          setMode("signin");
+        }
       }
-      router.push("/dashboard");
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo autenticar");
     } finally {
@@ -80,11 +82,7 @@ export function LoginForm() {
       {error ? (
         <p style={{ color: "var(--danger)", margin: 0, fontSize: "0.9rem" }}>{error}</p>
       ) : null}
-      {!hasKey ? (
-        <p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>
-          Sin `NEXT_PUBLIC_SUPABASE_ANON_KEY`: entrar abre el panel demo.
-        </p>
-      ) : null}
+      {info ? <p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>{info}</p> : null}
       <button type="submit" className="btn btn-primary" disabled={loading}>
         {loading ? "Espera…" : mode === "signin" ? "Continuar" : "Crear cuenta"}
       </button>
@@ -97,8 +95,6 @@ export function LoginForm() {
       </button>
       <p className="muted" style={{ margin: 0 }}>
         <Link href="/">Volver al inicio</Link>
-        {" · "}
-        <Link href="/dashboard">Panel demo</Link>
       </p>
     </form>
   );

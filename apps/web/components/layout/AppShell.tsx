@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { demoCompany } from "@/lib/demo-data";
+import { signOutAction } from "@/app/actions";
+import { CompanySwitcher } from "@/components/layout/CompanySwitcher";
+import type { Company } from "@/lib/types";
 
 const nav = [
   { href: "/dashboard", label: "Panel" },
@@ -14,9 +16,13 @@ const nav = [
 export function AppShell({
   children,
   active,
+  company,
+  companies = [],
 }: {
   children: ReactNode;
   active: string;
+  company: Company | null;
+  companies?: Company[];
 }) {
   return (
     <div className="app-shell">
@@ -27,7 +33,8 @@ export function AppShell({
         </div>
         <div className="company-chip">
           <span className="eyebrow">Empresa activa</span>
-          <strong>{demoCompany.name}</strong>
+          <strong>{company?.name ?? "Sin empresa"}</strong>
+          <CompanySwitcher companies={companies} activeId={company?.id} />
         </div>
         <nav>
           {nav.map((item) => (
@@ -41,9 +48,11 @@ export function AppShell({
           ))}
         </nav>
         <div className="nav-footer">
-          <Link href="/login" className="nav-link">
-            Salir
-          </Link>
+          <form action={signOutAction}>
+            <button type="submit" className="nav-link" style={{ width: "100%", background: "transparent", border: 0, textAlign: "left", cursor: "pointer" }}>
+              Salir
+            </button>
+          </form>
         </div>
       </aside>
       <div className="app-main">

@@ -1,40 +1,41 @@
 import { AppShell } from "@/components/layout/AppShell";
+import { getActiveCompany, listCompanies, requireUser } from "@/lib/supabase/data";
+import { siteUrl, supabaseUrl } from "@/lib/supabase/env";
 
 export const metadata = { title: "Ajustes" };
+export const dynamic = "force-dynamic";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const { user } = await requireUser();
+  const companies = await listCompanies();
+  const company = await getActiveCompany();
+
   return (
-    <AppShell active="/settings">
+    <AppShell active="/settings" company={company} companies={companies}>
       <div className="stack">
         <header>
           <p className="eyebrow">Cuenta</p>
           <h1 className="page-title">Ajustes</h1>
-          <p className="page-lead">
-            Preferencias del panel empleador. La integración con Supabase Auth y el selector
-            de empresa activa llegan con el esquema multi-tenant.
-          </p>
+          <p className="page-lead">Sesión y entorno conectados a producción.</p>
         </header>
 
         <section className="panel stack">
           <div className="field">
-            <label htmlFor="locale">Idioma</label>
-            <select id="locale" defaultValue="es-CO">
-              <option value="es-CO">Español (Colombia)</option>
-            </select>
+            <label>Usuario</label>
+            <input value={user.email ?? user.id} readOnly />
           </div>
           <div className="field">
-            <label htmlFor="tz">Zona horaria</label>
-            <select id="tz" defaultValue="America/Bogota">
-              <option value="America/Bogota">America/Bogota</option>
-            </select>
+            <label>Supabase</label>
+            <input value={supabaseUrl} readOnly />
           </div>
           <div className="field">
-            <label htmlFor="currency">Moneda</label>
-            <input id="currency" value="COP" readOnly />
+            <label>Site URL</label>
+            <input value={siteUrl} readOnly />
           </div>
-          <button type="button" className="btn btn-primary" style={{ justifySelf: "start" }}>
-            Guardar (demo)
-          </button>
+          <div className="field">
+            <label>Empresa activa</label>
+            <input value={company ? `${company.name} (${company.nit})` : "Ninguna"} readOnly />
+          </div>
         </section>
       </div>
     </AppShell>

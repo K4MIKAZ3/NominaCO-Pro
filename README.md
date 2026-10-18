@@ -34,6 +34,14 @@ pnpm --filter @nominapp/payroll-engine test
 pnpm --filter @nominapp/web dev
 ```
 
-## Estado
+## Publicar en NominappEmpresas
 
-Ver `docs/LEGAL_VALIDATION_2026.md` (corroboración de decretos/leyes antes del motor).
+El bot de Cursor no puede hacer push a `NominappEmpresas`. Desde una cuenta con acceso:
+
+```bash
+./scripts/transfer-foundation.sh
+```
+
+Luego Redeploy en Vercel (Root Directory = `apps/web`).
+
+Deploy: `docs/DEPLOY.md` · Arquitectura: `docs/ARCHITECTURE.md` · Producto: `docs/PRODUCT.md`.

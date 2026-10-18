@@ -11,6 +11,8 @@ keystore.properties
 local.properties
 .DS_Store
 *.log
+*.tsbuildinfo
 apps/android/.gradle/
 apps/android/build/
 apps/android/app/build/
+.vercel

@@ -55,14 +55,3 @@ export interface LegalSnapshot {
   officialHolidays: LocalDate[];
 }
 
-export interface HourBreakdown {
-  normalDiurna: number;
-  nocturnaOrdinaria: number;
-  extraDiurna: number;
-  extraNocturna: number;
-  dominicalDiurna: number;
-  dominicalNocturna: number;
-  extraDominicalDiurna: number;
-  extraDominicalNocturna: number;
-  total: number;
-}

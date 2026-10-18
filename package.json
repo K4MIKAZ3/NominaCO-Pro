@@ -5,11 +5,15 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "test": "pnpm --filter @nominapp/payroll-engine test",
-    "dev:web": "pnpm --filter @nominapp/web dev",
-    "build:web": "pnpm --filter @nominapp/web build",
+    "build:engine": "pnpm --filter @nominapp/payroll-engine build",
+    "dev:web": "pnpm build:engine && pnpm --filter @nominapp/web dev",
+    "build:web": "pnpm build:engine && pnpm --filter @nominapp/web build",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "typescript": "^5.7.0"
   }
 }

@@ -36,3 +36,14 @@ export function isOrdinaryWorkday(
     !manualHolidays.has(date)
   );
 }
+
+export function isWeekdayHoliday(
+  date: LocalDate,
+  snapshot: LegalSnapshot,
+  manualHolidays: Set<LocalDate> = new Set(),
+): boolean {
+  return (
+    !isSunday(date) &&
+    (isOfficialHoliday(date, snapshot) || manualHolidays.has(date))
+  );
+}

@@ -18,20 +18,26 @@ export default function MarketingHomePage() {
         </div>
       </header>
 
-      <section className="landing-hero">
-        <div className="label-caps">Nómina para empresas en Colombia</div>
-        <h1>Liquidación clara, por empresa y por período.</h1>
-        <p>
-          Administra empleados, cierra quincenas y entrega colillas sin fricción. Un panel
-          para el empleador; una vista simple para el trabajador.
-        </p>
-        <div className="landing-cta">
-          <Link href="/login" className="btn btn-primary">
-            Abrir panel
-          </Link>
-          <Link href="/colilla" className="btn">
-            Ver colilla
-          </Link>
+      <section className="landing-hero-plane" aria-label="Nominapp Empresas">
+        <div className="landing-hero-glow" aria-hidden />
+        <div className="landing-hero-inner">
+          <div className="landing-brand-hero anim-rise">
+            <div className="brand-mark" aria-hidden />
+            nominapp
+          </div>
+          <h1 className="anim-rise delay-1">Nómina clara para tu empresa</h1>
+          <p className="anim-rise delay-2">
+            Liquidación por período, colillas al instante y parámetros laborales de
+            Colombia siempre al día.
+          </p>
+          <div className="landing-cta anim-rise delay-3">
+            <Link href="/login" className="btn btn-accent">
+              Abrir panel
+            </Link>
+            <Link href="/colilla" className="btn">
+              Ver colilla
+            </Link>
+          </div>
         </div>
       </section>
     </div>

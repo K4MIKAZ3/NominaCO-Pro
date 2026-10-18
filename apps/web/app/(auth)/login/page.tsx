@@ -14,7 +14,7 @@ export default function LoginPage() {
         </div>
         <h1>Entrar</h1>
         <p className="muted" style={{ margin: "0 0 1.25rem", lineHeight: 1.5 }}>
-          Accede a tu panel de nómina multi-empresa.
+          Accede a tu panel de nómina.
         </p>
         <LoginForm />
       </div>

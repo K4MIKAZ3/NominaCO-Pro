@@ -14,7 +14,7 @@ const PROTECTED = [
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  if (!supabaseAnonKey) {
+  if (!supabaseUrl || !supabaseAnonKey) {
     return supabaseResponse;
   }
 

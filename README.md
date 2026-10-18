@@ -34,23 +34,12 @@ pnpm --filter @nominapp/payroll-engine test
 pnpm --filter @nominapp/web dev
 ```
 
-## Estado (foundation)
+## Publicar en NominappEmpresas
 
-- [x] Validación legal 2026 + motor TS (IBC sin ST)
-- [x] Migraciones aplicadas en Supabase `kmkrxyrorksrwmdomfuy`
-- [x] Panel web con auth + CRUD real (empresas / empleados / períodos / legal)
-- [x] Dominio Vercel `empresas.nominapp.xyz` (hay que redesplegar tras transfer)
-- [ ] **Transfer** esta rama → `NominappEmpresas` `main` (ver abajo)
-- [ ] Asistencia diaria persistida + PDF liquidación
-- [ ] App Android más allá del stub
-
-### Transfer a NominappEmpresas
+El bot de Cursor no puede hacer push a `NominappEmpresas`. Desde una cuenta con acceso:
 
 ```bash
 ./scripts/transfer-foundation.sh
-# o:
-git clone --branch km21/empresas-foundation-ae8e https://github.com/K4MIKAZ3/NominaCO-Pro.git /tmp/ne
-cd /tmp/ne && git push --force https://github.com/K4MIKAZ3/NominappEmpresas.git HEAD:main
 ```
 
 Luego Redeploy en Vercel (Root Directory = `apps/web`).

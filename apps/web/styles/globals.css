@@ -346,11 +346,60 @@ textarea {
   padding: 24px 32px 40px;
 }
 
+.content-split {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  flex: 1;
+  min-height: 0;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.detail {
+  border-left: 1px solid var(--line);
+  padding: 24px;
+  background: var(--ground-2);
+}
+
+.detail h2 {
+  margin: 6px 0 2px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.detail .sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.detail-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.detail-actions .btn-accent {
+  flex: 1;
+}
+
 .panel {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 20px;
+}
+
+@media (max-width: 900px) {
+  .content-split {
+    grid-template-columns: 1fr;
+  }
+
+  .detail {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
 }
 
 .table-html {
@@ -440,7 +489,10 @@ textarea {
   display: grid;
   place-items: center;
   padding: 1.5rem;
-  background: var(--ground);
+  background:
+    radial-gradient(900px 420px at 12% -10%, rgba(232, 163, 23, 0.18), transparent 60%),
+    radial-gradient(700px 380px at 90% 10%, rgba(15, 43, 42, 0.08), transparent 55%),
+    var(--ground);
 }
 
 .auth-panel {
@@ -459,9 +511,13 @@ textarea {
 
 .landing {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .landing-nav {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -471,24 +527,78 @@ textarea {
   margin-inline: auto;
 }
 
-.landing-hero {
+.landing-hero-plane {
+  position: relative;
+  flex: 1;
+  min-height: calc(100vh - 5.5rem);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: var(--ground);
+}
+
+.landing-hero-plane::before {
+  content: "";
+  position: absolute;
+  inset: -4%;
+  background:
+    linear-gradient(115deg, rgba(242, 244, 241, 0.96) 0%, rgba(242, 244, 241, 0.78) 36%, rgba(15, 43, 42, 0.72) 100%),
+    linear-gradient(160deg, #0f2b2a 0%, #17403d 48%, #2a5a4e 100%);
+  animation: plane-drift 12s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.landing-hero-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(640px 360px at 78% 32%, rgba(232, 163, 23, 0.42), transparent 68%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f2f4f1' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  animation: glow-pulse 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.landing-hero-inner {
+  position: relative;
+  z-index: 1;
   width: min(1120px, calc(100% - 2rem));
-  margin: 48px auto 72px;
-  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0 0 4.5rem;
+  max-width: 38rem;
 }
 
-.landing-hero h1 {
-  margin: 10px 0 14px;
-  font-size: clamp(2.4rem, 5vw, 3.4rem);
+.landing-brand-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: clamp(2.6rem, 7vw, 4.4rem);
+  font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1;
+  color: var(--ink);
 }
 
-.landing-hero p {
+.landing-brand-hero .brand-mark {
+  width: clamp(28px, 4vw, 40px);
+  height: clamp(28px, 4vw, 40px);
+  border-radius: 6px;
+}
+
+.landing-hero-plane h1 {
+  margin: 18px 0 12px;
+  font-size: clamp(1.55rem, 3.2vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.landing-hero-plane p {
   margin: 0;
   color: var(--muted);
-  font-size: 1.1rem;
+  font-size: 1.08rem;
   line-height: 1.55;
+  max-width: 32rem;
 }
 
 .landing-cta {
@@ -496,6 +606,63 @@ textarea {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 1.5rem;
+}
+
+.anim-rise {
+  animation: rise-in 0.7s ease both;
+}
+
+.delay-1 {
+  animation-delay: 0.08s;
+}
+
+.delay-2 {
+  animation-delay: 0.16s;
+}
+
+.delay-3 {
+  animation-delay: 0.24s;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes plane-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.88;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-hero-plane {
+    min-height: 72vh;
+    align-items: center;
+  }
+
+  .landing-hero-inner {
+    padding: 2rem 0 3rem;
+  }
 }
 
 /* ===== App trabajador ===== */

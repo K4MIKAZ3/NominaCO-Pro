@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   closePayrollPeriodAction,
   createPayrollPeriodAction,
@@ -58,9 +59,13 @@ export default async function PayrollPage() {
   const now = new Date();
   const defaultStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
   const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const defaultEnd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  const defaultEnd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(lastDay)}`;
   const defaultLabel = now.toLocaleDateString("es-CO", { month: "long", year: "numeric" });
   const openCount = periods.filter((p) => p.status !== "closed").length;
+  const openPeriod = periods.find((p) => p.status !== "closed") ?? periods[0];
+  const deductions = sample
+    ? sample.legalDeductions.reduce((s, d) => s + d.amount, 0)
+    : 0;
 
   return (
     <AppShell
@@ -71,16 +76,30 @@ export default async function PayrollPage() {
     >
       <header className="page-head">
         <div>
-          <div className="crumb">Nómina</div>
-          <h1>Períodos de liquidación</h1>
-          <p className="page-lead">Crea, revisa y cierra quincenas o meses por empresa.</p>
+          <div className="crumb">
+            Nómina
+            {openPeriod ? ` / ${openPeriod.label}` : ""}
+          </div>
+          <h1>
+            {openPeriod
+              ? `${openPeriod.label} · ${openPeriod.period_start} al ${openPeriod.period_end}`
+              : "Períodos de liquidación"}
+          </h1>
         </div>
         <div className="actions">
           {openCount > 0 ? (
-            <span className="chip chip-warn">{openCount} abiertos</span>
+            <span className="chip chip-warn">Borrador · {openCount} abiertos</span>
           ) : (
             <span className="chip chip-ok">Al día</span>
           )}
+          {openPeriod && openPeriod.status !== "closed" ? (
+            <form action={closePayrollPeriodAction}>
+              <input type="hidden" name="periodId" value={openPeriod.id} />
+              <button type="submit" className="btn btn-primary">
+                Cerrar período
+              </button>
+            </form>
+          ) : null}
         </div>
       </header>
 
@@ -90,147 +109,189 @@ export default async function PayrollPage() {
         </div>
       ) : (
         <>
-          {sample ? (
-            <section className="stats">
-              <div className="stat">
-                <span>Devengado (preview)</span>
-                <b className="m">{formatCop(sample.grossTotal)}</b>
-              </div>
-              <div className="stat">
-                <span>Deducciones</span>
-                <b className="m">
-                  {formatCop(sample.legalDeductions.reduce((s, d) => s + d.amount, 0))}
-                </b>
-              </div>
-              <div className="stat strong">
-                <span>Neto</span>
-                <b className="m">{formatCop(sample.netTotal)}</b>
-              </div>
-              <div className="stat">
-                <span>IBC</span>
-                <b className="m">{formatCop(sample.ibcTotal)}</b>
-              </div>
-            </section>
-          ) : null}
+          <section className="stats">
+            <div className="stat">
+              <span>Devengado</span>
+              <b className="m">{sample ? formatCop(sample.grossTotal) : "—"}</b>
+            </div>
+            <div className="stat">
+              <span>Deducciones</span>
+              <b className="m">{sample ? formatCop(deductions) : "—"}</b>
+            </div>
+            <div className="stat strong">
+              <span>Neto a pagar</span>
+              <b className="m">{sample ? formatCop(sample.netTotal) : "—"}</b>
+            </div>
+            <div className="stat">
+              <span>Empleados</span>
+              <b className="m">{employees.length}</b>
+            </div>
+          </section>
 
-          <div className="content-pad stack">
-            <section className="panel">
-              <div className="label-caps" style={{ marginBottom: 12 }}>
-                Nuevo período
-              </div>
-              <form action={createPayrollPeriodAction} className="stack">
-                <input type="hidden" name="companyId" value={company.id} />
-                <div className="grid-3">
-                  <div className="field">
-                    <label htmlFor="label">Etiqueta</label>
-                    <input id="label" name="label" required defaultValue={defaultLabel} />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="period_start">Inicio</label>
-                    <input
-                      id="period_start"
-                      name="period_start"
-                      type="date"
-                      required
-                      defaultValue={defaultStart}
-                    />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="period_end">Fin</label>
-                    <input
-                      id="period_end"
-                      name="period_end"
-                      type="date"
-                      required
-                      defaultValue={defaultEnd}
-                    />
-                  </div>
-                </div>
-                <button type="submit" className="btn btn-primary" style={{ justifySelf: "start" }}>
-                  Crear período
-                </button>
-              </form>
-            </section>
-
-            <section className="panel">
-              {periods.length === 0 ? (
-                <p className="muted" style={{ margin: 0 }}>
-                  Sin períodos todavía.
-                </p>
-              ) : (
-                <table className="table-html">
-                  <thead>
-                    <tr>
-                      <th>Período</th>
-                      <th>Rango</th>
-                      <th>Estado</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {periods.map((run) => (
-                      <tr key={run.id}>
-                        <td>
-                          <b>{run.label}</b>
-                        </td>
-                        <td className="m">
-                          {run.period_start} → {run.period_end}
-                        </td>
-                        <td>
-                          <span
-                            className={
-                              run.status === "closed" ? "chip chip-ok" : "chip chip-warn"
-                            }
-                          >
-                            {run.status === "closed" ? "Cerrado" : "Borrador"}
-                          </span>
-                        </td>
-                        <td>
-                          {run.status !== "closed" ? (
-                            <form action={closePayrollPeriodAction}>
-                              <input type="hidden" name="periodId" value={run.id} />
-                              <button type="submit" className="btn btn-primary">
-                                Cerrar período
-                              </button>
-                            </form>
-                          ) : null}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </section>
-
-            {sample && first ? (
+          <div className="content-split">
+            <div className="table-wrap content-pad stack">
               <section className="panel">
-                <div className="label-caps">Detalle</div>
-                <h2 style={{ margin: "6px 0 2px", fontSize: 22 }}>{first.full_name}</h2>
-                <div className="sub muted" style={{ fontSize: 13 }}>
-                  {first.job_title || "Empleado"} · preview 10 días
+                <div className="label-caps" style={{ marginBottom: 12 }}>
+                  Nuevo período
                 </div>
-                <div className="group-title">Devengado</div>
-                {sample.earnings.map((line) => (
-                  <div className="line" key={`${line.code}-${line.label}`}>
-                    <span>{line.label}</span>
-                    <span className="m">{formatCop(line.amount)}</span>
+                <form action={createPayrollPeriodAction} className="stack">
+                  <input type="hidden" name="companyId" value={company.id} />
+                  <div className="grid-3">
+                    <div className="field">
+                      <label htmlFor="label">Etiqueta</label>
+                      <input id="label" name="label" required defaultValue={defaultLabel} />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="period_start">Inicio</label>
+                      <input
+                        id="period_start"
+                        name="period_start"
+                        type="date"
+                        required
+                        defaultValue={defaultStart}
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="period_end">Fin</label>
+                      <input
+                        id="period_end"
+                        name="period_end"
+                        type="date"
+                        required
+                        defaultValue={defaultEnd}
+                      />
+                    </div>
                   </div>
-                ))}
-                <div className="group-title">Deducciones</div>
-                {sample.legalDeductions.map((line) => (
-                  <div className="line" key={`${line.code}-${line.label}`}>
-                    <span>{line.label}</span>
-                    <span className="m">−{formatCop(line.amount)}</span>
-                  </div>
-                ))}
-                <div className="net">
-                  <b>Neto</b>
-                  <span className="m">{formatCop(sample.netTotal)}</span>
-                </div>
+                  <button type="submit" className="btn btn-primary" style={{ justifySelf: "start" }}>
+                    Crear período
+                  </button>
+                </form>
               </section>
-            ) : (
-              <p className="muted">Agrega un empleado para ver el detalle de liquidación.</p>
-            )}
+
+              <section className="panel">
+                {employees.length === 0 ? (
+                  <p className="muted" style={{ margin: 0 }}>
+                    Agrega empleados para liquidar este período.{" "}
+                    <Link href="/employees">Ir a empleados</Link>
+                  </p>
+                ) : (
+                  <table className="table-html">
+                    <thead>
+                      <tr>
+                        <th>Empleado</th>
+                        <th>Cargo</th>
+                        <th>Salario</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {employees.map((e, idx) => (
+                        <tr key={e.id}>
+                          <td>
+                            <b>{e.full_name}</b>
+                          </td>
+                          <td>{e.job_title || "—"}</td>
+                          <td className="m">{formatCop(e.monthly_salary)}</td>
+                          <td>
+                            <span className={idx === 0 && sample ? "chip chip-warn" : "chip chip-ok"}>
+                              {idx === 0 && sample ? "Revisar" : "Listo"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </section>
+
+              {periods.length > 0 ? (
+                <section className="panel">
+                  <div className="label-caps" style={{ marginBottom: 8 }}>
+                    Historial
+                  </div>
+                  <table className="table-html">
+                    <thead>
+                      <tr>
+                        <th>Período</th>
+                        <th>Rango</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {periods.map((run) => (
+                        <tr key={run.id}>
+                          <td>
+                            <b>{run.label}</b>
+                          </td>
+                          <td className="m">
+                            {run.period_start} → {run.period_end}
+                          </td>
+                          <td>
+                            <span
+                              className={
+                                run.status === "closed" ? "chip chip-ok" : "chip chip-warn"
+                              }
+                            >
+                              {run.status === "closed" ? "Cerrado" : "Borrador"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </section>
+              ) : null}
+            </div>
+
+            <aside className="detail">
+              {sample && first ? (
+                <>
+                  <div className="label-caps">Detalle</div>
+                  <h2>{first.full_name}</h2>
+                  <div className="sub">
+                    {first.job_title || "Empleado"} ·{" "}
+                    {first.contract_type.replaceAll("_", " ").toLowerCase()}
+                  </div>
+                  <div className="group-title">Devengado</div>
+                  {sample.earnings.map((line) => (
+                    <div className="line" key={`${line.code}-${line.label}`}>
+                      <span>{line.label}</span>
+                      <span className="m">{formatCop(line.amount)}</span>
+                    </div>
+                  ))}
+                  <div className="group-title">Deducciones</div>
+                  {sample.legalDeductions.map((line) => (
+                    <div className="line" key={`${line.code}-${line.label}`}>
+                      <span>{line.label}</span>
+                      <span className="m">−{formatCop(line.amount)}</span>
+                    </div>
+                  ))}
+                  <div className="net">
+                    <b>Neto</b>
+                    <span className="m">{formatCop(sample.netTotal)}</span>
+                  </div>
+                  <div className="detail-actions">
+                    <Link href="/colilla" className="btn btn-accent">
+                      Ver colilla
+                    </Link>
+                    <Link href="/employees" className="btn">
+                      Empleados
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="label-caps">Detalle</div>
+                  <h2>Sin liquidación</h2>
+                  <div className="sub">Agrega un empleado para ver el desglose.</div>
+                  <div className="detail-actions">
+                    <Link href="/employees" className="btn btn-accent">
+                      Agregar empleado
+                    </Link>
+                  </div>
+                </>
+              )}
+            </aside>
           </div>
         </>
       )}

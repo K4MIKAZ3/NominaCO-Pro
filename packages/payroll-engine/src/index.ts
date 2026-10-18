@@ -1,5 +1,4 @@
 export type {
-  HourBreakdown,
   LegalSnapshot,
   LocalDate,
   PayrollLine,
@@ -24,4 +23,77 @@ export {
   isOrdinaryWorkday,
   isRestDay,
   isSunday,
+  isWeekdayHoliday,
 } from "./holidays.js";
+
+export {
+  addDays,
+  addWeeks,
+  compareYearMonths,
+  daysBetween,
+  endOfMonth,
+  enumerateYearMonths,
+  getLastNYearMonths,
+  isAfter,
+  isBefore,
+  isYearMonthInRange,
+  navigationYearMonthBounds,
+  parseDate,
+  parseTimeToMinutes,
+  parseYearMonth,
+  previousOrSameMonday,
+  shiftYearMonth,
+  startOfMonth,
+  todayYearMonth,
+  yearMonthPrefix,
+  isoDate,
+} from "./dates.js";
+
+export type {
+  ContractType,
+  DayType,
+  EmployeeProfile,
+  HourBreakdown,
+  LiquidationEstimate,
+  ManualDeduction,
+  MonthSummary,
+  MonthlyPayroll,
+  PayPeriodType,
+  PayrollEntryType,
+  PeriodPayrollSummary,
+  RemuneratedRestDays,
+  SemesterSettlement,
+  WorkDayEntry,
+  YearSettlementReport,
+} from "./models.js";
+
+export {
+  addHourBreakdown,
+  emptyHourBreakdown,
+} from "./models.js";
+
+export { calculateHours } from "./hourCalculator.js";
+export { calculateRemuneratedRest } from "./remuneratedRest.js";
+
+export {
+  dailyRate,
+  extraDominicalDiurnaFactor,
+  extraDominicalNocturnaFactor,
+  hourlyRate,
+  prestacionesAmount,
+  prestacionesBase,
+  proportionalBaseSalary,
+  remuneratedRestPay,
+  transportSubsidyForDays,
+} from "./rates.js";
+
+export {
+  applyManualEntries,
+  buildPeriodSummary,
+  computeMonthSummaries,
+  computeMonthSummary,
+  liquidateDateRange,
+  liquidateMonth,
+} from "./payrollEngine.js";
+
+export { calculateSettlement } from "./settlement.js";

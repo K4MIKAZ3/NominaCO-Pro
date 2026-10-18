@@ -5,8 +5,9 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "test": "pnpm --filter @nominapp/payroll-engine test",
-    "dev:web": "pnpm --filter @nominapp/web dev",
-    "build:web": "pnpm --filter @nominapp/web build",
+    "build:engine": "pnpm --filter @nominapp/payroll-engine build",
+    "dev:web": "pnpm build:engine && pnpm --filter @nominapp/web dev",
+    "build:web": "pnpm build:engine && pnpm --filter @nominapp/web build",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {

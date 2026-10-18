@@ -34,6 +34,14 @@ pnpm --filter @nominapp/payroll-engine test
 pnpm --filter @nominapp/web dev
 ```
 
-## Estado
+## Estado (foundation)
 
-Ver `docs/LEGAL_VALIDATION_2026.md` (corroboración de decretos/leyes antes del motor).
+- [x] Validación legal 2026 (`docs/LEGAL_VALIDATION_2026.md`)
+- [x] Motor TS: snapshots, horas, descanso, liquidación, IBC sin ST, prestaciones
+- [x] Migraciones: `legal_parameters` + companies/members/employees/RLS
+- [x] Panel web: landing, login, dashboard, empresas, empleados, nómina, legal, ajustes
+- [ ] Credenciales Supabase + auth real
+- [ ] DNS `empresas.nominapp.xyz`
+- [ ] App Android más allá del stub
+
+Ver también `docs/ARCHITECTURE.md` y `docs/PRODUCT.md`.

@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 /**
  * Parámetros legales Colombia — vigencia 2026.
- * Fuentes: Ley 2466/2025, Ley 2101/2021, Decreto SMMLV 2026.
+ * Fuentes públicas: ver [OfficialLegalSources].
  */
 object ColombiaLaborLaw2026 {
 

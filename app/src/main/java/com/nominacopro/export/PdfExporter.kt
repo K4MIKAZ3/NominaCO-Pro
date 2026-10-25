@@ -13,7 +13,6 @@ import android.text.TextPaint
 import android.text.TextUtils
 import androidx.core.content.FileProvider
 import com.nominacopro.R
-import com.nominacopro.domain.law.ColombiaLaborLaw2026
 import com.nominacopro.domain.model.DayType
 import com.nominacopro.domain.model.EmployeeProfile
 import com.nominacopro.domain.model.MonthlyPayroll
@@ -408,7 +407,7 @@ object PdfExporter {
         val line = paint(stroke = BRAND, strokeWidth = 0.6f)
         canvas.drawLine(MARGIN, FOOTER_Y - 10f, PAGE_W - MARGIN, FOOTER_Y - 10f, line)
         canvas.drawText(
-            "Ley 2466/2025 · SMMLV ${Formatters.money(ColombiaLaborLaw2026.SMMLV)} · Uso personal · No constituye nómina oficial",
+            "Uso personal · No representa al Gobierno · No es nómina oficial",
             MARGIN,
             FOOTER_Y,
             paint(7f, MUTED),

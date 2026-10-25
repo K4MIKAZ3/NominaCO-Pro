@@ -57,9 +57,12 @@ export default function TerminosPage() {
         <h2>2. Naturaleza informativa y descargo de responsabilidad profesional</h2>
         <p>
           <strong>
-            {site.name} no constituye nómina oficial, certificación laboral,
-            asesoría contable, tributaria ni legal.
+            {site.name} no representa al Gobierno de Colombia, no está afiliada
+            al Ministerio del Trabajo ni a ninguna autoridad, y no presta
+            servicios gubernamentales.
           </strong>{" "}
+          Tampoco constituye nómina oficial, certificación laboral, asesoría
+          contable, tributaria ni legal.{" "}
           Los resultados mostrados son estimaciones generadas automáticamente a
           partir de la información ingresada por el Usuario y de parámetros legales
           configurados en la aplicación.

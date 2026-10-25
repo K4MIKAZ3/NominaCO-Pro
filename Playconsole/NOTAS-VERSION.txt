@@ -1,11 +1,8 @@
-¡Nominapp llega a Google Play!
+Novedades Nominapp 1.7.40 (versionCode 51)
 
-Tu liquidación de nómina en Colombia, clara y al día con 2026:
-• Marca jornadas, dominicales y recargos nocturnos
-• Salud y pensión con IBC correcto (el auxilio de transporte no cotiza)
-• Quincenas, semanal o mensual — tú eliges
-• Gastos personales y neto real
-• PDF listo para guardar o compartir
-• Respaldo opcional en la nube
+• Aviso claro: Nominapp no es una app del Gobierno; estimaciones de uso personal
+• Fuentes oficiales de ley laboral visibles en la app (SMMLV, jornada, cotizaciones)
+• Modo online desde Ajustes: sal del modo offline para iniciar sesión o crear cuenta
+• Centro de notificaciones: avisos de jornada y mensajes de la app (campana)
 
-Gratis. Pensada para empleados, no para reemplazar tu desprendible oficial.
+Gratis, sin anuncios y pensada para empleados.
